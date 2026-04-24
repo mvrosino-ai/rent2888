@@ -424,29 +424,29 @@ function parseMainSheet(csv) {
 
   // Map column indices
   const COL = {
-    edificio:      ci('Edificio'),
-    depto:         ci('Departamento'),
-    concIngr:      ci('Concepto Ingresos'),
-    concEgr:       ci('Concepto Egresos'),
-    huesped:       ci('Huésped'),
-    plataforma:    ci('Plataforma'),
-    fechaIn:       ci('Fecha de ingreso'),
-    fechaEg:       ci('Fecha de Egreso'),
-    noches:        ci('Noches'),
-    ingresos:      ci('Ingresos'),
-    egresos:       ci('Egresos'),
-    propietario:   ci('Propietario'),
-    mesano:        ci('mes/ano'),
-    mes:           ci('mes'),
-    ano:           ci('ano'),
-    moneda:        ci('Moneda del Reporte'),
-    // fallback for moneda
-    moneda2:       ci('Moneda Reporte'),
-    moneda3:       ci('Moneda'),
+    edificio:     ci('Edificio'),
+    depto:        ci('Departamento'),
+    concIngr:     ci('Concepto Ingresos'),
+    concEgr:      ci('Concepto Egresos'),
+    huesped:      ci('Huésped'),
+    plataforma:   ci('Plataforma'),
+    fechaIn:      ci('Fecha de ingreso'),
+    fechaEg:      ci('Fecha de Egreso'),
+    noches:       ci('Noches'),
+    ing_ars:      ci('Ingresos carga'),   // col I — pesos
+    ing_usd:      ci('Ingresos Total $'), // col AQ — ya convertido a u$
+    egr_ars:      ci('Egresos'),          // col X — pesos
+    egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
+    propietario:  ci('Propietario'),
+    mesano:       ci('mes/ano'),
+    mes:          ci('mes'),
+    ano:          ci('ano'),
+    moneda:       ci('Moneda del Reporte'),
+    moneda2:      ci('Moneda Reporte'),
+    moneda3:      ci('Moneda'),
   };
 
-  // Resolve moneda col
-  const monCol = COL.moneda >= 0 ? COL.moneda : COL.moneda2 >= 0 ? COL.moneda2 : COL.moneda3;
+  const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
 
   dataRows = [];
 
@@ -454,39 +454,39 @@ function parseMainSheet(csv) {
     const c = splitCSV(lines[i]);
     const mano = (c[COL.mesano]||'').trim();
     if (!mano || mano==='#N/A' || mano==='mes/ano') continue;
-
-    // Skip rows where mes/ano doesn't look like M/YYYY
     if (!/^\d{1,2}\/\d{4}$/.test(mano)) continue;
 
-    const prop   = (c[COL.propietario]||'').trim();
-    const moneda = monCol>=0 ? (c[monCol]||'').trim() : '';
-    const ing    = pn(c[COL.ingresos]);
-    const egr    = pn(c[COL.egresos]);
-    const concI  = (c[COL.concIngr]||'').trim();
-    const concE  = (c[COL.concEgr]||'').trim();
-    const edif   = COL.edificio>=0 ? (c[COL.edificio]||'').trim() : '';
-
+    const prop  = (c[COL.propietario]||'').trim();
+    const edif  = COL.edificio>=0 ? (c[COL.edificio]||'').trim() : '';
     if (!prop && !edif) continue;
+    if (prop==='#N/A' && !edif) continue;
+
+    const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
+    const isUSD  = moneda === 'u$';
+
+    // Use the correct column depending on moneda
+    const ing = isUSD ? pn(c[COL.ing_usd]) : pn(c[COL.ing_ars]);
+    const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
+
     if (!ing && !egr) continue;
-    if (prop === '#N/A' && !edif) continue;
 
     dataRows.push({
-      edificio:  edif,
-      depto:     (c[COL.depto]||'').trim(),
-      propietario: prop,
-      moneda:    moneda || (propMap[prop]?.moneda) || '$',
-      plataforma:(c[COL.plataforma]||'').trim(),
-      conceptoIngreso: concI,
-      huesped:   (c[COL.huesped]||'').trim(),
-      fechaIngreso: (c[COL.fechaIn]||'').trim(),
-      fechaEgreso:  (c[COL.fechaEg]||'').trim(),
-      noches:    pn(c[COL.noches]),
-      ingresos:  ing,
-      egresos:   egr,
-      conceptoEgreso: concE,
-      mesano:    mano,
-      mes:       pn(c[COL.mes]),
-      ano:       pn(c[COL.ano]),
+      edificio:        edif,
+      depto:           (c[COL.depto]||'').trim(),
+      propietario:     prop,
+      moneda,
+      plataforma:      (c[COL.plataforma]||'').trim(),
+      conceptoIngreso: (c[COL.concIngr]||'').trim(),
+      huesped:         (c[COL.huesped]||'').trim(),
+      fechaIngreso:    (c[COL.fechaIn]||'').trim(),
+      fechaEgreso:     (c[COL.fechaEg]||'').trim(),
+      noches:          pn(c[COL.noches]),
+      ingresos:        ing,
+      egresos:         egr,
+      conceptoEgreso:  (c[COL.concEgr]||'').trim(),
+      mesano:          mano,
+      mes:             pn(c[COL.mes]),
+      ano:             pn(c[COL.ano]),
     });
   }
 }
