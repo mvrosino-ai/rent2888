@@ -269,7 +269,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 <script>
 // ── CONFIG HARDCODEADA ──
 let CFG = {
-  sid: '1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw',
+  sid: '1ScM4lQWvOc8GDSCU2tppR_fSbyn9WWGocUnVHdUhVfs',
   tab: '$$$',
   ptab: 'Departamento - Propietario - Edificio',
   com: 0.20
@@ -570,63 +570,57 @@ function render(prop, per) {
 
   const mon = propMap[prop]?.moneda || activeMoneda;
 
-  // ── Get direct rows for this propietario ──
+  // Direct rows: prop has their own rows in $$$
   const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
 
-  // ── Get building expense rows that need to be split ──
-  // Building rows: propietario is an edificio name AND this prop is a member
+  // Building expenses: detect by Edificio column, distribute proportionally
   const buildingExpenses = [];
   for (const [edif, members] of Object.entries(edificioMap)) {
-    // Check if this prop is in this building
     const myEntry = members.find(m => m.prop === prop && m.activo);
     if (!myEntry) continue;
-    // Total active deptos in this building (for proportional split)
-    const totalDeptos = members.filter(m=>m.activo).reduce((s,m)=>s+m.cantidad,0);
+    const totalDeptos = members.filter(m=>m.activo).reduce((s,m)=>s+m.cantidad, 0);
     const myShare = totalDeptos > 0 ? myEntry.cantidad / totalDeptos : 0;
-
-    // Find expense rows in $$$ where propietario === edificio name
+    // Find rows where Edificio = this building, in this period, with an egreso
+    // These rows may have a wrong/different Propietario — detect purely by Edificio
     const edifRows = dataRows.filter(r =>
-      r.propietario === edif &&
       r.mesano === per &&
-      r.egresos < 0
+      r.egresos < 0 &&
+      r.conceptoEgreso &&
+      r.edificio === edif &&
+      r.propietario !== prop
     );
-
     for (const row of edifRows) {
-      const myEgr = row.egresos * myShare;
       buildingExpenses.push({
-        concepto: row.conceptoEgreso || row.conceptoIngreso || edif,
+        concepto: row.conceptoEgreso,
         edificio: edif,
-        egresos: myEgr,
-        myShare,
-        totalDeptos,
-        myDeptos: myEntry.cantidad
+        egresos: row.egresos * myShare,
+        myDeptos: myEntry.cantidad,
+        totalDeptos
       });
     }
   }
 
-  // ── Aggregate deptos ──
+  // Aggregate stays and direct egresos by depto
   const deptos = [...new Set(directRows.map(r=>r.depto).filter(Boolean))].sort();
   let tIng=0, tEgr=0, tNoch=0;
   const dd={};
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
-    const stays = drs.filter(r=>r.conceptoIngreso&&(r.ingresos||r.comisionBK));
+    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos>0);
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos<0);
-    const ing   = stays.reduce((s,r)=>s+r.ingresos+(r.comisionBK||0),0);
+    const ing   = stays.reduce((s,r)=>s+r.ingresos,0);
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.reduce((s,r)=>s+(r.noches||0),0);
     dd[d]={stays,egrs,ing,egr,noch};
-    tIng+=ing; tEgr+=egr; tNoch+=noch;
+    tIng+=ing;
   }
 
-  // Add direct egresos without a depto (not in stays)
-  const directEgrs = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0);
+  const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0);
   const directEgrTotal = directEgrs.reduce((s,r)=>s+r.egresos,0);
-
-  // Building expenses total
-  const buildEgrTotal = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
-  tEgr = directEgrTotal + buildEgrTotal;
+  const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
+  tEgr  = directEgrTotal + buildEgrTotal;
+  tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
 
   const com  = tIng * CFG.com;
   const neto = tIng + tEgr - com;
@@ -707,22 +701,19 @@ function render(prop, per) {
     h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div></div><div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;color:var(--ink3);font-style:italic;font-size:13px">Sin estadías registradas para este período</div></div>`;
   }
 
-  // EGRESOS — agrupar por depto+categoría (directos) y edificio+categoría (proporcionales)
-  // Group direct egresos: key = "depto||concepto"
+  // EGRESOS — group by concepto+depto (direct) and concepto+edificio (building)
   const directGrouped = {};
   for (const e of directEgrs) {
     const key = `${e.depto}||${e.conceptoEgreso||'Egreso'}`;
-    if (!directGrouped[key]) directGrouped[key] = { concepto: e.conceptoEgreso||'Egreso', depto: e.depto, monto: 0, tipo: 'directo' };
+    if (!directGrouped[key]) directGrouped[key] = { concepto: e.conceptoEgreso||'Egreso', sub: e.depto, monto: 0 };
     directGrouped[key].monto += e.egresos;
   }
-  // Group building egresos: key = "edificio||concepto"
   const buildGrouped = {};
   for (const e of buildingExpenses) {
     const key = `${e.edificio}||${e.concepto}`;
-    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, edificio: e.edificio, myDeptos: e.myDeptos, totalDeptos: e.totalDeptos, monto: 0, tipo: 'edificio' };
+    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, sub: e.edificio, monto: 0 };
     buildGrouped[key].monto += e.egresos;
   }
-
   const allEgrGrouped = [...Object.values(directGrouped), ...Object.values(buildGrouped)];
 
   if (allEgrGrouped.length) {
@@ -731,11 +722,10 @@ function render(prop, per) {
       <div class="egrc">
         <div class="egrc-h"><span class="egrc-ht">Total egresos</span><span class="egrc-hv">${fmt(tEgr,mon)}</span></div>`;
     allEgrGrouped.forEach(e=>{
-      const sub = e.tipo==='edificio' ? e.edificio : e.depto;
       h+=`<div class="egrc-i">
         <div>
           <div>${e.concepto}</div>
-          <div class="egrc-id">${sub}</div>
+          <div class="egrc-id">${e.sub}</div>
         </div>
         <span style="color:var(--red);font-weight:600">${fmt(e.monto,mon)}</span>
       </div>`;
