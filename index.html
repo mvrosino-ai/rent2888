@@ -707,22 +707,35 @@ function render(prop, per) {
     h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div></div><div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;color:var(--ink3);font-style:italic;font-size:13px">Sin estadías registradas para este período</div></div>`;
   }
 
-  // EGRESOS (directos + proporcionales de edificio)
-  const allEgrItems = [
-    ...directEgrs.map(e=>({ label: e.conceptoEgreso||'Egreso', sub: e.depto, monto: e.egresos, tipo: 'directo' })),
-    ...buildingExpenses.map(e=>({ label: e.concepto, sub: `${e.edificio} · proporción ${e.myDeptos}/${e.totalDeptos}`, monto: e.egresos, tipo: 'edificio' }))
-  ];
+  // EGRESOS — agrupar por depto+categoría (directos) y edificio+categoría (proporcionales)
+  // Group direct egresos: key = "depto||concepto"
+  const directGrouped = {};
+  for (const e of directEgrs) {
+    const key = `${e.depto}||${e.conceptoEgreso||'Egreso'}`;
+    if (!directGrouped[key]) directGrouped[key] = { concepto: e.conceptoEgreso||'Egreso', depto: e.depto, monto: 0, tipo: 'directo' };
+    directGrouped[key].monto += e.egresos;
+  }
+  // Group building egresos: key = "edificio||concepto"
+  const buildGrouped = {};
+  for (const e of buildingExpenses) {
+    const key = `${e.edificio}||${e.concepto}`;
+    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, edificio: e.edificio, myDeptos: e.myDeptos, totalDeptos: e.totalDeptos, monto: 0, tipo: 'edificio' };
+    buildGrouped[key].monto += e.egresos;
+  }
 
-  if (allEgrItems.length) {
+  const allEgrGrouped = [...Object.values(directGrouped), ...Object.values(buildGrouped)];
+
+  if (allEgrGrouped.length) {
     h+=`<div class="sec">
       <div class="sec-hdr"><div class="sec-ttl">Egresos del mes</div><div class="sec-ln"></div><div class="sec-ct" style="color:var(--red)">${fmt(tEgr,mon)}</div></div>
       <div class="egrc">
         <div class="egrc-h"><span class="egrc-ht">Total egresos</span><span class="egrc-hv">${fmt(tEgr,mon)}</span></div>`;
-    allEgrItems.forEach(e=>{
+    allEgrGrouped.forEach(e=>{
+      const sub = e.tipo==='edificio' ? e.edificio : e.depto;
       h+=`<div class="egrc-i">
         <div>
-          <div>${e.label}${e.tipo==='edificio'?`<span class="prop-tag">Edificio</span>`:''}</div>
-          <div class="egrc-id">${e.sub}</div>
+          <div>${e.concepto}</div>
+          <div class="egrc-id">${sub}</div>
         </div>
         <span style="color:var(--red);font-weight:600">${fmt(e.monto,mon)}</span>
       </div>`;
