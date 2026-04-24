@@ -4,34 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rent2888 — Reportes</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#F5F3EE;--card:#FFFFFF;--ink:#18181B;--ink2:#52525B;--ink3:#A1A1AA;--line:#E4E4E7;--gold:#B8860B;--gold-bg:#FDF8EC;--gold-light:#F0C040;--green:#166534;--green-bg:#DCFCE7;--red:#991B1B;--red-bg:#FEE2E2;--blue:#1E3A5F;--blue-bg:#EFF6FF}
+:root{--bg:#F5F3EE;--card:#fff;--ink:#18181B;--ink2:#52525B;--ink3:#A1A1AA;--line:#E4E4E7;--gold:#B8860B;--gold-bg:#FDF8EC;--gold-lt:#F0C040;--green:#166534;--green-bg:#DCFCE7;--red:#991B1B;--red-bg:#FEE2E2;--blue:#1E3A5F;--blue-bg:#EFF6FF}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5}
 
 /* TOPBAR */
 .topbar{background:var(--ink);color:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200}
-.logo{font-family:'DM Serif Display',serif;font-size:19px;cursor:pointer;user-select:none;-webkit-user-select:none}
-.logo span{color:var(--gold-light)}
-.topbar-actions{display:flex;gap:8px}
+.logo{font-family:'DM Serif Display',serif;font-size:19px;cursor:pointer;user-select:none}
+.logo span{color:var(--gold-lt)}
 .tbtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;transition:.15s}
 .tbtn:hover{background:rgba(255,255,255,.12)}
 .tbtn-gold{background:var(--gold);border-color:var(--gold)}
 .tbtn-gold:hover{opacity:.88}
+.topbar-r{display:flex;gap:8px}
 
 /* LOADING */
-#loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:82vh;gap:14px}
-.big-spin{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-txt{color:var(--ink2);font-size:14px}
+#screen-load{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:82vh;gap:14px}
+.spin{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.load-txt{color:var(--ink2);font-size:14px}
 
-/* MODAL BASE */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
-.modal{background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:420px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-lg{max-width:500px}
-.modal-title{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px}
+/* MODALS */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal{background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:440px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-lg{max-width:520px}
+.modal-ttl{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px}
 .modal-sub{color:var(--ink2);font-size:13px;margin-bottom:24px}
 .fg{margin-bottom:16px}
 .fl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2);margin-bottom:5px;display:block}
@@ -43,22 +43,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .mbtn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;cursor:pointer;transition:.15s;flex:1;border:none}
 .mbtn-p{background:var(--ink);color:#fff}.mbtn-p:hover{opacity:.85}
 .mbtn-g{background:transparent;color:var(--ink2);border:1px solid var(--line)}.mbtn-g:hover{background:var(--bg)}
-.err-msg{font-size:12px;color:var(--red);margin-top:7px;display:none}
+.err{font-size:12px;color:var(--red);margin-top:7px;display:none}
 
 /* FILTERS */
-#filters{display:none;background:var(--card);border-bottom:1px solid var(--line);padding:12px 28px;gap:10px;align-items:center;flex-wrap:wrap}
-.fsel{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 30px 7px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;min-width:200px}
+#screen-filters{display:none;background:var(--card);border-bottom:1px solid var(--line);padding:14px 28px;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-group-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.fsel{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 30px 7px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;min-width:220px}
 .fsel:focus{outline:none;border-color:var(--gold)}
-.flabel{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
-.fsep{width:1px;height:22px;background:var(--line)}
-.ml-a{margin-left:auto}
+.moneda-tabs{display:flex;gap:4px}
+.mtab{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink2);cursor:pointer;transition:.15s;letter-spacing:.02em}
+.mtab.active-usd{background:var(--blue);border-color:var(--blue);color:#fff}
+.mtab.active-ars{background:var(--green);border-color:var(--green);color:#fff}
+.fsep{width:1px;height:40px;background:var(--line);align-self:center}
+.ml-a{margin-left:auto;align-self:center;display:flex;gap:8px}
 .abtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .abtn:hover{background:var(--bg)}
-.abtn.gold{background:var(--gold);border-color:var(--gold);color:#fff}.abtn.gold:hover{opacity:.88}
 .abtn.grn{background:var(--green);border-color:var(--green);color:#fff}.abtn.grn:hover{opacity:.88}
 
 /* MAIN */
-#main{display:none;padding:28px;max-width:860px;margin:0 auto}
+#screen-main{display:none;padding:28px;max-width:880px;margin:0 auto}
 
 /* HERO */
 .hero{background:var(--ink);color:#fff;border-radius:16px;padding:28px 32px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px}
@@ -67,9 +71,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .hero-sb{font-size:13px;color:rgba(255,255,255,.48)}
 .hero-r{text-align:right}
 .hero-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.32);margin-bottom:4px}
-.hero-amt{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;color:var(--gold-light)}
+.hero-amt{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;color:var(--gold-lt)}
 .mbadge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;margin-top:6px}
-.mb-u{background:rgba(240,192,64,.2);color:var(--gold-light)}
+.mb-u{background:rgba(240,192,64,.2);color:var(--gold-lt)}
 .mb-a{background:rgba(22,101,52,.3);color:#6EE7A0}
 
 /* METRICS */
@@ -77,7 +81,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .mc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
 .mc-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:7px}
 .mc-v{font-size:20px;font-weight:600}
-.mc-v.g{color:var(--green)}.mc-v.r{color:var(--red)}.mc-v.b{color:var(--blue)}.mc-v.au{color:var(--gold)}
+.g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}.au{color:var(--gold)}
 
 /* SECTION */
 .sec{margin-bottom:24px}
@@ -86,7 +90,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .sec-ln{flex:1;height:1px;background:var(--line)}
 .sec-ct{font-size:12px;color:var(--ink3);font-weight:500}
 
-/* DEPTO */
+/* DEPTO BLOCKS */
 .dblock{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
 .dhdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;transition:.1s}
 .dhdr:hover{background:var(--bg)}
@@ -110,23 +114,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .stbl tr:hover td{background:#FAFAF8}
 .stbl tfoot td{font-weight:700;background:var(--bg)}
 .stbl tfoot td.r{color:var(--green);font-size:14px}
-.gn{font-weight:500}
-.gp{font-size:11px;color:var(--ink3)}
+.gn{font-weight:500}.gp{font-size:11px;color:var(--ink3)}
 .np{font-size:11px;background:var(--blue-bg);color:var(--blue);padding:1px 7px;border-radius:20px;font-weight:600}
 .lt{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:600}
 
 /* EGRESOS */
 .egr-s{padding:14px 18px;background:var(--bg);border-top:1px solid var(--line)}
 .egr-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
-.egr-r{display:flex;justify-content:space-between;font-size:13px;padding:4px 0}
+.egr-r{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
+.egr-r:last-of-type{border-bottom:none}
 .egr-c{color:var(--ink2)}.egr-m{color:var(--red);font-weight:500}
-.egr-tot{display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+.egr-prop{font-size:10px;color:var(--ink3);margin-top:1px}
+.egr-tot{display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
 .egrc{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .egrc-h{padding:14px 18px;background:var(--red-bg);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #FECACA}
 .egrc-ht{font-weight:600;font-size:13px;color:var(--red)}.egrc-hv{font-weight:700;font-size:15px;color:var(--red)}
 .egrc-i{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;font-size:13px;border-bottom:1px solid var(--line)}
 .egrc-i:last-child{border-bottom:none}
-.egrc-id{font-size:10px;color:var(--ink3);margin-top:1px}
+.egrc-id{font-size:10px;color:var(--ink3);margin-top:2px}
+.prop-tag{font-size:10px;background:#FEF3C7;color:#92400E;padding:1px 7px;border-radius:20px;margin-left:6px;font-weight:600}
 
 /* LIQUIDACION */
 .liq{background:var(--gold-bg);border:1px solid #E8D5A0;border-radius:12px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
@@ -144,21 +150,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .chart-ttl{font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:14px;text-transform:uppercase;letter-spacing:.06em}
 .chart-wrap{position:relative;height:160px}
 
-/* HISTORY */
-#history-screen{display:none;padding:28px}
-.hist-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.hist-ttl{font-family:'DM Serif Display',serif;font-size:22px}
-.hist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.hcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;cursor:pointer;transition:.15s}
-.hcard:hover{border-color:var(--gold);box-shadow:0 2px 12px rgba(0,0,0,.06)}
-.hc-p{font-weight:600;font-size:14px;margin-bottom:2px}
-.hc-per{font-size:12px;color:var(--ink2);margin-bottom:10px}
-.hc-amt{font-family:'DM Serif Display',serif;font-size:22px}
-.hc-b{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:6px;vertical-align:middle}
-.hc-sent{background:var(--green-bg);color:var(--green)}
-.hc-draft{background:var(--gold-bg);color:var(--gold)}
-.hc-meta{font-size:11px;color:var(--ink3);margin-top:8px}
-
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
@@ -167,16 +158,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .empty{text-align:center;padding:60px;color:var(--ink3);font-size:14px}
 
 @media(max-width:640px){
-  .topbar{padding:0 16px}#main{padding:16px}#filters{padding:10px 16px}
+  .topbar,.screen-filters,#screen-main{padding-left:16px;padding-right:16px}
   .hero{padding:20px}.hero-amt{font-size:36px}.liq-tv{font-size:30px}
   .liq{flex-direction:column;align-items:flex-start}
 }
 @media print{
-  .topbar,#filters,#history-screen,.abtn,.tbtn{display:none!important}
+  .topbar,#screen-filters,.abtn,.tbtn{display:none!important}
   body{background:#fff}
   .hero{background:#18181B!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .hero-amt{color:#F0C040!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  #main{display:block!important;padding:0;max-width:100%}
+  #screen-main{display:block!important;padding:0;max-width:100%}
   .dblock{break-inside:avoid}
 }
 </style>
@@ -185,8 +176,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 
 <div class="topbar">
   <div class="logo" id="logo" onclick="logoClick()">Rent<span>2888</span></div>
-  <div class="topbar-actions">
-    <button class="tbtn" id="btn-hist" onclick="showHistory()" style="display:none">📋 Guardados</button>
+  <div class="topbar-r">
     <button class="tbtn tbtn-gold" onclick="window.print()" id="btn-pdf" style="display:none">↓ PDF</button>
   </div>
 </div>
@@ -194,20 +184,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 <div class="toast" id="toast"></div>
 
 <!-- LOADING -->
-<div id="loading-screen">
-  <div class="big-spin"></div>
-  <div class="loading-txt">Cargando reportes...</div>
+<div id="screen-load">
+  <div class="spin"></div>
+  <div class="load-txt">Cargando reportes...</div>
 </div>
 
-<!-- MODAL: PASSWORD -->
-<div class="overlay" id="ov-pass" style="display:none">
+<!-- MODAL PASSWORD -->
+<div class="ov" id="ov-pass" style="display:none">
   <div class="modal">
-    <div class="modal-title">Administración</div>
+    <div class="modal-ttl">Administración</div>
     <div class="modal-sub">Ingresá la contraseña para acceder a la configuración.</div>
     <div class="fg">
       <label class="fl">Contraseña</label>
       <input class="fi" id="inp-pass" type="password" placeholder="••••" onkeydown="if(event.key==='Enter')checkPass()">
-      <div class="err-msg" id="pass-err">Contraseña incorrecta</div>
+      <div class="err" id="pass-err">Contraseña incorrecta</div>
     </div>
     <div class="mbtns">
       <button class="mbtn mbtn-g" onclick="closePass()">Cancelar</button>
@@ -216,32 +206,27 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
   </div>
 </div>
 
-<!-- MODAL: CONFIG -->
-<div class="overlay" id="ov-cfg" style="display:none">
+<!-- MODAL CONFIG -->
+<div class="ov" id="ov-cfg" style="display:none">
   <div class="modal modal-lg">
-    <div class="modal-title">Configuración</div>
+    <div class="modal-ttl">Configuración</div>
     <div class="fg">
       <label class="fl">ID del Google Sheet</label>
-      <input class="fi" id="c-sid" value="1ScM4lQWvOc8GDSCU2tppR_fSbyn9WWGocUnVHdUhVfs">
-      <div class="fhint">El Sheet debe estar compartido como público (cualquiera con el link puede ver)</div>
+      <input class="fi" id="c-sid">
+      <div class="fhint">El Sheet debe estar compartido como público</div>
     </div>
     <div class="fg">
-      <label class="fl">Nombre de la pestaña</label>
+      <label class="fl">Pestaña de datos principales</label>
       <input class="fi" id="c-tab" value="$$$">
+    </div>
+    <div class="fg">
+      <label class="fl">Pestaña de propietarios</label>
+      <input class="fi" id="c-ptab">
+      <div class="fhint">Nombre exacto de la pestaña con Edificio / Prop / Cantidad / Moneda / Estado</div>
     </div>
     <div class="fg">
       <label class="fl">% Comisión</label>
       <input class="fi" id="c-com" type="number" value="20" min="0" max="100">
-    </div>
-    <hr class="fdiv">
-    <div class="fg">
-      <label class="fl">Supabase URL <span style="font-weight:400;color:var(--ink3)">(opcional — para guardar reportes)</span></label>
-      <input class="fi" id="c-surl" placeholder="https://xxxx.supabase.co">
-    </div>
-    <div class="fg">
-      <label class="fl">Supabase Anon Key</label>
-      <input class="fi" id="c-skey" placeholder="eyJhbGci...">
-      <div class="fhint">Supabase → Settings → API → anon public</div>
     </div>
     <div class="mbtns">
       <button class="mbtn mbtn-g" onclick="closeCfg()">Cancelar</button>
@@ -251,64 +236,75 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 </div>
 
 <!-- FILTERS -->
-<div id="filters" style="display:none">
-  <span class="flabel">Propietario</span>
-  <select class="fsel" id="sel-p" onchange="onFilter()"></select>
-  <span class="flabel">Período</span>
-  <select class="fsel" id="sel-per" onchange="onFilter()"></select>
-  <div class="fsep"></div>
-  <div class="ml-a" style="display:flex;gap:8px">
-    <button class="abtn" id="btn-save" onclick="saveReport()" style="display:none">💾 Guardar</button>
-    <button class="abtn grn" id="btn-sent" onclick="markSent()" style="display:none">✓ Enviado</button>
+<div id="screen-filters" style="display:none">
+  <div class="filter-group">
+    <div class="filter-group-label">Moneda</div>
+    <div class="moneda-tabs">
+      <button class="mtab active-usd" id="tab-usd" onclick="setMoneda('u$')">💵 USD</button>
+      <button class="mtab" id="tab-ars" onclick="setMoneda('$')">🇦🇷 Pesos</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-label">Propietario</div>
+    <select class="fsel" id="sel-p" onchange="onFilter()">
+      <option value="">Seleccionar...</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-label">Período</div>
+    <select class="fsel" id="sel-per" onchange="onFilter()">
+      <option value="">Seleccionar...</option>
+    </select>
+  </div>
+  <div class="ml-a">
     <button class="abtn" onclick="window.print()">↓ PDF</button>
   </div>
 </div>
 
 <!-- MAIN -->
-<div id="main">
+<div id="screen-main">
   <div id="ra"><div class="empty">Seleccioná un propietario y período.</div></div>
 </div>
 
-<!-- HISTORY -->
-<div id="history-screen">
-  <div class="hist-hdr">
-    <div class="hist-ttl">Reportes guardados</div>
-    <button class="abtn" onclick="backToReport()">← Volver</button>
-  </div>
-  <div id="hist-grid" class="hist-grid"></div>
-</div>
-
 <script>
-// ── CONFIG (hardcodeada — acceso solo via admin) ──
-let CFG = { sid:'1ScM4lQWvOc8GDSCU2tppR_fSbyn9WWGocUnVHdUhVfs', tab:'$$$', com:0.20, surl:'', skey:'' };
+// ── CONFIG HARDCODEADA ──
+let CFG = {
+  sid: '1ScM4lQWvOc8GDSCU2tppR_fSbyn9WWGocUnVHdUhVfs',
+  tab: '$$$',
+  ptab: 'Departamento - Propietario - Edificio',
+  com: 0.20
+};
 const PASS = '2888';
 const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-let rows = [], chartN = null, chartD = null, curId = null;
+let dataRows = [];       // filas de $$$
+let propMap = {};        // propietario -> { moneda, activo }
+let edificioMap = {};    // edificio -> [ { prop, cantidad, moneda } ]
+let edificioNames = new Set(); // nombres de edificios (para detectar egresos de edificio)
+let activeMoneda = 'u$';
+let chartN = null, chartD = null;
 let lclicks = 0, ltimer = null;
 
-// ── LOGO triple clic ──
+// ── TRIPLE CLIC LOGO ──
 function logoClick() {
   lclicks++;
   if (ltimer) clearTimeout(ltimer);
   ltimer = setTimeout(() => lclicks = 0, 600);
   if (lclicks >= 3) {
     lclicks = 0;
+    document.getElementById('c-sid').value  = CFG.sid;
+    document.getElementById('c-tab').value  = CFG.tab;
+    document.getElementById('c-ptab').value = CFG.ptab;
+    document.getElementById('c-com').value  = CFG.com * 100;
     document.getElementById('ov-pass').style.display = 'flex';
     setTimeout(() => document.getElementById('inp-pass').focus(), 80);
   }
 }
-
 function checkPass() {
   if (document.getElementById('inp-pass').value === PASS) {
     document.getElementById('ov-pass').style.display = 'none';
     document.getElementById('inp-pass').value = '';
     document.getElementById('pass-err').style.display = 'none';
-    document.getElementById('c-sid').value   = CFG.sid;
-    document.getElementById('c-tab').value   = CFG.tab;
-    document.getElementById('c-com').value   = CFG.com * 100;
-    document.getElementById('c-surl').value  = CFG.surl;
-    document.getElementById('c-skey').value  = CFG.skey;
     document.getElementById('ov-cfg').style.display = 'flex';
   } else {
     document.getElementById('pass-err').style.display = 'block';
@@ -319,9 +315,12 @@ function checkPass() {
 function closePass() { document.getElementById('ov-pass').style.display='none'; document.getElementById('inp-pass').value=''; document.getElementById('pass-err').style.display='none'; }
 function closeCfg()  { document.getElementById('ov-cfg').style.display='none'; }
 function applyCfg()  {
-  CFG = { sid: document.getElementById('c-sid').value.trim(), tab: document.getElementById('c-tab').value.trim()||'$$$', com: parseFloat(document.getElementById('c-com').value)/100||.2, surl: document.getElementById('c-surl').value.trim(), skey: document.getElementById('c-skey').value.trim() };
+  CFG.sid  = document.getElementById('c-sid').value.trim();
+  CFG.tab  = document.getElementById('c-tab').value.trim() || '$$$';
+  CFG.ptab = document.getElementById('c-ptab').value.trim();
+  CFG.com  = parseFloat(document.getElementById('c-com').value) / 100 || 0.20;
   closeCfg(); toast('Guardado. Recargando...');
-  setTimeout(() => { rows=[]; showLoading(); loadSheet(); }, 800);
+  setTimeout(() => { dataRows=[]; propMap={}; edificioMap={}; showLoad(); init(); }, 800);
 }
 
 // ── UTILS ──
@@ -329,92 +328,238 @@ const ml = mano => { if(!mano) return ''; const [m,y]=mano.split('/'); return (M
 function fmt(n, mo) {
   if (n==null) return '—';
   const neg=n<0, abs=Math.abs(n);
-  const s = mo==='u$' ? 'u$'+abs.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+Math.round(abs).toLocaleString('es-AR');
+  const s = mo==='u$'
+    ? 'u$'+abs.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})
+    : '$'+Math.round(abs).toLocaleString('es-AR');
   return neg?'-'+s:s;
 }
-const pn = s => { if(!s||s==='#N/A'||s==='') return 0; return parseFloat(String(s).replace(/[^\d.\-]/g,''))||0; };
+const pn = s => { if(!s||s==='#N/A'||s===''||s==='FALSE') return 0; return parseFloat(String(s).replace(/[^\d.\-]/g,''))||0; };
 const sp = (a,b) => { const [ma,ya]=a.split('/').map(Number),[mb,yb]=b.split('/').map(Number); return ya!==yb?ya-yb:ma-mb; };
 function toast(msg, t='') { const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+t; setTimeout(()=>el.className='toast',3200); }
-
-// ── LOAD SHEET ──
-async function loadSheet() {
-  try {
-    const url = `https://docs.google.com/spreadsheets/d/${CFG.sid}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(CFG.tab)}`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('No se pudo acceder. Verificá que el Sheet sea público.');
-    const csv = await r.text();
-    parseCSV(csv);
-    if (!rows.length) throw new Error('Sin datos. Verificá el nombre de la pestaña en admin.');
-    initApp();
-  } catch(e) {
-    document.getElementById('loading-screen').innerHTML =
-      `<div style="text-align:center;color:var(--ink2);padding:40px;max-width:360px">
-        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
-        <div style="font-weight:600;margin-bottom:6px;color:var(--ink)">Error al cargar los datos</div>
-        <div style="font-size:13px;margin-bottom:16px">${e.message}</div>
-        <div style="font-size:12px;color:var(--ink3)">Hacé <strong>triple clic</strong> en el logo "Rent2888" para ir a configuración</div>
-      </div>`;
-  }
-}
-
-function parseCSV(csv) {
-  const lines = csv.split('\n').filter(l=>l.trim());
-  let hdr=[], hi=-1;
-  for (let i=0;i<Math.min(8,lines.length);i++) {
-    const c=splitCSV(lines[i]);
-    if (c.includes('Departamento')&&c.includes('Propietario')&&c.includes('mes/ano')) { hdr=c; hi=i; break; }
-  }
-  if (hi<0) return;
-  const ci = n => hdr.indexOf(n);
-  rows = [];
-  for (let i=hi+1;i<lines.length;i++) {
-    const c = splitCSV(lines[i]);
-    const prop=(c[ci('Propietario')]||'').trim(), depto=(c[ci('Departamento')]||'').trim(), mano=(c[ci('mes/ano')]||'').trim();
-    if (!prop||!mano||mano==='#N/A') continue;
-    const ing=pn(c[ci('Ingresos')]), cbk=pn(c[ci('Comision BK')]), egr=pn(c[ci('Egresos')]);
-    if (!ing&&!cbk&&!egr) continue;
-    rows.push({ depto, propietario:prop, moneda:(c[ci('Moneda')]||'$').trim(), plataforma:(c[ci('Plataforma')]||'').trim(),
-      conceptoIngreso:(c[ci('Concepto Ingresos')]||'').trim(), huesped:(c[ci('Huésped')]||'').trim(),
-      fechaIngreso:(c[ci('Fecha de ingreso')]||'').trim(), fechaEgreso:(c[ci('Fecha de Egreso')]||'').trim(),
-      noches:pn(c[ci('Noches')]), ingresos:ing, comisionBK:cbk,
-      conceptoEgreso:(c[ci('Concepto Egresos')]||'').trim(), egresos:egr,
-      mesano:mano, mes:pn(c[ci('mes')]), ano:pn(c[ci('ano')]) });
-  }
-}
 
 function splitCSV(line) {
   const res=[]; let cur=''; let inQ=false;
   for (let i=0;i<line.length;i++) {
-    if (line[i]==='"') { inQ=!inQ; }
-    else if (line[i]===','&&!inQ) { res.push(cur.replace(/^"|"$/g,'').trim()); cur=''; }
-    else { cur+=line[i]; }
+    if (line[i]==='"'){inQ=!inQ;}
+    else if (line[i]===','&&!inQ){res.push(cur.replace(/^"|"$/g,'').trim());cur='';}
+    else{cur+=line[i];}
   }
   res.push(cur.replace(/^"|"$/g,'').trim());
   return res;
 }
 
+async function fetchCSV(sheetId, tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`No se pudo acceder a la hoja "${tabName}". Verificá que el Sheet sea público.`);
+  return r.text();
+}
+
+// ── LOAD PROPIETARIOS SHEET ──
+// Columns: A=Edificio, B=Prop, C=Cantidad, D=Moneda, E=Estado
+function parsePropSheet(csv) {
+  const lines = csv.split('\n').filter(l=>l.trim());
+  if (lines.length < 2) return;
+
+  // Find header row
+  let hi = -1;
+  for (let i=0;i<Math.min(5,lines.length);i++) {
+    const c = splitCSV(lines[i]);
+    // header has "Prop" or "Propietarios" in col B
+    if (c[1] && (c[1].toLowerCase().includes('prop') || c[1].toLowerCase().includes('propietario'))) {
+      hi = i; break;
+    }
+  }
+  if (hi < 0) hi = 0; // fallback: first row is header
+
+  propMap = {};
+  edificioMap = {};
+  edificioNames = new Set();
+
+  for (let i=hi+1;i<lines.length;i++) {
+    const c = splitCSV(lines[i]);
+    const edificio = (c[0]||'').trim();
+    const prop     = (c[1]||'').trim();
+    const cantidad = pn(c[2]);
+    const moneda   = (c[3]||'u$').trim();
+    const estado   = (c[4]||'Activo').trim();
+
+    if (!prop || prop === '#N/A') continue;
+
+    edificioNames.add(edificio);
+
+    if (!edificioMap[edificio]) edificioMap[edificio] = [];
+    edificioMap[edificio].push({ prop, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
+
+    // propMap: use first occurrence for moneda (a prop can appear in multiple buildings)
+    if (!propMap[prop]) {
+      propMap[prop] = { moneda, activo: estado === 'Activo' && cantidad > 0 };
+    } else if (estado === 'Activo' && cantidad > 0) {
+      propMap[prop].activo = true;
+      propMap[prop].moneda = moneda;
+    }
+  }
+}
+
+// ── LOAD MAIN SHEET ($$$) ──
+// Key columns (by name):
+//   Propietario (AS=col 44), Moneda del Reporte (AT=col 45 approx),
+//   mes/ano (AP=col 41), Egresos (X=col 23), Concepto Egresos (V=col 21),
+//   Ingresos (Y=col 24?), Huésped, Noches, Fecha de ingreso, Fecha de Egreso,
+//   Concepto Ingresos, Plataforma, Edificio (U=col 20), Departamento
+function parseMainSheet(csv) {
+  const lines = csv.split('\n').filter(l=>l.trim());
+  let headers=[], hi=-1;
+
+  for (let i=0;i<Math.min(5,lines.length);i++) {
+    const c = splitCSV(lines[i]);
+    // Look for row that has 'mes/ano' AND 'Propietario'
+    if (c.some(x=>x==='mes/ano') && c.some(x=>x==='Propietario')) {
+      headers=c; hi=i; break;
+    }
+  }
+  if (hi<0) throw new Error('No encontré los encabezados en la hoja $$$. Verificá el nombre de la pestaña.');
+
+  const ci = n => headers.findIndex(h => h.trim() === n.trim());
+
+  // Map column indices
+  const COL = {
+    edificio:      ci('Edificio'),
+    depto:         ci('Departamento'),
+    concIngr:      ci('Concepto Ingresos'),
+    concEgr:       ci('Concepto Egresos'),
+    huesped:       ci('Huésped'),
+    plataforma:    ci('Plataforma'),
+    fechaIn:       ci('Fecha de ingreso'),
+    fechaEg:       ci('Fecha de Egreso'),
+    noches:        ci('Noches'),
+    ingresos:      ci('Ingresos'),
+    egresos:       ci('Egresos'),
+    propietario:   ci('Propietario'),
+    mesano:        ci('mes/ano'),
+    mes:           ci('mes'),
+    ano:           ci('ano'),
+    moneda:        ci('Moneda del Reporte'),
+    // fallback for moneda
+    moneda2:       ci('Moneda Reporte'),
+    moneda3:       ci('Moneda'),
+  };
+
+  // Resolve moneda col
+  const monCol = COL.moneda >= 0 ? COL.moneda : COL.moneda2 >= 0 ? COL.moneda2 : COL.moneda3;
+
+  dataRows = [];
+
+  for (let i=hi+1;i<lines.length;i++) {
+    const c = splitCSV(lines[i]);
+    const mano = (c[COL.mesano]||'').trim();
+    if (!mano || mano==='#N/A' || mano==='mes/ano') continue;
+
+    // Skip rows where mes/ano doesn't look like M/YYYY
+    if (!/^\d{1,2}\/\d{4}$/.test(mano)) continue;
+
+    const prop   = (c[COL.propietario]||'').trim();
+    const moneda = monCol>=0 ? (c[monCol]||'').trim() : '';
+    const ing    = pn(c[COL.ingresos]);
+    const egr    = pn(c[COL.egresos]);
+    const concI  = (c[COL.concIngr]||'').trim();
+    const concE  = (c[COL.concEgr]||'').trim();
+    const edif   = COL.edificio>=0 ? (c[COL.edificio]||'').trim() : '';
+
+    if (!prop && !edif) continue;
+    if (!ing && !egr) continue;
+    if (prop === '#N/A' && !edif) continue;
+
+    dataRows.push({
+      edificio:  edif,
+      depto:     (c[COL.depto]||'').trim(),
+      propietario: prop,
+      moneda:    moneda || (propMap[prop]?.moneda) || '$',
+      plataforma:(c[COL.plataforma]||'').trim(),
+      conceptoIngreso: concI,
+      huesped:   (c[COL.huesped]||'').trim(),
+      fechaIngreso: (c[COL.fechaIn]||'').trim(),
+      fechaEgreso:  (c[COL.fechaEg]||'').trim(),
+      noches:    pn(c[COL.noches]),
+      ingresos:  ing,
+      egresos:   egr,
+      conceptoEgreso: concE,
+      mesano:    mano,
+      mes:       pn(c[COL.mes]),
+      ano:       pn(c[COL.ano]),
+    });
+  }
+}
+
 // ── INIT ──
-function initApp() {
-  const props = [...new Set(rows.map(r=>r.propietario).filter(Boolean))].sort();
-  const pers  = [...new Set(rows.map(r=>r.mesano).filter(Boolean))].sort(sp);
-  const sp2   = document.getElementById('sel-p');
-  const sper  = document.getElementById('sel-per');
-  sp2.innerHTML  = '<option value="">Seleccionar propietario...</option>' + props.map(p=>`<option value="${p}">${p}</option>`).join('');
-  sper.innerHTML = '<option value="">Seleccionar período...</option>'     + pers.map(p=>`<option value="${p}">${ml(p)}</option>`).join('');
+async function init() {
+  try {
+    // Load both sheets in parallel
+    const [csvProp, csvMain] = await Promise.all([
+      fetchCSV(CFG.sid, CFG.ptab),
+      fetchCSV(CFG.sid, CFG.tab)
+    ]);
+
+    parsePropSheet(csvProp);
+    parseMainSheet(csvMain);
+
+    if (!dataRows.length) throw new Error('Sin datos en la hoja $$$. Verificá el nombre de la pestaña en admin.');
+
+    buildUI();
+  } catch(e) {
+    document.getElementById('screen-load').innerHTML =
+      `<div style="text-align:center;color:var(--ink2);padding:40px;max-width:380px">
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-weight:600;margin-bottom:6px;color:var(--ink)">Error al cargar</div>
+        <div style="font-size:13px;margin-bottom:14px">${e.message}</div>
+        <div style="font-size:12px;color:var(--ink3)">Hacé <strong>triple clic</strong> en el logo para ir a configuración</div>
+      </div>`;
+  }
+}
+
+function buildUI() {
+  // Get all periods from data
+  const pers = [...new Set(dataRows.map(r=>r.mesano).filter(Boolean))].sort(sp);
+  const sper = document.getElementById('sel-per');
+  sper.innerHTML = '<option value="">Seleccionar período...</option>' + pers.map(p=>`<option value="${p}">${ml(p)}</option>`).join('');
   if (pers.length) sper.value = pers[pers.length-1];
-  document.getElementById('loading-screen').style.display = 'none';
-  document.getElementById('filters').style.display = 'flex';
-  document.getElementById('main').style.display = 'block';
+
+  // Build prop list for current moneda
+  buildPropDropdown();
+
+  document.getElementById('screen-load').style.display = 'none';
+  document.getElementById('screen-filters').style.display = 'flex';
+  document.getElementById('screen-main').style.display = 'block';
   document.getElementById('btn-pdf').style.display = 'block';
-  document.getElementById('btn-hist').style.display = CFG.skey ? 'block' : 'none';
+  onFilter();
+}
+
+function buildPropDropdown() {
+  // Get active propietarios filtered by selected moneda
+  const actives = Object.entries(propMap)
+    .filter(([p, v]) => v.activo && v.moneda === activeMoneda)
+    .map(([p]) => p)
+    .sort();
+
+  const sp = document.getElementById('sel-p');
+  const prev = sp.value;
+  sp.innerHTML = `<option value="">Seleccionar propietario...</option>` + actives.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if (actives.includes(prev)) sp.value = prev;
+
+  // Update tab styles
+  document.getElementById('tab-usd').className = 'mtab' + (activeMoneda==='u$'?' active-usd':'');
+  document.getElementById('tab-ars').className = 'mtab' + (activeMoneda==='$'?' active-ars':'');
+}
+
+function setMoneda(m) {
+  activeMoneda = m;
+  buildPropDropdown();
   onFilter();
 }
 
 function onFilter() {
-  const prop=document.getElementById('sel-p').value, per=document.getElementById('sel-per').value;
-  curId=null;
-  document.getElementById('btn-save').style.display = (prop&&per&&CFG.skey)?'block':'none';
-  document.getElementById('btn-sent').style.display = 'none';
+  const prop = document.getElementById('sel-p').value;
+  const per  = document.getElementById('sel-per').value;
   render(prop, per);
 }
 
@@ -422,40 +567,83 @@ function onFilter() {
 function render(prop, per) {
   const ra = document.getElementById('ra');
   if (!prop||!per) { ra.innerHTML='<div class="empty">Seleccioná un propietario y período.</div>'; return; }
-  const dr = rows.filter(r=>r.propietario===prop&&r.mesano===per);
-  if (!dr.length) { ra.innerHTML='<div class="empty">Sin datos para este propietario en este período.</div>'; return; }
 
-  const mon = dr.find(r=>r.moneda)?.moneda||'$';
-  const deps = [...new Set(dr.map(r=>r.depto).filter(Boolean))].sort();
+  const mon = propMap[prop]?.moneda || activeMoneda;
+
+  // ── Get direct rows for this propietario ──
+  const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
+
+  // ── Get building expense rows that need to be split ──
+  // Building rows: propietario is an edificio name AND this prop is a member
+  const buildingExpenses = [];
+  for (const [edif, members] of Object.entries(edificioMap)) {
+    // Check if this prop is in this building
+    const myEntry = members.find(m => m.prop === prop && m.activo);
+    if (!myEntry) continue;
+    // Total active deptos in this building (for proportional split)
+    const totalDeptos = members.filter(m=>m.activo).reduce((s,m)=>s+m.cantidad,0);
+    const myShare = totalDeptos > 0 ? myEntry.cantidad / totalDeptos : 0;
+
+    // Find expense rows in $$$ where propietario === edificio name
+    const edifRows = dataRows.filter(r =>
+      r.propietario === edif &&
+      r.mesano === per &&
+      r.egresos < 0
+    );
+
+    for (const row of edifRows) {
+      const myEgr = row.egresos * myShare;
+      buildingExpenses.push({
+        concepto: row.conceptoEgreso || row.conceptoIngreso || edif,
+        edificio: edif,
+        egresos: myEgr,
+        myShare,
+        totalDeptos,
+        myDeptos: myEntry.cantidad
+      });
+    }
+  }
+
+  // ── Aggregate deptos ──
+  const deptos = [...new Set(directRows.map(r=>r.depto).filter(Boolean))].sort();
   let tIng=0, tEgr=0, tNoch=0;
   const dd={};
 
-  for (const d of deps) {
-    const drs   = dr.filter(r=>r.depto===d);
+  for (const d of deptos) {
+    const drs   = directRows.filter(r=>r.depto===d);
     const stays = drs.filter(r=>r.conceptoIngreso&&(r.ingresos||r.comisionBK));
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos<0);
-    const ing   = stays.reduce((s,r)=>s+r.ingresos+r.comisionBK,0);
+    const ing   = stays.reduce((s,r)=>s+r.ingresos+(r.comisionBK||0),0);
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.reduce((s,r)=>s+(r.noches||0),0);
     dd[d]={stays,egrs,ing,egr,noch};
     tIng+=ing; tEgr+=egr; tNoch+=noch;
   }
 
-  const com  = tIng*CFG.com;
-  const neto = tIng+tEgr-com;
+  // Add direct egresos without a depto (not in stays)
+  const directEgrs = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0);
+  const directEgrTotal = directEgrs.reduce((s,r)=>s+r.egresos,0);
 
-  // Histórico
-  const ap = [...new Set(rows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).slice(-18);
-  const hN = ap.map(p=>rows.filter(x=>x.propietario===prop&&x.mesano===p&&x.conceptoIngreso).reduce((s,x)=>s+(x.noches||0),0));
-  const hD = ap.map(p=>{
-    const pr=rows.filter(x=>x.propietario===prop&&x.mesano===p);
-    const i=pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos+x.comisionBK,0);
+  // Building expenses total
+  const buildEgrTotal = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
+  tEgr = directEgrTotal + buildEgrTotal;
+
+  const com  = tIng * CFG.com;
+  const neto = tIng + tEgr - com;
+
+  // ── Historical ──
+  const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).slice(-18);
+  const hN = allPers.map(p=>dataRows.filter(x=>x.propietario===prop&&x.mesano===p&&x.conceptoIngreso).reduce((s,x)=>s+(x.noches||0),0));
+  const hD = allPers.map(p=>{
+    const pr=dataRows.filter(x=>x.propietario===prop&&x.mesano===p);
+    const i=pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos+(x.comisionBK||0),0);
     const e=pr.filter(x=>x.conceptoEgreso&&x.egresos<0).reduce((s,x)=>s+x.egresos,0);
     return Math.max(0,i+e-i*CFG.com);
   });
-  const hL = ap.map(p=>{const[m,y]=p.split('/');return MESES[+m].slice(0,3)+"'"+String(y).slice(2);});
-  const ci = ap.indexOf(per);
+  const hL=allPers.map(p=>{const[m,y]=p.split('/');return MESES[+m].slice(0,3)+"'"+String(y).slice(2);});
+  const ci=allPers.indexOf(per);
 
+  // ── Build HTML ──
   let h='';
 
   // HERO
@@ -463,7 +651,7 @@ function render(prop, per) {
     <div>
       <div class="hero-ey">Rent2888 · Liquidación mensual</div>
       <div class="hero-nm">${prop}</div>
-      <div class="hero-sb">${deps.length} depto${deps.length!==1?'s':''} · ${tNoch} noches · ${ml(per)}</div>
+      <div class="hero-sb">${deptos.length} depto${deptos.length!==1?'s':''} · ${tNoch} noches · ${ml(per)}</div>
       <span class="mbadge ${mon==='u$'?'mb-u':'mb-a'}">${mon==='u$'?'USD':'PESOS'}</span>
     </div>
     <div class="hero-r">
@@ -478,48 +666,67 @@ function render(prop, per) {
     <div class="mc"><div class="mc-l">Egresos</div><div class="mc-v r">${fmt(tEgr,mon)}</div></div>
     <div class="mc"><div class="mc-l">Comisión ${Math.round(CFG.com*100)}%</div><div class="mc-v r">-${fmt(com,mon)}</div></div>
     <div class="mc"><div class="mc-l">Noches</div><div class="mc-v b">${tNoch}</div></div>
-    <div class="mc"><div class="mc-l">Deptos</div><div class="mc-v au">${deps.length}</div></div>
+    <div class="mc"><div class="mc-l">Deptos</div><div class="mc-v au">${deptos.length}</div></div>
   </div>`;
 
   // ESTADIAS
-  h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div><div class="sec-ct">${deps.length} deptos</div></div>`;
-  for (const d of deps) {
-    const {stays,egrs,ing,egr,noch}=dd[d];
-    const k=d.replace(/[^a-z0-9]/gi,'_');
-    h+=`<div class="dblock" id="db-${k}">
-      <div class="dhdr" onclick="tog('${k}')">
-        <div class="dhdr-l"><span class="dnm">${d}</span><span class="dng">${noch}n</span></div>
-        <div class="dhdr-r"><span class="damt">${fmt(ing,mon)}</span><span class="dchv">▾</span></div>
-      </div>
-      <div class="dbody">`;
-    if (stays.length) {
-      h+=`<table class="stbl"><thead><tr><th>Huésped</th><th>Período</th><th style="text-align:center">Noches</th><th class="r">Ingreso</th></tr></thead><tbody>`;
-      stays.forEach(s=>{
-        const m=s.ingresos||s.comisionBK, isL=(s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
-        h+=`<tr><td><div class="gn">${s.huesped||'—'}${isL?'<span class="lt">Late CO</span>':''}</div><div class="gp">${s.plataforma||s.conceptoIngreso||''}</div></td>
-          <td><span style="font-size:12px;color:var(--ink2)">${s.fechaIngreso||'—'} → ${s.fechaEgreso||'—'}</span></td>
-          <td style="text-align:center"><span class="np">${s.noches||'—'}</span></td>
-          <td class="r">${fmt(m,mon)}</td></tr>`;
-      });
-      h+=`</tbody><tfoot><tr><td colspan="3" style="padding:11px 18px">Total ${d}</td><td class="r" style="padding:11px 18px">${fmt(ing,mon)}</td></tr></tfoot></table>`;
-    } else {
-      h+=`<div style="padding:14px 18px;color:var(--ink3);font-size:13px;font-style:italic">Sin estadías — uso propio o depto vacío</div>`;
+  if (deptos.length) {
+    h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div><div class="sec-ct">${deptos.length} deptos</div></div>`;
+    for (const d of deptos) {
+      const {stays,egrs,ing,egr,noch}=dd[d];
+      const k=d.replace(/[^a-z0-9]/gi,'_');
+      h+=`<div class="dblock" id="db-${k}">
+        <div class="dhdr" onclick="tog('${k}')">
+          <div class="dhdr-l"><span class="dnm">${d}</span><span class="dng">${noch}n</span></div>
+          <div class="dhdr-r"><span class="damt">${fmt(ing,mon)}</span><span class="dchv">▾</span></div>
+        </div>
+        <div class="dbody">`;
+      if (stays.length) {
+        h+=`<table class="stbl"><thead><tr><th>Huésped</th><th>Período</th><th style="text-align:center">Noches</th><th class="r">Ingreso</th></tr></thead><tbody>`;
+        stays.forEach(s=>{
+          const m2=s.ingresos||(s.comisionBK||0);
+          const isL=(s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
+          h+=`<tr><td><div class="gn">${s.huesped||'—'}${isL?'<span class="lt">Late CO</span>':''}</div><div class="gp">${s.plataforma||s.conceptoIngreso||''}</div></td>
+            <td><span style="font-size:12px;color:var(--ink2)">${s.fechaIngreso||'—'} → ${s.fechaEgreso||'—'}</span></td>
+            <td style="text-align:center"><span class="np">${s.noches||'—'}</span></td>
+            <td class="r">${fmt(m2,mon)}</td></tr>`;
+        });
+        h+=`</tbody><tfoot><tr><td colspan="3" style="padding:11px 18px">Total ${d}</td><td class="r" style="padding:11px 18px">${fmt(ing,mon)}</td></tr></tfoot></table>`;
+      } else {
+        h+=`<div style="padding:14px 18px;color:var(--ink3);font-size:13px;font-style:italic">Sin estadías — uso propio o depto vacío</div>`;
+      }
+      if (egrs.length) {
+        h+=`<div class="egr-s"><div class="egr-t">Egresos del depto</div>`;
+        egrs.forEach(e=>{h+=`<div class="egr-r"><span class="egr-c">${e.conceptoEgreso}</span><span class="egr-m">${fmt(e.egresos,mon)}</span></div>`;});
+        h+=`<div class="egr-tot"><span>Total</span><span style="color:var(--red)">${fmt(egr,mon)}</span></div></div>`;
+      }
+      h+=`</div></div>`;
     }
-    if (egrs.length) {
-      h+=`<div class="egr-s"><div class="egr-t">Egresos del depto</div>`;
-      egrs.forEach(e=>{ h+=`<div class="egr-r"><span class="egr-c">${e.conceptoEgreso}</span><span class="egr-m">${fmt(e.egresos,mon)}</span></div>`; });
-      h+=`<div class="egr-tot"><span>Total egresos ${d}</span><span style="color:var(--red)">${fmt(egr,mon)}</span></div></div>`;
-    }
-    h+=`</div></div>`;
+    h+=`</div>`;
+  } else {
+    h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div></div><div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;color:var(--ink3);font-style:italic;font-size:13px">Sin estadías registradas para este período</div></div>`;
   }
-  h+=`</div>`;
 
-  // EGRESOS GENERALES
-  const ae=dr.filter(r=>r.conceptoEgreso&&r.egresos<0);
-  if (ae.length) {
-    h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Egresos del mes</div><div class="sec-ln"></div><div class="sec-ct" style="color:var(--red)">${fmt(tEgr,mon)}</div></div>
-    <div class="egrc"><div class="egrc-h"><span class="egrc-ht">Total egresos</span><span class="egrc-hv">${fmt(tEgr,mon)}</span></div>`;
-    ae.forEach(e=>{ h+=`<div class="egrc-i"><div><div>${e.conceptoEgreso}</div><div class="egrc-id">${e.depto}</div></div><span style="color:var(--red);font-weight:600">${fmt(e.egresos,mon)}</span></div>`; });
+  // EGRESOS (directos + proporcionales de edificio)
+  const allEgrItems = [
+    ...directEgrs.map(e=>({ label: e.conceptoEgreso||'Egreso', sub: e.depto, monto: e.egresos, tipo: 'directo' })),
+    ...buildingExpenses.map(e=>({ label: e.concepto, sub: `${e.edificio} · proporción ${e.myDeptos}/${e.totalDeptos}`, monto: e.egresos, tipo: 'edificio' }))
+  ];
+
+  if (allEgrItems.length) {
+    h+=`<div class="sec">
+      <div class="sec-hdr"><div class="sec-ttl">Egresos del mes</div><div class="sec-ln"></div><div class="sec-ct" style="color:var(--red)">${fmt(tEgr,mon)}</div></div>
+      <div class="egrc">
+        <div class="egrc-h"><span class="egrc-ht">Total egresos</span><span class="egrc-hv">${fmt(tEgr,mon)}</span></div>`;
+    allEgrItems.forEach(e=>{
+      h+=`<div class="egrc-i">
+        <div>
+          <div>${e.label}${e.tipo==='edificio'?`<span class="prop-tag">Edificio</span>`:''}</div>
+          <div class="egrc-id">${e.sub}</div>
+        </div>
+        <span style="color:var(--red);font-weight:600">${fmt(e.monto,mon)}</span>
+      </div>`;
+    });
     h+=`</div></div>`;
   }
 
@@ -527,9 +734,9 @@ function render(prop, per) {
   h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Liquidación final</div><div class="sec-ln"></div></div>
   <div class="liq">
     <div class="liq-rows">
-      <div class="liq-r"><span class="liq-rl">Ingresos brutos</span><span class="liq-rv" style="color:var(--green)">${fmt(tIng,mon)}</span></div>
-      <div class="liq-r"><span class="liq-rl">Egresos del mes</span><span class="liq-rv" style="color:var(--red)">${fmt(tEgr,mon)}</span></div>
-      <div class="liq-r"><span class="liq-rl">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="liq-rv" style="color:var(--red)">-${fmt(com,mon)}</span></div>
+      <div class="liq-r"><span class="liq-rl">Ingresos brutos</span><span class="liq-rv g">${fmt(tIng,mon)}</span></div>
+      <div class="liq-r"><span class="liq-rl">Egresos del mes</span><span class="liq-rv r">${fmt(tEgr,mon)}</span></div>
+      <div class="liq-r"><span class="liq-rl">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="liq-rv r">-${fmt(com,mon)}</span></div>
       <hr class="liq-div">
       <div class="liq-r"><span class="liq-rl" style="font-weight:700">Neto a transferir</span><span class="liq-rv" style="font-size:15px">${fmt(neto,mon)}</span></div>
     </div>
@@ -543,97 +750,39 @@ function render(prop, per) {
     <div class="chart-card"><div class="chart-ttl">Monto liquidado por mes</div><div class="chart-wrap"><canvas id="cD"></canvas></div></div>
   </div></div>`;
 
-  h+=`<div style="text-align:center;font-size:11px;color:var(--ink3);padding:16px 0 8px">Rent2888 · ${ml(per)} · Generado el ${new Date().toLocaleDateString('es-AR')}</div>`;
+  h+=`<div style="text-align:center;font-size:11px;color:var(--ink3);padding:16px 0 8px">Rent2888 · ${ml(per)} · ${new Date().toLocaleDateString('es-AR')}</div>`;
 
   ra.innerHTML = h;
-  setTimeout(() => renderCharts(hL, hN, hD, ci, mon), 50);
+  setTimeout(()=>renderCharts(hL,hN,hD,ci,mon), 50);
 }
 
-function tog(k) { document.getElementById('db-'+k)?.classList.toggle('open'); }
+function tog(k){document.getElementById('db-'+k)?.classList.toggle('open');}
 
 // ── CHARTS ──
-function renderCharts(labels, noches, dinero, ci, mon) {
-  if (chartN){chartN.destroy();chartN=null;} if (chartD){chartD.destroy();chartD=null;}
+function renderCharts(labels,noches,dinero,ci,mon){
+  if(chartN){chartN.destroy();chartN=null;} if(chartD){chartD.destroy();chartD=null;}
   const bgN=labels.map((_,i)=>i===ci?'#1E3A5F':'#BFDBFE');
   const bgD=labels.map((_,i)=>i===ci?'#B8860B':'#FDE68A');
-  const baseOpts = (isN) => ({
-    responsive:true, maintainAspectRatio:false,
-    plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>isN?ctx.parsed.y+' noches':fmt(ctx.parsed.y,mon)}} },
-    scales:{
-      x:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#A1A1AA',maxRotation:45}},
-      y:{grid:{color:'#F4F4F5'},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#A1A1AA'}}
-    }
-  });
-  const cN=document.getElementById('cN'), cD=document.getElementById('cD');
-  if (!cN||!cD) return;
-  chartN=new Chart(cN,{type:'bar',data:{labels,datasets:[{data:noches,backgroundColor:bgN,borderRadius:4,borderSkipped:false}]},options:baseOpts(true)});
-  chartD=new Chart(cD,{type:'bar',data:{labels,datasets:[{data:dinero,backgroundColor:bgD,borderRadius:4,borderSkipped:false}]},options:baseOpts(false)});
+  const opt=(isN)=>({responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>isN?ctx.parsed.y+' noches':fmt(ctx.parsed.y,mon)}}},
+    scales:{x:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#A1A1AA',maxRotation:45}},
+            y:{grid:{color:'#F4F4F5'},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#A1A1AA'}}}});
+  const cN=document.getElementById('cN'),cD=document.getElementById('cD');
+  if(!cN||!cD) return;
+  chartN=new Chart(cN,{type:'bar',data:{labels,datasets:[{data:noches,backgroundColor:bgN,borderRadius:4,borderSkipped:false}]},options:opt(true)});
+  chartD=new Chart(cD,{type:'bar',data:{labels,datasets:[{data:dinero,backgroundColor:bgD,borderRadius:4,borderSkipped:false}]},options:opt(false)});
 }
 
-// ── SUPABASE ──
-async function sf(path, method='GET', body=null) {
-  if (!CFG.surl||!CFG.skey) return null;
-  const o={method,headers:{'Content-Type':'application/json','apikey':CFG.skey,'Authorization':'Bearer '+CFG.skey,'Prefer':method==='POST'?'return=representation':''}};
-  if (body) o.body=JSON.stringify(body);
-  const r=await fetch(CFG.surl+'/rest/v1/'+path,o);
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
+function showLoad(){
+  const l=document.getElementById('screen-load');
+  l.style.display='flex';
+  l.innerHTML='<div class="spin"></div><div class="load-txt">Cargando reportes...</div>';
+  document.getElementById('screen-filters').style.display='none';
+  document.getElementById('screen-main').style.display='none';
 }
 
-async function saveReport() {
-  const prop=document.getElementById('sel-p').value, per=document.getElementById('sel-per').value;
-  if (!prop||!per) return;
-  const dr=rows.filter(r=>r.propietario===prop&&r.mesano===per);
-  const mon=dr.find(r=>r.moneda)?.moneda||'$';
-  const tI=dr.filter(r=>r.conceptoIngreso).reduce((s,r)=>s+r.ingresos+r.comisionBK,0);
-  const tE=dr.filter(r=>r.conceptoEgreso&&r.egresos<0).reduce((s,r)=>s+r.egresos,0);
-  const com=tI*CFG.com;
-  try {
-    const d=await sf('reportes','POST',{propietario:prop,periodo:per,periodo_label:ml(per),moneda:mon,total_ingresos:tI,total_egresos:tE,comision:com,total_pagar:tI+tE-com,estado:'draft',html_snapshot:document.getElementById('ra').innerHTML,created_at:new Date().toISOString()});
-    curId=d?.[0]?.id;
-    toast('Reporte guardado ✓','ok');
-    document.getElementById('btn-sent').style.display='block';
-  } catch(e){toast('Error: '+e.message,'err');}
-}
-
-async function markSent() {
-  if (!curId) return;
-  try { await sf(`reportes?id=eq.${curId}`,'PATCH',{estado:'enviado',sent_at:new Date().toISOString()}); toast('Marcado como enviado ✓','ok'); document.getElementById('btn-sent').style.display='none'; }
-  catch(e){toast('Error: '+e.message,'err');}
-}
-
-async function showHistory() {
-  document.getElementById('filters').style.display='none';
-  document.getElementById('main').style.display='none';
-  document.getElementById('history-screen').style.display='block';
-  try {
-    const data=await sf('reportes?order=created_at.desc&limit=100');
-    const g=document.getElementById('hist-grid');
-    if (!data?.length){g.innerHTML='<div class="empty">No hay reportes guardados aún.</div>';return;}
-    g.innerHTML=data.map(r=>`<div class="hcard" onclick="loadSaved('${r.id}')">
-      <div class="hc-p">${r.propietario}</div><div class="hc-per">${r.periodo_label||ml(r.periodo)}</div>
-      <div class="hc-amt">${fmt(r.total_pagar,r.moneda)}<span class="hc-b ${r.estado==='enviado'?'hc-sent':'hc-draft'}">${r.estado==='enviado'?'✓ Enviado':'Borrador'}</span></div>
-      <div class="hc-meta">Guardado el ${new Date(r.created_at).toLocaleDateString('es-AR')}</div>
-    </div>`).join('');
-  } catch(e){document.getElementById('hist-grid').innerHTML='<div class="empty">Error: '+e.message+'</div>';}
-}
-
-async function loadSaved(id) {
-  try {
-    const d=await sf(`reportes?id=eq.${id}`);
-    if (!d?.[0]) return;
-    backToReport();
-    document.getElementById('ra').innerHTML=d[0].html_snapshot;
-    curId=id;
-    document.getElementById('btn-sent').style.display=d[0].estado!=='enviado'?'block':'none';
-  } catch(e){toast('Error: '+e.message,'err');}
-}
-
-function backToReport() { document.getElementById('history-screen').style.display='none'; document.getElementById('filters').style.display='flex'; document.getElementById('main').style.display='block'; }
-function showLoading() { const l=document.getElementById('loading-screen'); l.style.display='flex'; l.innerHTML='<div class="big-spin"></div><div class="loading-txt">Cargando reportes...</div>'; document.getElementById('filters').style.display='none'; document.getElementById('main').style.display='none'; document.getElementById('history-screen').style.display='none'; }
-
-// ── ARRANQUE AUTOMÁTICO ──
-loadSheet();
+// ── ARRANQUE ──
+init();
 </script>
 </body>
 </html>
