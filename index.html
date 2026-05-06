@@ -329,7 +329,7 @@ function fmt(n, mo) {
   if (n==null) return '—';
   const neg=n<0, abs=Math.abs(n);
   const s = mo==='u$'
-    ? 'u$'+abs.toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2})
+    ? 'u$'+Math.round(abs).toLocaleString('es-AR')
     : '$'+Math.round(abs).toLocaleString('es-AR');
   return neg?'-'+s:s;
 }
