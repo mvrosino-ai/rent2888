@@ -456,8 +456,9 @@ function parseMainSheet(csv) {
     fechaIn:      ci('Fecha de ingreso'),
     fechaEg:      ci('Fecha de Egreso'),
     noches:       ci('Noches'),
-    ing_ars:      ci('Ingresos u$ a $'),   // col AJ — pesos (convertido)
-    ing_usd:      ci('Ingresos Total $'), // col AQ — ya convertido a u$
+    ing_ars:      ci('Ingresos u$ a $'),   // col AJ — u$ converted to pesos
+    ing_ars_orig: ci('TOTAL'),             // col Y  — original pesos income
+    ing_usd:      ci('Ingresos Total $'), // col AQ — already converted to u$
     egr_ars:      ci('Egresos'),          // col X — pesos
     egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
     eprDepto:     ci('$ por Depto'),      // col AB — egreso ya dividido por 1 depto (pesos)
@@ -510,8 +511,9 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
     const isUSD  = moneda === 'u$';
 
-    // Use the correct column depending on moneda
-    const ing = isUSD ? pn(c[COL.ing_usd]) : pn(c[COL.ing_ars]);
+    // For pesos: use col Y (TOTAL) which has original pesos income
+    // For USD: use col AQ (Ingresos Total $) which converts everything to u$
+    const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
@@ -710,7 +712,7 @@ function render(prop, per) {
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
-    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0); // incluye devoluciones negativas
+    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0&&r.conceptoIngreso!=='Booking'); // excluye comisión Booking
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
     const ing   = stays.reduce((s,r)=>s+r.ingresos,0); // neto: bruto - devoluciones
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
