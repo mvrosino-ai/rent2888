@@ -395,6 +395,7 @@ function parsePropSheet(csv) {
     // Mapa inverso: prop -> lista de {edificio, cantidad}
     if (!propToEdif[prop]) propToEdif[prop] = [];
     propToEdif[prop].push({ edificio, cantidad: estado === 'Activo' ? cantidad : 0 });
+    if (prop.toLowerCase().includes('scianc')) console.log('[PROPTOEDF]', JSON.stringify(prop), '->', edificio, cantidad, estado);
 
     // propMap: use first occurrence for moneda (a prop can appear in multiple buildings)
     if (!propMap[prop]) {
