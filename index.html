@@ -335,7 +335,20 @@ function fmt(n, mo) {
     : '$'+Math.round(abs).toLocaleString('es-AR');
   return neg?'-'+s:s;
 }
-const pn = s => { if(!s||s==='#N/A'||s===''||s==='FALSE') return 0; return parseFloat(String(s).replace(/[^\d.\-]/g,''))||0; };
+const pn = s => {
+  if(!s||s==='#N/A'||s===''||s==='FALSE') return 0;
+  let v=String(s).replace(/[^\d.,\-]/g,'');
+  if(!v) return 0;
+  const dots=v.split('.').length-1, commas=v.split(',').length-1;
+  if(dots>1){v=v.replace(/\./g,'').replace(',','.');}           // 1.532.626 -> 1532626
+  else if(dots===1&&commas===0){
+    const dec=v.split('.')[1];
+    if(dec&&dec.length===3) v=v.replace('.','');                // 253.500 -> 253500
+    // else keep as decimal: 1.5 stays 1.5
+  } else if(dots===1&&commas===1){v=v.replace('.','').replace(',','.');} // 1.234,56
+  else if(dots===0&&commas===1){v=v.replace(',','.');}
+  return parseFloat(v)||0;
+};
 const sp = (a,b) => { const [ma,ya]=a.split('/').map(Number),[mb,yb]=b.split('/').map(Number); return ya!==yb?ya-yb:ma-mb; };
 function toast(msg, t='') { const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+t; setTimeout(()=>el.className='toast',3200); }
 
@@ -445,36 +458,40 @@ function parseMainSheet(csv) {
 
   const ci = n => headers.findIndex(h => h.trim() === n.trim());
 
-  // Map column indices — hardcoded from real headers (console verified)
+  // Map column indices
   const COL = {
-    edificio:    20,  // "Edificio"
-    depto:        1,  // "Departamento"
-    concIngr:     3,  // "Concepto Ingresos"
-    concEgr:     21,  // "Concepto Egresos"
-    huesped:      4,  // "Huésped"
-    plataforma:   2,  // "Plataforma"
-    fechaIn:      5,  // "Fecha de ingreso"
-    fechaEg:      7,  // "Fecha de Egreso"
-    noches:       6,  // "Noches"
-    ing_total:   42,  // "Ingresos Total $" ← fuente de verdad (igual que PowerBI)
-    ing_base:     9,  // "Ingresos"
-    comisionBK:  10,  // "Comision BK"
-    egr_ars:     23,  // "Egresos" (pesos)
-    egr_usd:     33,  // "Egresos $ a u$"
-    eprDepto:    27,  // "$ por Depto"
-    eprDeptoU:   34,  // "$ por depto en u$"
-    ingAaU:      32,  // "Ingresos $ a u$"
-    ingUaP:      35,  // "Ingresos u$ a $"
-    egrUaP:      36,  // "Egresos u$ a $"
-    propietario: 43,  // "Propietario"
-    mesano:      41,  // "mes/ano"
-    mes:         39,  // "mes"
-    ano:         40,  // "ano"
-    moneda:      45,  // "Moneda del Reporte"
-    cantDeptos:  44,  // "Cantidad de departamentos"
+    edificio:     20,   // col U — fijo, evita conflicto con col AE que también se llama 'Edificio'
+    depto:        ci('Departamento'),
+    concIngr:     ci('Concepto Ingresos'),
+    concEgr:      ci('Concepto Egresos'),
+    huesped:      ci('Huésped'),
+    plataforma:   ci('Plataforma'),
+    fechaIn:      ci('Fecha de ingreso'),
+    fechaEg:      ci('Fecha de Egreso'),
+    noches:       ci('Noches'),
+    ing_ars:      ci('Ingresos u$ a $'),   // col AJ — u$ converted to pesos
+    ing_ars_orig: ci('TOTAL'),             // col Y  — original pesos income
+    ing_usd:      ci('Ingresos Total $'), // col AQ — already converted to u$
+    egr_ars:      ci('Egresos'),          // col X — pesos
+    egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
+    eprDepto:     ci('$ por Depto'),      // col AB — egreso ya dividido por 1 depto (pesos)
+    egrAaU:       ci('Egresos $ a u$'),   // col AH — egreso convertido a u$
+    eprDeptoU:    ci('$ por depto en u$'),// col AI — egreso por depto en u$
+    ingAaU:       ci('Ingresos $ a u$'),  // col AG — ingreso convertido a u$
+    ingUaP:       ci('Ingresos u$ a $'),  // col AJ — ingreso u$ a pesos
+    egrUaP:       ci('Egresos u$ a $'),   // col AK — egreso u$ a pesos
+    propietario:  ci('Propietario'),
+    mesano:       ci('mes/ano'),
+    mes:          ci('mes'),
+    ano:          ci('ano'),
+    moneda:       ci('Moneda del Reporte'),
+    moneda2:      ci('Moneda Reporte'),
+    moneda3:      ci('Moneda'),
+    edifShared:   ci('Edificio'),   // col AE — nombre edificio compartido
+    dptosShared:  ci('Dptos'),      // col AF — cantidad total de deptos
   };
 
-  const monCol = COL.moneda; // col 45 "Moneda del Reporte"
+  const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
 
   // Read AE(col 30)/AF(col 31): shared buildings map {name -> totalDeptos}
   // These values are in fixed rows of the sheet, NOT in the main header row.
@@ -507,9 +524,16 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
     const isUSD  = moneda === 'u$';
 
-    // Col 42 "Ingresos Total $" = fuente de verdad para ambas monedas
-    // Para USD ademas existe col 33 "Egresos $ a u$" para egresos convertidos
-    const ing = pn(c[COL.ing_total]);  // col 42 — mismo que usa PowerBI
+    // Moneda de la fila (col 11) puede ser u$ aunque el reporte del prop sea en pesos
+    const monedaFila = (c[11]||'').trim();
+    // Props en pesos: fila u$ -> usar col AJ (ingUaP), fila $ -> usar col Y (ing_ars_orig)
+    // Props en u$: usar col AQ (ing_usd)
+    let ing;
+    if(isUSD){
+      ing = pn(c[COL.ing_usd]);
+    } else {
+      ing = monedaFila==='u$' ? pn(c[COL.ingUaP]) : (pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
+    }
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
@@ -527,9 +551,9 @@ function parseMainSheet(csv) {
       noches:          pn(c[COL.noches]),
       ingresos:        ing,
       egresos:         egr,
-      egrPorDepto:     pn(c[COL.eprDepto]),
-      egrPorDeptoU:    pn(c[COL.eprDeptoU]),
-      egrAaU:          pn(c[COL.egr_usd]),
+      egrPorDepto:     COL.eprDepto>=0   ? pn(c[COL.eprDepto])   : null,
+      egrPorDeptoU:    COL.eprDeptoU>=0  ? pn(c[COL.eprDeptoU]) : null,
+      egrAaU:          COL.egrAaU>=0     ? pn(c[COL.egrAaU])    : null,
       conceptoEgreso:  (c[COL.concEgr]||'').trim(),
       mesano:          mano,
       mes:             pn(c[COL.mes]),
@@ -733,8 +757,8 @@ function render(prop, per) {
   const hN = allPers.map(p=>dataRows.filter(x=>x.propietario===prop&&x.mesano===p&&x.conceptoIngreso).reduce((s,x)=>s+(x.noches||0),0));
   const hD = allPers.map(p=>{
     const pr=dataRows.filter(x=>x.propietario===prop&&x.mesano===p);
-    const i=pr.filter(x=>x.conceptoIngreso&&x.ingresos>0).reduce((s,x)=>s+x.ingresos,0);
-    const e=pr.filter(x=>x.conceptoEgreso&&x.egresos!==0).reduce((s,x)=>s+x.egresos,0);
+    const i=pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos+(x.comisionBK||0),0);
+    const e=pr.filter(x=>x.conceptoEgreso&&x.egresos<0).reduce((s,x)=>s+x.egresos,0);
     return Math.max(0,i+e-i*CFG.com);
   });
   const hL=allPers.map(p=>{const[m,y]=p.split('/');return MESES[+m].slice(0,3)+"'"+String(y).slice(2);});
