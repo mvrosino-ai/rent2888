@@ -460,7 +460,12 @@ function parseMainSheet(csv) {
     ing_usd:      ci('Ingresos Total $'), // col AQ — ya convertido a u$
     egr_ars:      ci('Egresos'),          // col X — pesos
     egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
-    eprDepto:     ci('$ por Depto'),      // col AB — egreso ya dividido por 1 depto
+    eprDepto:     ci('$ por Depto'),      // col AB — egreso ya dividido por 1 depto (pesos)
+    egrAaU:       ci('Egresos $ a u$'),   // col AH — egreso convertido a u$
+    eprDeptoU:    ci('$ por depto en u$'),// col AI — egreso por depto en u$
+    ingAaU:       ci('Ingresos $ a u$'),  // col AG — ingreso convertido a u$
+    ingUaP:       ci('Ingresos u$ a $'),  // col AJ — ingreso u$ a pesos
+    egrUaP:       ci('Egresos u$ a $'),   // col AK — egreso u$ a pesos
     propietario:  ci('Propietario'),
     mesano:       ci('mes/ano'),
     mes:          ci('mes'),
@@ -524,7 +529,9 @@ function parseMainSheet(csv) {
       noches:          pn(c[COL.noches]),
       ingresos:        ing,
       egresos:         egr,
-      egrPorDepto:     COL.eprDepto>=0 ? pn(c[COL.eprDepto]) : null,
+      egrPorDepto:     COL.eprDepto>=0   ? pn(c[COL.eprDepto])   : null,
+      egrPorDeptoU:    COL.eprDeptoU>=0  ? pn(c[COL.eprDeptoU]) : null,
+      egrAaU:          COL.egrAaU>=0     ? pn(c[COL.egrAaU])    : null,
       conceptoEgreso:  (c[COL.concEgr]||'').trim(),
       mesano:          mano,
       mes:             pn(c[COL.mes]),
@@ -663,9 +670,11 @@ function render(prop, per) {
       if (r.egresos === 0 || !r.conceptoEgreso) continue;
       if (r.depto !== edif) continue; // col B = nombre del edificio
       const key = r.conceptoEgreso;
-      const porDepto = (r.egrPorDepto != null && r.egrPorDepto !== 0)
-        ? r.egrPorDepto
-        : r.egresos / (sbMap[edif] || 1);
+      // Use USD column if prop bills in u$, otherwise pesos column
+      const isUSD = mon === 'u$';
+      const porDepto = isUSD
+        ? ((r.egrPorDeptoU != null && r.egrPorDeptoU !== 0) ? r.egrPorDeptoU : (r.egrAaU != null && r.egrAaU !== 0 ? r.egrAaU / (sbMap[edif] || 1) : r.egresos / (sbMap[edif] || 1)))
+        : ((r.egrPorDepto  != null && r.egrPorDepto  !== 0) ? r.egrPorDepto  : r.egresos / (sbMap[edif] || 1));
       byConcepto[key] = (byConcepto[key] || 0) + porDepto;
     }
 
