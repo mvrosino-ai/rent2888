@@ -608,32 +608,51 @@ function render(prop, per) {
   // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
   const buildingExpenses = [];
 
-  // Detectar edificios compartidos del prop combinando dos fuentes:
-  // 1. propToEdif (hoja propietarios) - puede estar incompleto
-  // 2. edificioMap: si algún depto del prop aparece en los members de ese edificio
+  // Detectar edificios compartidos del prop:
+  // Para cada edificio compartido, contar cuántos deptos únicos del prop
+  // tienen egresos en el sheet $$$ cuyo col U (edificio) = ese edificio compartido,
+  // O cuyo nombre de depto aparece como depto registrado en ese edificio en la hoja prop.
+  // Como fallback final: si el prop tiene filas con col U = nombre del edificio compartido.
   const myEdifMap = {}; // edif -> cantidad
 
-  // Fuente 1: propToEdif
+  // Fuente 1: propToEdif (hoja propietarios, puede estar incompleto)
   for (const { edificio: e, cantidad: q } of (propToEdif[prop] || [])) {
     if (sharedBuildings.has(e) && q > 0) myEdifMap[e] = (myEdifMap[e] || 0) + q;
   }
 
-  // Fuente 2: edificioMap - buscar el prop en cada edificio compartido
+  // Fuente 2: edificioMap directo (buscar prop exacto en cada edificio compartido)
   for (const edif of sharedBuildings) {
-    if (myEdifMap[edif]) continue; // ya detectado
+    if (myEdifMap[edif]) continue;
     const entry = (edificioMap[edif] || []).find(m => m.activo && m.prop === prop);
     if (entry) myEdifMap[edif] = entry.cantidad || 1;
   }
 
-  // Fuente 3: deptos del prop en el sheet - si alguno está registrado en edificioMap[edif]
-  const propDeptos = new Set(directRows.map(r => r.depto).filter(Boolean));
+  // Fuente 3: mirar col U (edificio) de las filas del prop en $$$
+  // Si alguna fila tiene edificio = nombre de un edificio compartido, el prop pertenece a él
   for (const edif of sharedBuildings) {
-    if (myEdifMap[edif]) continue; // ya detectado
-    const members = edificioMap[edif] || [];
-    // Contar cuántos deptos del prop están registrados en este edificio
-    const matchingDeptos = members.filter(m => propDeptos.has(m.prop) || 
-      directRows.some(r => r.depto === m.prop && r.propietario === prop));
-    if (matchingDeptos.length > 0) myEdifMap[edif] = matchingDeptos.length;
+    if (myEdifMap[edif]) continue;
+    const deptoSet = new Set(
+      directRows.filter(r => r.edificio === edif).map(r => r.depto)
+    );
+    if (deptoSet.size > 0) myEdifMap[edif] = deptoSet.size;
+  }
+
+  // Fuente 4: para edificios donde col U no dice el nombre del edificio sino el depto
+  // (ej: IT335 tiene col U = "IT335" no "Italiano"), buscar en dataRows si hay filas
+  // de egreso con depto=edif que tengan egrPorDepto, y ver si el prop tiene algún ingreso
+  // en ese mismo mes en ese edificio vía col U del ingreso
+  for (const edif of sharedBuildings) {
+    if (myEdifMap[edif]) continue;
+    // Ver si algún depto del prop tiene col U que matchee algún miembro de ese edificio
+    // Los miembros del edificio están en edificioMap[edif] - pero puede estar vacío/incompleto
+    // Alternativa: ver si el prop tiene ingresos en deptos cuyos nombres empiezan igual
+    // que los deptos conocidos de ese edificio en edificioMap
+    const knownDeptos = (edificioMap[edif] || []).map(m => m.prop); // nombres de deptos del edificio
+    const propDeps = directRows.map(r => r.depto).filter(Boolean);
+    const matches = propDeps.filter(d => knownDeptos.includes(d));
+    if (matches.length > 0) {
+      myEdifMap[edif] = new Set(matches).size;
+    }
   }
 
   for (const [edif, cantidad] of Object.entries(myEdifMap)) {
