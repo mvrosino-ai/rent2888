@@ -457,7 +457,8 @@ function parseMainSheet(csv) {
     fechaEg:      ci('Fecha de Egreso'),
     noches:       ci('Noches'),
     ing_ars:      ci('Ingresos u$ a $'),   // col AJ — u$ converted to pesos
-    ing_ars_orig: ci('TOTAL'),             // col Y  — original pesos income
+    ing_ars_orig: ci('TOTAL'),             // col Y  — original pesos income (fallback)
+    ing_ars_brut: ci('Ingreso Total $'),   // col ?? — ingreso bruto en pesos (lo que usa PowerBI)
     ing_usd:      ci('Ingresos Total $'), // col AQ — already converted to u$
     egr_ars:      ci('Egresos'),          // col X — pesos
     egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
@@ -511,9 +512,13 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
     const isUSD  = moneda === 'u$';
 
-    // For pesos: use col Y (TOTAL) which has original pesos income
-    // For USD: use col AQ (Ingresos Total $) which converts everything to u$
-    const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
+    // Para pesos: "Ingreso Total $" (bruto en ARS, mismo que usa PowerBI)
+    //   fallback a TOTAL (col Y), luego a Ingresos u$ a $
+    // Para USD: "Ingresos Total $" (col AQ, todo convertido a u$)
+    const ingArsBrut = COL.ing_ars_brut >= 0 ? pn(c[COL.ing_ars_brut]) : 0;
+    const ing = isUSD
+      ? pn(c[COL.ing_usd])
+      : (ingArsBrut || pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
@@ -737,8 +742,8 @@ function render(prop, per) {
   const hN = allPers.map(p=>dataRows.filter(x=>x.propietario===prop&&x.mesano===p&&x.conceptoIngreso).reduce((s,x)=>s+(x.noches||0),0));
   const hD = allPers.map(p=>{
     const pr=dataRows.filter(x=>x.propietario===prop&&x.mesano===p);
-    const i=pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos+(x.comisionBK||0),0);
-    const e=pr.filter(x=>x.conceptoEgreso&&x.egresos<0).reduce((s,x)=>s+x.egresos,0);
+    const i=pr.filter(x=>x.conceptoIngreso&&x.ingresos>0).reduce((s,x)=>s+x.ingresos,0);
+    const e=pr.filter(x=>x.conceptoEgreso&&x.egresos!==0).reduce((s,x)=>s+x.egresos,0);
     return Math.max(0,i+e-i*CFG.com);
   });
   const hL=allPers.map(p=>{const[m,y]=p.split('/');return MESES[+m].slice(0,3)+"'"+String(y).slice(2);});
