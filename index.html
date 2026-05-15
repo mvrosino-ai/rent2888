@@ -610,25 +610,24 @@ function render(prop, per) {
     if (cantidad === 0) continue; // este prop no tiene deptos en este edificio
 
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
-    // Agrupar por concepto para evitar duplicados (una sola fila por concepto)
+    // Sumar egrPorDepto de todas las filas del mes, agrupadas por concepto
     const byConcepto = {};
     for (const r of dataRows) {
       if (r.mesano !== per) continue;
       if (r.egresos >= 0 || !r.conceptoEgreso) continue;
       if (r.depto !== edif) continue; // col B = nombre del edificio
       const key = r.conceptoEgreso;
-      // Tomar la primera fila de cada concepto (todas tienen el mismo egrPorDepto)
-      if (!byConcepto[key]) byConcepto[key] = r;
+      const porDepto = (r.egrPorDepto != null && r.egrPorDepto !== 0)
+        ? r.egrPorDepto
+        : r.egresos / (sbMap[edif] || 1);
+      byConcepto[key] = (byConcepto[key] || 0) + porDepto;
     }
 
-    for (const row of Object.values(byConcepto)) {
-      const porDepto = (row.egrPorDepto != null && row.egrPorDepto !== 0)
-        ? row.egrPorDepto
-        : row.egresos / (sbMap[edif] || 1);
+    for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
       buildingExpenses.push({
-        concepto: row.conceptoEgreso,
+        concepto: concepto,
         edificio: edif,
-        egresos:  porDepto * cantidad,
+        egresos:  totalPorDepto * cantidad,
         myDeptos: cantidad,
       });
     }
