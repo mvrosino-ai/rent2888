@@ -572,37 +572,34 @@ function render(prop, per) {
 
   const mon = propMap[prop]?.moneda || activeMoneda;
 
+  // Edificios compartidos = los que tienen más de 1 propietario activo (Italiano, Monta, Fleni...)
+  // Excluye deptos individuales que también están en edificioMap como claves (1A, IT335, etc.)
+  const sharedBuildings = new Set(
+    Object.entries(edificioMap)
+      .filter(([, members]) => members.filter(m=>m.activo).length > 1)
+      .map(([edif]) => edif)
+  );
+
   // Direct rows: prop has their own rows in $$$
   const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
-
-  // DEBUG: mostrar edificioMap y si el prop está en cada edificio
-  console.log('[DEBUG] prop buscado:', JSON.stringify(prop));
-  console.log('[DEBUG] edificioMap keys:', Object.keys(edificioMap));
-  for (const [edif, members] of Object.entries(edificioMap)) {
-    console.log(`[DEBUG] edificio="${edif}" members:`, members.map(m=>({prop:JSON.stringify(m.prop), cantidad:m.cantidad, activo:m.activo})));
-    const found = members.find(m => m.prop === prop);
-    console.log(`[DEBUG] -> myEntry para "${prop}":`, found);
-  }
 
   // Building expenses: filas donde col B (depto) = nombre del edificio compartido.
   // El valor ya viene dividido por 1 depto en col AB ($ por Depto).
   // Se multiplica x cantidad de deptos que tiene este prop en ese edificio.
   const buildingExpenses = [];
   for (const [edif, members] of Object.entries(edificioMap)) {
+    if (!sharedBuildings.has(edif)) continue; // solo edificios compartidos
     const myEntry = members.find(m => m.prop === prop && m.activo);
     if (!myEntry) continue;
 
-    // Detectar filas de egreso de edificio: col B (depto) coincide con el nombre del edificio
+    // Detectar la fila de egreso del edificio: col B = nombre del edificio, con egrPorDepto
     const edifRows = dataRows.filter(r =>
       r.mesano === per &&
       r.egresos < 0 &&
       r.conceptoEgreso &&
-      r.depto === edif   // col B tiene el nombre del edificio en estas filas
+      r.depto === edif &&
+      r.egrPorDepto != null && r.egrPorDepto !== 0  // solo filas con col AB = egreso por depto
     );
-    console.log(`[BUILD] edificio="${edif}" myEntry.cantidad=${myEntry.cantidad} edifRows=${edifRows.length}`, edifRows.map(r=>({depto:r.depto,concepto:r.conceptoEgreso,egresos:r.egresos,egrPorDepto:r.egrPorDepto,mesano:r.mesano})));
-    // También loguear todas las filas del período con ese depto para ver si están siendo descartadas
-    const allForEdif = dataRows.filter(r => r.mesano === per && r.depto === edif);
-    console.log(`[BUILD] todas las filas con depto="${edif}" en ${per}:`, allForEdif.map(r=>({concepto:r.conceptoEgreso,egresos:r.egresos,ingresos:r.ingresos,egrPorDepto:r.egrPorDepto})));
 
     for (const row of edifRows) {
       // egrPorDepto = valor ya dividido por 1 depto (col AB)
@@ -621,14 +618,14 @@ function render(prop, per) {
 
   // Aggregate stays and direct egresos by depto
   // Excluir edificios compartidos de la lista de deptos (van en buildingExpenses)
-  const deptos = [...new Set(directRows.map(r=>r.depto).filter(d=>d&&!edificioNames.has(d)))].sort();
+  const deptos = [...new Set(directRows.map(r=>r.depto).filter(d=>d&&!sharedBuildings.has(d)))].sort();
   let tIng=0, tEgr=0, tNoch=0;
   const dd={};
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
     const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos>0);
-    const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos<0&&!edificioNames.has(r.depto));
+    const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos<0&&!sharedBuildings.has(r.depto));
     const ing   = stays.reduce((s,r)=>s+r.ingresos,0);
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.reduce((s,r)=>s+(r.noches||0),0);
@@ -638,7 +635,7 @@ function render(prop, per) {
 
   // Excluir de directEgrs las filas que ya se procesaron como gasto de edificio compartido
   // (son las filas donde col B = nombre de un edificio en edificioMap)
-  const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0&&!edificioNames.has(r.depto));
+  const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0&&!sharedBuildings.has(r.depto));
   const directEgrTotal = directEgrs.reduce((s,r)=>s+r.egresos,0);
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
