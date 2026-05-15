@@ -437,6 +437,7 @@ function parseMainSheet(csv) {
     ing_usd:      ci('Ingresos Total $'), // col AQ — ya convertido a u$
     egr_ars:      ci('Egresos'),          // col X — pesos
     egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
+    eprDepto:     ci('$ por Depto'),      // col AB — egreso ya dividido por 1 depto
     propietario:  ci('Propietario'),
     mesano:       ci('mes/ano'),
     mes:          ci('mes'),
@@ -483,6 +484,7 @@ function parseMainSheet(csv) {
       noches:          pn(c[COL.noches]),
       ingresos:        ing,
       egresos:         egr,
+      egrPorDepto:     COL.eprDepto>=0 ? pn(c[COL.eprDepto]) : null,
       conceptoEgreso:  (c[COL.concEgr]||'').trim(),
       mesano:          mano,
       mes:             pn(c[COL.mes]),
@@ -573,29 +575,33 @@ function render(prop, per) {
   // Direct rows: prop has their own rows in $$$
   const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
 
-  // Building expenses: detect by Edificio column, distribute proportionally
+  // Building expenses: filas donde col B (depto) = nombre del edificio compartido.
+  // El valor ya viene dividido por 1 depto en col AB ($ por Depto).
+  // Se multiplica x cantidad de deptos que tiene este prop en ese edificio.
   const buildingExpenses = [];
   for (const [edif, members] of Object.entries(edificioMap)) {
     const myEntry = members.find(m => m.prop === prop && m.activo);
     if (!myEntry) continue;
-    const totalDeptos = members.filter(m=>m.activo).reduce((s,m)=>s+m.cantidad, 0);
-    const myShare = totalDeptos > 0 ? myEntry.cantidad / totalDeptos : 0;
-    // Find rows where Edificio = this building, in this period, with an egreso
-    // These rows may have a wrong/different Propietario — detect purely by Edificio
+
+    // Detectar filas de egreso de edificio: col B (depto) coincide con el nombre del edificio
     const edifRows = dataRows.filter(r =>
       r.mesano === per &&
       r.egresos < 0 &&
       r.conceptoEgreso &&
-      r.edificio === edif &&
-      r.propietario !== prop
+      r.depto === edif   // col B tiene el nombre del edificio en estas filas
     );
+
     for (const row of edifRows) {
+      // egrPorDepto = valor ya dividido por 1 depto (col AB)
+      // Si no existe esa columna, fallback al egreso completo (depto no compartido)
+      const porDepto = (row.egrPorDepto != null && row.egrPorDepto !== 0)
+        ? row.egrPorDepto
+        : row.egresos;
       buildingExpenses.push({
-        concepto: row.conceptoEgreso,
-        edificio: edif,
-        egresos: row.egresos * myShare,
-        myDeptos: myEntry.cantidad,
-        totalDeptos
+        concepto:  row.conceptoEgreso,
+        edificio:  edif,
+        egresos:   porDepto * myEntry.cantidad,  // x deptos del prop en este edificio
+        myDeptos:  myEntry.cantidad,
       });
     }
   }
