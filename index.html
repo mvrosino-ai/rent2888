@@ -280,7 +280,8 @@ const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agos
 let dataRows = [];       // filas de $$$
 let propMap = {};        // propietario -> { moneda, activo }
 let edificioMap = {};    // edificio -> [ { prop, cantidad, moneda } ]
-let propToEdif  = {};    // prop -> [ { edificio, cantidad } ] (inverso de edificioMap)
+let propToEdif  = {};    // prop -> [ { edificio, depto, cantidad } ] (inverso de edificioMap)
+let deptoToEdif = {};    // depto -> edificio compartido (ej: IT335 -> Italiano)
 let edificioNames = new Set(); // nombres de edificios (para detectar egresos de edificio)
 let activeMoneda = 'u$';
 let chartN = null, chartD = null;
@@ -364,41 +365,43 @@ function parsePropSheet(csv) {
 
   // Find header row
   let hi = -1;
-  for (let i=0;i<Math.min(5,lines.length);i++) {
+  for (let i=0;i<Math.min(10,lines.length);i++) {
     const c = splitCSV(lines[i]);
-    // header has "Prop" or "Propietarios" in col B
-    if (c[1] && (c[1].toLowerCase().includes('prop') || c[1].toLowerCase().includes('propietario'))) {
+    // header row has "Edificio" in col F (index 5) and "Prop" in col G (index 6)
+    if (c[5] && c[5].toLowerCase().includes('edif') && c[6] && c[6].toLowerCase().includes('prop')) {
       hi = i; break;
     }
   }
-  if (hi < 0) hi = 0; // fallback: first row is header
-  // Log first data row to see all columns
-  const firstDataRow = splitCSV(lines[hi+1]||'');
-  console.log('[PROP SHEET COLS]', firstDataRow.map((v,i)=>`${i}:${v}`).filter(s=>s.split(':')[1]));
+  if (hi < 0) hi = 0; // fallback
 
   propMap = {};
   edificioMap = {};
   propToEdif = {};
+  deptoToEdif = {};
   edificioNames = new Set();
 
+  // Real table is in cols F(5),G(6),H(7),I(8),J(9)
+  // Structure: edificio(5), prop(6), cantidad(7), moneda(8), estado(9)
   for (let i=hi+1;i<lines.length;i++) {
     const c = splitCSV(lines[i]);
-    const edificio = (c[0]||'').trim();
-    const prop     = (c[1]||'').trim();
-    const cantidad = pn(c[2]);
-    const moneda   = (c[3]||'u$').trim();
-    const estado   = (c[4]||'Activo').trim();
+    const edificio = (c[5]||'').trim();
+    const prop     = (c[6]||'').trim();
+    const cantidad = pn(c[7]);
+    const moneda   = (c[8]||'$').trim();
+    const estado   = (c[9]||'Activo').trim();
 
     if (!prop || prop === '#N/A') continue;
+    if (!edificio || edificio.toLowerCase().includes('edifici')) continue;
 
     edificioNames.add(edificio);
 
     if (!edificioMap[edificio]) edificioMap[edificio] = [];
-    edificioMap[edificio].push({ prop, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
+    edificioMap[edificio].push({ prop, depto, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
     // Mapa inverso: prop -> lista de {edificio, cantidad}
     if (!propToEdif[prop]) propToEdif[prop] = [];
-    propToEdif[prop].push({ edificio, cantidad: estado === 'Activo' ? cantidad : 0 });
-    if (edificio === 'Italiano') console.log('[ITALIANO]', JSON.stringify(prop), 'cantidad:', cantidad, 'estado:', estado);
+    propToEdif[prop].push({ edificio, depto, cantidad: estado === 'Activo' ? cantidad : 0 });
+    // depto->edificio map for shared buildings
+    if (depto && edificio) deptoToEdif[depto] = edificio;
 
     // propMap: use first occurrence for moneda (a prop can appear in multiple buildings)
     if (!propMap[prop]) {
@@ -629,31 +632,15 @@ function render(prop, per) {
     if (entry) myEdifMap[edif] = entry.cantidad || 1;
   }
 
-  // Fuente 3: mirar col U (edificio) de las filas del prop en $$$
-  // Si alguna fila tiene edificio = nombre de un edificio compartido, el prop pertenece a él
-  for (const edif of sharedBuildings) {
-    if (myEdifMap[edif]) continue;
-    const deptoSet = new Set(
-      directRows.filter(r => r.edificio === edif).map(r => r.depto)
-    );
-    if (deptoSet.size > 0) myEdifMap[edif] = deptoSet.size;
-  }
-
-  // Fuente 4: para edificios donde col U no dice el nombre del edificio sino el depto
-  // (ej: IT335 tiene col U = "IT335" no "Italiano"), buscar en dataRows si hay filas
-  // de egreso con depto=edif que tengan egrPorDepto, y ver si el prop tiene algún ingreso
-  // en ese mismo mes en ese edificio vía col U del ingreso
-  for (const edif of sharedBuildings) {
-    if (myEdifMap[edif]) continue;
-    // Ver si algún depto del prop tiene col U que matchee algún miembro de ese edificio
-    // Los miembros del edificio están en edificioMap[edif] - pero puede estar vacío/incompleto
-    // Alternativa: ver si el prop tiene ingresos en deptos cuyos nombres empiezan igual
-    // que los deptos conocidos de ese edificio en edificioMap
-    const knownDeptos = (edificioMap[edif] || []).map(m => m.prop); // nombres de deptos del edificio
-    const propDeps = directRows.map(r => r.depto).filter(Boolean);
-    const matches = propDeps.filter(d => knownDeptos.includes(d));
-    if (matches.length > 0) {
-      myEdifMap[edif] = new Set(matches).size;
+  // Fuente 3: usar deptoToEdif — mapa directo depto→edificio construido desde hoja propietarios
+  // Si el prop tiene filas con depto que mapea a un edificio compartido, lo detecta
+  for (const r of directRows) {
+    if (!r.depto) continue;
+    const edif = deptoToEdif[r.depto];
+    if (edif && sharedBuildings.has(edif) && !myEdifMap[edif]) {
+      // Contar deptos únicos del prop en este edificio
+      const deptos = new Set(directRows.filter(dr => deptoToEdif[dr.depto] === edif).map(dr => dr.depto));
+      myEdifMap[edif] = deptos.size;
     }
   }
 
