@@ -608,10 +608,35 @@ function render(prop, per) {
   // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
   const buildingExpenses = [];
 
-  // propToEdif: lista de edificios compartidos donde este prop tiene deptos activos
-  const myEdifEntries = (propToEdif[prop] || []).filter(e => sharedBuildings.has(e.edificio) && e.cantidad > 0);
+  // Detectar edificios compartidos del prop combinando dos fuentes:
+  // 1. propToEdif (hoja propietarios) - puede estar incompleto
+  // 2. edificioMap: si algún depto del prop aparece en los members de ese edificio
+  const myEdifMap = {}; // edif -> cantidad
 
-  for (const { edificio: edif, cantidad } of myEdifEntries) {
+  // Fuente 1: propToEdif
+  for (const { edificio: e, cantidad: q } of (propToEdif[prop] || [])) {
+    if (sharedBuildings.has(e) && q > 0) myEdifMap[e] = (myEdifMap[e] || 0) + q;
+  }
+
+  // Fuente 2: edificioMap - buscar el prop en cada edificio compartido
+  for (const edif of sharedBuildings) {
+    if (myEdifMap[edif]) continue; // ya detectado
+    const entry = (edificioMap[edif] || []).find(m => m.activo && m.prop === prop);
+    if (entry) myEdifMap[edif] = entry.cantidad || 1;
+  }
+
+  // Fuente 3: deptos del prop en el sheet - si alguno está registrado en edificioMap[edif]
+  const propDeptos = new Set(directRows.map(r => r.depto).filter(Boolean));
+  for (const edif of sharedBuildings) {
+    if (myEdifMap[edif]) continue; // ya detectado
+    const members = edificioMap[edif] || [];
+    // Contar cuántos deptos del prop están registrados en este edificio
+    const matchingDeptos = members.filter(m => propDeptos.has(m.prop) || 
+      directRows.some(r => r.depto === m.prop && r.propietario === prop));
+    if (matchingDeptos.length > 0) myEdifMap[edif] = matchingDeptos.length;
+  }
+
+  for (const [edif, cantidad] of Object.entries(myEdifMap)) {
 
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
     // Sumar egrPorDepto de todas las filas del mes, agrupadas por concepto
