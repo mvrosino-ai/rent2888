@@ -451,17 +451,17 @@ function parseMainSheet(csv) {
 
   const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
 
-  // Read AE/AF: shared buildings map {name -> totalDeptos}
-  // These are in rows 3-10 of the sheet (right after headers)
+  // Read AE(col 30)/AF(col 31): shared buildings map {name -> totalDeptos}
+  // These values are in fixed rows of the sheet, NOT in the main header row.
+  // We scan all rows looking for a row where col 30 has a known building name pattern
+  // and col 31 has a number — these are the AE/AF reference rows (rows 3-10 in Excel).
   window.sharedBuildingMap = {};
-  if (COL.edifShared >= 0 && COL.dptosShared >= 0) {
-    for (let i=hi+1; i<Math.min(hi+12, lines.length); i++) {
-      const c = splitCSV(lines[i]);
-      const edif = (c[COL.edifShared]||'').trim();
-      const dptos = parseInt(c[COL.dptosShared]);
-      if (edif && !isNaN(dptos) && dptos > 0) {
-        window.sharedBuildingMap[edif] = dptos;
-      }
+  for (let i=0; i<lines.length; i++) {
+    const c = splitCSV(lines[i]);
+    const edif = (c[30]||'').trim();
+    const dptos = parseInt(c[31]);
+    if (edif && edif !== 'Edificio' && !isNaN(dptos) && dptos > 0) {
+      window.sharedBuildingMap[edif] = dptos;
     }
   }
   console.log('[sharedBuildingMap]', window.sharedBuildingMap);
