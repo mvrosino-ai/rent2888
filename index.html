@@ -424,7 +424,7 @@ function parseMainSheet(csv) {
 
   // Map column indices
   const COL = {
-    edificio:     ci('Edificio'),
+    edificio:     20,   // col U — fijo, evita conflicto con col AE que también se llama 'Edificio'
     depto:        ci('Departamento'),
     concIngr:     ci('Concepto Ingresos'),
     concEgr:      ci('Concepto Egresos'),
@@ -601,26 +601,18 @@ function render(prop, per) {
   // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
   const buildingExpenses = [];
 
-  // DEBUG: mostrar edificios únicos en directRows
-  const edifEnDirectRows = [...new Set(directRows.map(r=>r.edificio).filter(Boolean))];
-  console.log('[DIRECT EDIFICIOS]', edifEnDirectRows);
-
   for (const edif of sharedBuildings) {
     // Deptos del prop en este edificio (col U = edif en sus filas directas)
     const myDeptos = new Set(
       directRows.filter(r => r.edificio === edif).map(r => r.depto)
     );
     const cantidad = myDeptos.size;
-    console.log(`[EDIF CHECK] "${edif}" -> cantidad=${cantidad}`, [...myDeptos]);
-    if (cantidad === 0) continue; // este prop no tiene deptos en este edificio
+    if (cantidad === 0) continue;
 
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
     // Sumar egrPorDepto de todas las filas del mes, agrupadas por concepto
     const byConcepto = {};
     // Debug: mostrar qué filas hay con depto=edif en este período
-    const debugRows = dataRows.filter(r => r.mesano===per && r.depto===edif);
-    if (debugRows.length === 0) console.log(`[EDIF] "${edif}" - 0 filas con depto="${edif}" en ${per}. prop tiene ${cantidad} deptos via edificio col.`);
-    else console.log(`[EDIF] "${edif}" - ${debugRows.length} filas`, debugRows.slice(0,3).map(r=>({depto:r.depto,edificio:r.edificio,concepto:r.conceptoEgreso,egr:r.egresos,egrPD:r.egrPorDepto})));
     for (const r of dataRows) {
       if (r.mesano !== per) continue;
       if (r.egresos >= 0 || !r.conceptoEgreso) continue;
