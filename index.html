@@ -445,9 +445,26 @@ function parseMainSheet(csv) {
     moneda:       ci('Moneda del Reporte'),
     moneda2:      ci('Moneda Reporte'),
     moneda3:      ci('Moneda'),
+    edifShared:   ci('Edificio'),   // col AE — nombre edificio compartido
+    dptosShared:  ci('Dptos'),      // col AF — cantidad total de deptos
   };
 
   const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
+
+  // Read AE/AF: shared buildings map {name -> totalDeptos}
+  // These are in rows 3-10 of the sheet (right after headers)
+  window.sharedBuildingMap = {};
+  if (COL.edifShared >= 0 && COL.dptosShared >= 0) {
+    for (let i=hi+1; i<Math.min(hi+12, lines.length); i++) {
+      const c = splitCSV(lines[i]);
+      const edif = (c[COL.edifShared]||'').trim();
+      const dptos = parseInt(c[COL.dptosShared]);
+      if (edif && !isNaN(dptos) && dptos > 0) {
+        window.sharedBuildingMap[edif] = dptos;
+      }
+    }
+  }
+  console.log('[sharedBuildingMap]', window.sharedBuildingMap);
 
   dataRows = [];
 
@@ -575,84 +592,39 @@ function render(prop, per) {
   // Direct rows: prop has their own rows in $$$
   const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
 
-  // Edificios compartidos: filas del sheet $$$ donde col B (depto) = col U (edificio)
-  // y ese nombre aparece en edificioMap con más de 1 propietario activo.
-  // Se detectan porque la fila de egreso tiene depto === edificio (ej: depto="Italiano", edificio="Italiano")
-  // y NO pertenece al propietario seleccionado (son gastos del edificio, no del depto individual).
-  
-  // Identificar qué edificios compartidos corresponden a este prop mirando col U de sus propias filas
-  // Un prop pertenece a un edificio compartido si tiene filas donde edificio está en edificioMap con >1 miembro
-  const propEdificios = new Set(directRows.map(r => r.edificio).filter(Boolean));
-  
-  // sharedBuildings: edificios con >1 propietario activo en edificioMap
-  const sharedBuildings = new Set(
-    Object.entries(edificioMap)
-      .filter(([, members]) => members.filter(m=>m.activo).length > 1)
-      .map(([edif]) => edif)
-  );
+  // sharedBuildingMap: {Italiano:7, Monta:11, ...} leído de cols AE/AF del sheet
+  const sbMap = window.sharedBuildingMap || {};
+  const sharedBuildings = new Set(Object.keys(sbMap));
 
-  // Building expenses: buscar filas donde col B = col U = nombre de edificio compartido
-  // Estas filas tienen el egreso ya dividido por depto en col AB (egrPorDepto)
-  // La cantidad de deptos del prop viene de edificioMap
+  // Para cada edificio compartido, detectar si este prop tiene deptos en él
+  // mirando col U (edificio) de sus propias filas en $$$
+  // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
   const buildingExpenses = [];
-  
-  // Para cada edificio compartido donde este prop tiene deptos:
-  // Detectamos su presencia mirando col U (edificio) de sus propias filas en $$$
-  const propEdifShared = [...propEdificios].filter(e => sharedBuildings.has(e));
-  
-  for (const edif of propEdifShared) {
-    const members = edificioMap[edif] || [];
-    const myEntry = members.find(m => m.prop === prop && m.activo);
-    const cantidad = myEntry ? myEntry.cantidad : 1;
 
-    // Filas de egreso del edificio: depto === edificio, tienen egrPorDepto, cualquier propietario
-    const edifRows = dataRows.filter(r =>
-      r.mesano === per &&
-      r.egresos < 0 &&
-      r.conceptoEgreso &&
-      r.depto === edif &&
-      r.edificio === edif  // col B = col U = nombre del edificio
+  for (const edif of sharedBuildings) {
+    // Deptos del prop en este edificio (col U = edif en sus filas directas)
+    const myDeptos = new Set(
+      directRows.filter(r => r.edificio === edif).map(r => r.depto)
     );
+    const cantidad = myDeptos.size;
+    if (cantidad === 0) continue; // este prop no tiene deptos en este edificio
 
-    for (const row of edifRows) {
-      const porDepto = (row.egrPorDepto != null && row.egrPorDepto !== 0)
-        ? row.egrPorDepto
-        : row.egresos;
-      buildingExpenses.push({
-        concepto: row.conceptoEgreso,
-        edificio: edif,
-        egresos:  porDepto * cantidad,
-        myDeptos: cantidad,
-      });
+    // Filas de egreso del edificio: col B (depto) = nombre del edificio
+    // Agrupar por concepto para evitar duplicados (una sola fila por concepto)
+    const byConcepto = {};
+    for (const r of dataRows) {
+      if (r.mesano !== per) continue;
+      if (r.egresos >= 0 || !r.conceptoEgreso) continue;
+      if (r.depto !== edif) continue; // col B = nombre del edificio
+      const key = r.conceptoEgreso;
+      // Tomar la primera fila de cada concepto (todas tienen el mismo egrPorDepto)
+      if (!byConcepto[key]) byConcepto[key] = r;
     }
-  }
-  
-  // También buscar edificios compartidos donde el prop tiene deptos pero sus filas
-  // usan col U = nombre del edificio compartido (ej: IT335 tiene edificio="Italiano")
-  const propEdifFromU = new Set(
-    directRows
-      .map(r => r.edificio)
-      .filter(e => e && sharedBuildings.has(e) && !propEdifShared.includes(e))
-  );
-  
-  for (const edif of propEdifFromU) {
-    const members = edificioMap[edif] || [];
-    // Contar deptos del prop en este edificio = cantidad de filas únicas de depto del prop con este edificio
-    const myDeptos = new Set(directRows.filter(r => r.edificio === edif).map(r => r.depto)).size;
-    const cantidad = myDeptos || 1;
 
-    const edifRows = dataRows.filter(r =>
-      r.mesano === per &&
-      r.egresos < 0 &&
-      r.conceptoEgreso &&
-      r.depto === edif &&
-      r.edificio === edif
-    );
-
-    for (const row of edifRows) {
+    for (const row of Object.values(byConcepto)) {
       const porDepto = (row.egrPorDepto != null && row.egrPorDepto !== 0)
         ? row.egrPorDepto
-        : row.egresos;
+        : row.egresos / (sbMap[edif] || 1);
       buildingExpenses.push({
         concepto: row.conceptoEgreso,
         edificio: edif,
