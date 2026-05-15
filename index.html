@@ -694,11 +694,13 @@ function render(prop, per) {
       buildingExpenses.push({
         concepto: concepto,
         edificio: edif,
-        egresos:  totalPorDepto * cantidad,
+        egresos:  Math.round(totalPorDepto * cantidad),
         myDeptos: cantidad,
       });
     }
   }
+
+
 
   // Aggregate stays and direct egresos by depto
   // Excluir edificios compartidos de la lista de deptos (van en buildingExpenses)
