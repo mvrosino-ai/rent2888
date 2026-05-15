@@ -572,46 +572,92 @@ function render(prop, per) {
 
   const mon = propMap[prop]?.moneda || activeMoneda;
 
-  // Edificios compartidos = los que tienen más de 1 propietario activo (Italiano, Monta, Fleni...)
-  // Excluye deptos individuales que también están en edificioMap como claves (1A, IT335, etc.)
+  // Direct rows: prop has their own rows in $$$
+  const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
+
+  // Edificios compartidos: filas del sheet $$$ donde col B (depto) = col U (edificio)
+  // y ese nombre aparece en edificioMap con más de 1 propietario activo.
+  // Se detectan porque la fila de egreso tiene depto === edificio (ej: depto="Italiano", edificio="Italiano")
+  // y NO pertenece al propietario seleccionado (son gastos del edificio, no del depto individual).
+  
+  // Identificar qué edificios compartidos corresponden a este prop mirando col U de sus propias filas
+  // Un prop pertenece a un edificio compartido si tiene filas donde edificio está en edificioMap con >1 miembro
+  const propEdificios = new Set(directRows.map(r => r.edificio).filter(Boolean));
+  
+  // sharedBuildings: edificios con >1 propietario activo en edificioMap
   const sharedBuildings = new Set(
     Object.entries(edificioMap)
       .filter(([, members]) => members.filter(m=>m.activo).length > 1)
       .map(([edif]) => edif)
   );
 
-  // Direct rows: prop has their own rows in $$$
-  const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
-
-  // Building expenses: filas donde col B (depto) = nombre del edificio compartido.
-  // El valor ya viene dividido por 1 depto en col AB ($ por Depto).
-  // Se multiplica x cantidad de deptos que tiene este prop en ese edificio.
+  // Building expenses: buscar filas donde col B = col U = nombre de edificio compartido
+  // Estas filas tienen el egreso ya dividido por depto en col AB (egrPorDepto)
+  // La cantidad de deptos del prop viene de edificioMap
   const buildingExpenses = [];
-  for (const [edif, members] of Object.entries(edificioMap)) {
-    if (!sharedBuildings.has(edif)) continue; // solo edificios compartidos
+  
+  // Para cada edificio compartido donde este prop tiene deptos:
+  // Detectamos su presencia mirando col U (edificio) de sus propias filas en $$$
+  const propEdifShared = [...propEdificios].filter(e => sharedBuildings.has(e));
+  
+  for (const edif of propEdifShared) {
+    const members = edificioMap[edif] || [];
     const myEntry = members.find(m => m.prop === prop && m.activo);
-    if (!myEntry) continue;
+    const cantidad = myEntry ? myEntry.cantidad : 1;
 
-    // Detectar la fila de egreso del edificio: col B = nombre del edificio, con egrPorDepto
+    // Filas de egreso del edificio: depto === edificio, tienen egrPorDepto, cualquier propietario
     const edifRows = dataRows.filter(r =>
       r.mesano === per &&
       r.egresos < 0 &&
       r.conceptoEgreso &&
       r.depto === edif &&
-      r.egrPorDepto != null && r.egrPorDepto !== 0  // solo filas con col AB = egreso por depto
+      r.edificio === edif  // col B = col U = nombre del edificio
     );
 
     for (const row of edifRows) {
-      // egrPorDepto = valor ya dividido por 1 depto (col AB)
-      // Si no existe esa columna, fallback al egreso completo (depto no compartido)
       const porDepto = (row.egrPorDepto != null && row.egrPorDepto !== 0)
         ? row.egrPorDepto
         : row.egresos;
       buildingExpenses.push({
-        concepto:  row.conceptoEgreso,
-        edificio:  edif,
-        egresos:   porDepto * myEntry.cantidad,  // x deptos del prop en este edificio
-        myDeptos:  myEntry.cantidad,
+        concepto: row.conceptoEgreso,
+        edificio: edif,
+        egresos:  porDepto * cantidad,
+        myDeptos: cantidad,
+      });
+    }
+  }
+  
+  // También buscar edificios compartidos donde el prop tiene deptos pero sus filas
+  // usan col U = nombre del edificio compartido (ej: IT335 tiene edificio="Italiano")
+  const propEdifFromU = new Set(
+    directRows
+      .map(r => r.edificio)
+      .filter(e => e && sharedBuildings.has(e) && !propEdifShared.includes(e))
+  );
+  
+  for (const edif of propEdifFromU) {
+    const members = edificioMap[edif] || [];
+    // Contar deptos del prop en este edificio = cantidad de filas únicas de depto del prop con este edificio
+    const myDeptos = new Set(directRows.filter(r => r.edificio === edif).map(r => r.depto)).size;
+    const cantidad = myDeptos || 1;
+
+    const edifRows = dataRows.filter(r =>
+      r.mesano === per &&
+      r.egresos < 0 &&
+      r.conceptoEgreso &&
+      r.depto === edif &&
+      r.edificio === edif
+    );
+
+    for (const row of edifRows) {
+      const porDepto = (row.egrPorDepto != null && row.egrPorDepto !== 0)
+        ? row.egrPorDepto
+        : row.egresos;
+      buildingExpenses.push({
+        concepto: row.conceptoEgreso,
+        edificio: edif,
+        egresos:  porDepto * cantidad,
+        myDeptos: cantidad,
       });
     }
   }
