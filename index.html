@@ -687,7 +687,7 @@ function render(prop, per) {
           ? r.egrPorDepto
           : r.egresos / (sbMap[edif] || 1);
       }
-      byConcepto[key] = (byConcepto[key] || 0) + porDepto;
+      byConcepto[key] = (byConcepto[key] || 0) + Math.round(porDepto * 100) / 100;
     }
 
     for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
