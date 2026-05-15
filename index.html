@@ -672,10 +672,22 @@ function render(prop, per) {
       const key = r.conceptoEgreso;
       // Use USD column if prop bills in u$, otherwise pesos column
       const isUSD = mon === 'u$';
-      if (edif==='Monta'&&r.conceptoEgreso==='Limpieza') console.log('[MONTA LIM]', r.mesano, per, r.mesano===per, {egrPorDeptoU:r.egrPorDeptoU, porDepto_calc: r.egrPorDeptoU});
-      const porDepto = isUSD
-        ? ((r.egrPorDeptoU != null && r.egrPorDeptoU !== 0) ? r.egrPorDeptoU : (r.egrAaU != null && r.egrAaU !== 0 ? r.egrAaU / (sbMap[edif] || 1) : r.egresos / (sbMap[edif] || 1)))
-        : ((r.egrPorDepto  != null && r.egrPorDepto  !== 0) ? r.egrPorDepto  : r.egresos / (sbMap[edif] || 1));
+      let porDepto;
+      if (isUSD) {
+        // col AI ($ por depto en u$) — ya dividido por cantidad de deptos del edificio
+        // Si es null usar egrAaU/total, si es 0 la limpieza no aplica (usar 0)
+        if (r.egrPorDeptoU != null) {
+          porDepto = r.egrPorDeptoU; // includes 0 case
+        } else if (r.egrAaU != null && r.egrAaU !== 0) {
+          porDepto = r.egrAaU / (sbMap[edif] || 1);
+        } else {
+          porDepto = r.egresos / (sbMap[edif] || 1);
+        }
+      } else {
+        porDepto = (r.egrPorDepto != null && r.egrPorDepto !== 0)
+          ? r.egrPorDepto
+          : r.egresos / (sbMap[edif] || 1);
+      }
       byConcepto[key] = (byConcepto[key] || 0) + porDepto;
     }
 
