@@ -687,11 +687,11 @@ function render(prop, per) {
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
-    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos>0);
+    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0); // incluye devoluciones negativas
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
-    const ing   = stays.reduce((s,r)=>s+r.ingresos,0);
+    const ing   = stays.reduce((s,r)=>s+r.ingresos,0); // neto: bruto - devoluciones
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
-    const noch  = stays.reduce((s,r)=>s+(r.noches||0),0);
+    const noch  = stays.filter(r=>r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
     dd[d]={stays,egrs,ing,egr,noch};
     tIng+=ing;
   }
