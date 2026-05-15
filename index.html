@@ -619,6 +619,9 @@ function render(prop, per) {
   const sbMap = window.sharedBuildingMap || {};
   const sharedBuildings = new Set(Object.keys(sbMap));
 
+  // myEdifEntries: solo edificios compartidos (esCompartido:true) del prop
+  // Evita duplicar Monta que puede aparecer en tabla A (como depto) y tabla B (como edificio compartido)
+
   // Para cada edificio compartido, detectar si este prop tiene deptos en él
   // mirando col U (edificio) de sus propias filas en $$$
   // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
@@ -631,9 +634,12 @@ function render(prop, per) {
   // Como fallback final: si el prop tiene filas con col U = nombre del edificio compartido.
   const myEdifMap = {}; // edif -> cantidad
 
-  // Fuente 1: propToEdif (hoja propietarios, puede estar incompleto)
-  for (const { edificio: e, cantidad: q } of (propToEdif[prop] || [])) {
-    if (sharedBuildings.has(e) && q > 0) myEdifMap[e] = (myEdifMap[e] || 0) + q;
+  // Fuente 1: propToEdif - solo entradas esCompartido para edificios compartidos
+  for (const entry of (propToEdif[prop] || [])) {
+    const { edificio: e, cantidad: q, esCompartido } = entry;
+    if (sharedBuildings.has(e) && q > 0 && esCompartido) {
+      myEdifMap[e] = (myEdifMap[e] || 0) + q;
+    }
   }
 
   // Fuente 2: edificioMap directo (buscar prop exacto en cada edificio compartido)
