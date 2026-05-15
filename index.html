@@ -381,7 +381,6 @@ function parsePropSheet(csv) {
   propMap = {};
   edificioMap = {};
   propToEdif = {};
-  deptoToEdif = {};
   edificioNames = new Set();
 
   const cantCol  = propCol + 1;
@@ -401,7 +400,7 @@ function parsePropSheet(csv) {
     edificioNames.add(edificio);
 
     if (!edificioMap[edificio]) edificioMap[edificio] = [];
-    edificioMap[edificio].push({ prop, depto, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
+    edificioMap[edificio].push({ prop, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
     // Mapa inverso: prop -> lista de {edificio, cantidad}
     if (!propToEdif[prop]) propToEdif[prop] = [];
     propToEdif[prop].push({ edificio, cantidad: estado === 'Activo' ? cantidad : 0 });
