@@ -614,7 +614,7 @@ function render(prop, per) {
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
     const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos>0);
-    const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos<0);
+    const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos<0&&!edificioNames.has(r.depto));
     const ing   = stays.reduce((s,r)=>s+r.ingresos,0);
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.reduce((s,r)=>s+(r.noches||0),0);
@@ -622,7 +622,9 @@ function render(prop, per) {
     tIng+=ing;
   }
 
-  const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0);
+  // Excluir de directEgrs las filas que ya se procesaron como gasto de edificio compartido
+  // (son las filas donde col B = nombre de un edificio en edificioMap)
+  const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos<0&&!edificioNames.has(r.depto));
   const directEgrTotal = directEgrs.reduce((s,r)=>s+r.egresos,0);
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
