@@ -445,41 +445,36 @@ function parseMainSheet(csv) {
 
   const ci = n => headers.findIndex(h => h.trim() === n.trim());
 
-  // Map column indices
+  // Map column indices — hardcoded from real headers (console verified)
   const COL = {
-    edificio:     20,   // col U — fijo, evita conflicto con col AE que también se llama 'Edificio'
-    depto:        ci('Departamento'),
-    concIngr:     ci('Concepto Ingresos'),
-    concEgr:      ci('Concepto Egresos'),
-    huesped:      ci('Huésped'),
-    plataforma:   ci('Plataforma'),
-    fechaIn:      ci('Fecha de ingreso'),
-    fechaEg:      ci('Fecha de Egreso'),
-    noches:       ci('Noches'),
-    ing_ars:      ci('Ingresos u$ a $'),   // col AJ — u$ converted to pesos
-    ing_ars_orig: ci('TOTAL'),             // col Y  — original pesos income (fallback)
-    ing_ars_brut: ci('Ingreso Total $'),   // col ?? — ingreso bruto en pesos (lo que usa PowerBI)
-    ing_usd:      ci('Ingresos Total $'), // col AQ — already converted to u$
-    egr_ars:      ci('Egresos'),          // col X — pesos
-    egr_usd:      ci('Egresos $ a u$'),   // col AH — ya convertido a u$
-    eprDepto:     ci('$ por Depto'),      // col AB — egreso ya dividido por 1 depto (pesos)
-    egrAaU:       ci('Egresos $ a u$'),   // col AH — egreso convertido a u$
-    eprDeptoU:    ci('$ por depto en u$'),// col AI — egreso por depto en u$
-    ingAaU:       ci('Ingresos $ a u$'),  // col AG — ingreso convertido a u$
-    ingUaP:       ci('Ingresos u$ a $'),  // col AJ — ingreso u$ a pesos
-    egrUaP:       ci('Egresos u$ a $'),   // col AK — egreso u$ a pesos
-    propietario:  ci('Propietario'),
-    mesano:       ci('mes/ano'),
-    mes:          ci('mes'),
-    ano:          ci('ano'),
-    moneda:       ci('Moneda del Reporte'),
-    moneda2:      ci('Moneda Reporte'),
-    moneda3:      ci('Moneda'),
-    edifShared:   ci('Edificio'),   // col AE — nombre edificio compartido
-    dptosShared:  ci('Dptos'),      // col AF — cantidad total de deptos
+    edificio:    20,  // "Edificio"
+    depto:        1,  // "Departamento"
+    concIngr:     3,  // "Concepto Ingresos"
+    concEgr:     21,  // "Concepto Egresos"
+    huesped:      4,  // "Huésped"
+    plataforma:   2,  // "Plataforma"
+    fechaIn:      5,  // "Fecha de ingreso"
+    fechaEg:      7,  // "Fecha de Egreso"
+    noches:       6,  // "Noches"
+    ing_total:   42,  // "Ingresos Total $" ← fuente de verdad (igual que PowerBI)
+    ing_base:     9,  // "Ingresos"
+    comisionBK:  10,  // "Comision BK"
+    egr_ars:     23,  // "Egresos" (pesos)
+    egr_usd:     33,  // "Egresos $ a u$"
+    eprDepto:    27,  // "$ por Depto"
+    eprDeptoU:   34,  // "$ por depto en u$"
+    ingAaU:      32,  // "Ingresos $ a u$"
+    ingUaP:      35,  // "Ingresos u$ a $"
+    egrUaP:      36,  // "Egresos u$ a $"
+    propietario: 43,  // "Propietario"
+    mesano:      41,  // "mes/ano"
+    mes:         39,  // "mes"
+    ano:         40,  // "ano"
+    moneda:      45,  // "Moneda del Reporte"
+    cantDeptos:  44,  // "Cantidad de departamentos"
   };
 
-  const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
+  const monCol = COL.moneda; // col 45 "Moneda del Reporte"
 
   // Read AE(col 30)/AF(col 31): shared buildings map {name -> totalDeptos}
   // These values are in fixed rows of the sheet, NOT in the main header row.
@@ -512,13 +507,9 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
     const isUSD  = moneda === 'u$';
 
-    // Para pesos: "Ingreso Total $" (bruto en ARS, mismo que usa PowerBI)
-    //   fallback a TOTAL (col Y), luego a Ingresos u$ a $
-    // Para USD: "Ingresos Total $" (col AQ, todo convertido a u$)
-    const ingArsBrut = COL.ing_ars_brut >= 0 ? pn(c[COL.ing_ars_brut]) : 0;
-    const ing = isUSD
-      ? pn(c[COL.ing_usd])
-      : (ingArsBrut || pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
+    // Col 42 "Ingresos Total $" = fuente de verdad para ambas monedas
+    // Para USD ademas existe col 33 "Egresos $ a u$" para egresos convertidos
+    const ing = pn(c[COL.ing_total]);  // col 42 — mismo que usa PowerBI
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
@@ -536,9 +527,9 @@ function parseMainSheet(csv) {
       noches:          pn(c[COL.noches]),
       ingresos:        ing,
       egresos:         egr,
-      egrPorDepto:     COL.eprDepto>=0   ? pn(c[COL.eprDepto])   : null,
-      egrPorDeptoU:    COL.eprDeptoU>=0  ? pn(c[COL.eprDeptoU]) : null,
-      egrAaU:          COL.egrAaU>=0     ? pn(c[COL.egrAaU])    : null,
+      egrPorDepto:     pn(c[COL.eprDepto]),
+      egrPorDeptoU:    pn(c[COL.eprDeptoU]),
+      egrAaU:          pn(c[COL.egr_usd]),
       conceptoEgreso:  (c[COL.concEgr]||'').trim(),
       mesano:          mano,
       mes:             pn(c[COL.mes]),
