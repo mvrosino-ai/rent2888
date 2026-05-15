@@ -601,12 +601,17 @@ function render(prop, per) {
   // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
   const buildingExpenses = [];
 
+  // DEBUG: mostrar edificios únicos en directRows
+  const edifEnDirectRows = [...new Set(directRows.map(r=>r.edificio).filter(Boolean))];
+  console.log('[DIRECT EDIFICIOS]', edifEnDirectRows);
+
   for (const edif of sharedBuildings) {
     // Deptos del prop en este edificio (col U = edif en sus filas directas)
     const myDeptos = new Set(
       directRows.filter(r => r.edificio === edif).map(r => r.depto)
     );
     const cantidad = myDeptos.size;
+    console.log(`[EDIF CHECK] "${edif}" -> cantidad=${cantidad}`, [...myDeptos]);
     if (cantidad === 0) continue; // este prop no tiene deptos en este edificio
 
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
