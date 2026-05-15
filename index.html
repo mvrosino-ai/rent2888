@@ -363,54 +363,63 @@ function parsePropSheet(csv) {
   const lines = csv.split('\n').filter(l=>l.trim());
   if (lines.length < 2) return;
 
-  // Find header row
-  let hi = -1;
-  let edifCol = -1, propCol = -1;
-  for (let i=0;i<Math.min(15,lines.length);i++) {
+  // Find header row: col0="Depto", col5="Edificio" (or "Edificiio")
+  let hi = 0;
+  for (let i=0;i<Math.min(10,lines.length);i++) {
     const c = splitCSV(lines[i]);
-    for (let j=0;j<c.length;j++) {
-      const v = (c[j]||'').toLowerCase().trim();
-      if (v === 'edificio' || v === 'edificiio') { edifCol = j; }
-      if (v === 'prop' || v === 'propietario') { propCol = j; }
-    }
-    if (edifCol >= 0 && propCol >= 0) { hi = i; break; }
+    if ((c[0]||'').toLowerCase().includes('depto') &&
+        (c[5]||'').toLowerCase().includes('edif')) { hi = i; break; }
   }
-  if (hi < 0) { hi = 0; edifCol = 5; propCol = 6; } // fallback
-  console.log('[PROP SHEET] hi=', hi, 'edifCol=', edifCol, 'propCol=', propCol);
 
   propMap = {};
   edificioMap = {};
   propToEdif = {};
   edificioNames = new Set();
 
-  const cantCol  = propCol + 1;
-  const monCol2  = propCol + 2;
-  const estCol   = propCol + 3;
   for (let i=hi+1;i<lines.length;i++) {
     const c = splitCSV(lines[i]);
-    const edificio = (c[edifCol]||'').trim();
-    const prop     = (c[propCol]||'').trim();
-    const cantidad = pn(c[cantCol]);
-    const moneda   = (c[monCol2]||'$').trim();
-    const estado   = (c[estCol]||'Activo').trim();
 
-    if (!prop || prop === '#N/A') continue;
-    if (!edificio || edificio.toLowerCase().includes('edifici')) continue;
+    // ── Table A (cols 0-4): deptos individuales ──
+    // col0=depto, col1=prop, col2=cantidad, col3=moneda, col4=estado
+    const deptoA = (c[0]||'').trim();
+    const propA  = (c[1]||'').trim();
+    const cantA  = pn(c[2]);
+    const monA   = (c[3]||'$').trim();
+    const estA   = (c[4]||'Activo').trim();
+    const activoA = estA === 'Activo' && cantA > 0;
 
-    edificioNames.add(edificio);
+    if (deptoA && propA && propA !== '#N/A' && !deptoA.toLowerCase().includes('depto')) {
+      edificioNames.add(deptoA);
+      if (!edificioMap[deptoA]) edificioMap[deptoA] = [];
+      edificioMap[deptoA].push({ prop: propA, cantidad: cantA, moneda: monA, activo: activoA });
+      if (activoA) {
+        if (!propToEdif[propA]) propToEdif[propA] = [];
+        propToEdif[propA].push({ edificio: deptoA, cantidad: cantA, esIndividual: true });
+      }
+      if (!propMap[propA]) propMap[propA] = { moneda: monA, activo: activoA };
+      else if (activoA) { propMap[propA].activo = true; propMap[propA].moneda = monA; }
+    }
 
-    if (!edificioMap[edificio]) edificioMap[edificio] = [];
-    edificioMap[edificio].push({ prop, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
-    // Mapa inverso: prop -> lista de {edificio, cantidad}
-    if (!propToEdif[prop]) propToEdif[prop] = [];
-    propToEdif[prop].push({ edificio, cantidad: estado === 'Activo' ? cantidad : 0 });
+    // ── Table B (cols 5-8): edificios compartidos ──
+    // col5=edificio, col6=prop, col7=cantidad, col8=moneda (sin columna estado)
+    const edifB = (c[5]||'').trim();
+    const propB = (c[6]||'').trim();
+    const cantB = pn(c[7]);
+    const monB  = (c[8]||'$').trim();
+    const activoB = cantB > 0;
 
-    // propMap: use first occurrence for moneda (a prop can appear in multiple buildings)
-    if (!propMap[prop]) {
-      propMap[prop] = { moneda, activo: estado === 'Activo' && cantidad > 0 };
-    } else if (estado === 'Activo' && cantidad > 0) {
-      propMap[prop].activo = true;
-      propMap[prop].moneda = moneda;
+    const edifBlow = edifB.toLowerCase();
+    if (edifB && propB && propB !== '#N/A' &&
+        !edifBlow.includes('edif') && !edifBlow.includes('prop') && !edifBlow.includes('propietario')) {
+      edificioNames.add(edifB);
+      if (!edificioMap[edifB]) edificioMap[edifB] = [];
+      edificioMap[edifB].push({ prop: propB, cantidad: cantB, moneda: monB, activo: activoB });
+      if (activoB) {
+        if (!propToEdif[propB]) propToEdif[propB] = [];
+        propToEdif[propB].push({ edificio: edifB, cantidad: cantB, esCompartido: true });
+      }
+      if (!propMap[propB]) propMap[propB] = { moneda: monB, activo: activoB };
+      else if (activoB) { propMap[propB].activo = true; }
     }
   }
 }
