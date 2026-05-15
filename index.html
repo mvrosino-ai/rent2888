@@ -365,14 +365,18 @@ function parsePropSheet(csv) {
 
   // Find header row
   let hi = -1;
-  for (let i=0;i<Math.min(10,lines.length);i++) {
+  let edifCol = -1, propCol = -1;
+  for (let i=0;i<Math.min(15,lines.length);i++) {
     const c = splitCSV(lines[i]);
-    // header row has "Edificio" in col F (index 5) and "Prop" in col G (index 6)
-    if (c[5] && c[5].toLowerCase().includes('edif') && c[6] && c[6].toLowerCase().includes('prop')) {
-      hi = i; break;
+    for (let j=0;j<c.length;j++) {
+      const v = (c[j]||'').toLowerCase().trim();
+      if (v === 'edificio' || v === 'edificiio') { edifCol = j; }
+      if (v === 'prop' || v === 'propietario') { propCol = j; }
     }
+    if (edifCol >= 0 && propCol >= 0) { hi = i; break; }
   }
-  if (hi < 0) hi = 0; // fallback
+  if (hi < 0) { hi = 0; edifCol = 5; propCol = 6; } // fallback
+  console.log('[PROP SHEET] hi=', hi, 'edifCol=', edifCol, 'propCol=', propCol);
 
   propMap = {};
   edificioMap = {};
@@ -380,15 +384,16 @@ function parsePropSheet(csv) {
   deptoToEdif = {};
   edificioNames = new Set();
 
-  // Real table is in cols F(5),G(6),H(7),I(8),J(9)
-  // Structure: edificio(5), prop(6), cantidad(7), moneda(8), estado(9)
+  const cantCol  = propCol + 1;
+  const monCol2  = propCol + 2;
+  const estCol   = propCol + 3;
   for (let i=hi+1;i<lines.length;i++) {
     const c = splitCSV(lines[i]);
-    const edificio = (c[5]||'').trim();
-    const prop     = (c[6]||'').trim();
-    const cantidad = pn(c[7]);
-    const moneda   = (c[8]||'$').trim();
-    const estado   = (c[9]||'Activo').trim();
+    const edificio = (c[edifCol]||'').trim();
+    const prop     = (c[propCol]||'').trim();
+    const cantidad = pn(c[cantCol]);
+    const moneda   = (c[monCol2]||'$').trim();
+    const estado   = (c[estCol]||'Activo').trim();
 
     if (!prop || prop === '#N/A') continue;
     if (!edificio || edificio.toLowerCase().includes('edifici')) continue;
@@ -399,9 +404,7 @@ function parsePropSheet(csv) {
     edificioMap[edificio].push({ prop, depto, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
     // Mapa inverso: prop -> lista de {edificio, cantidad}
     if (!propToEdif[prop]) propToEdif[prop] = [];
-    propToEdif[prop].push({ edificio, depto, cantidad: estado === 'Activo' ? cantidad : 0 });
-    // depto->edificio map for shared buildings
-    if (depto && edificio) deptoToEdif[depto] = edificio;
+    propToEdif[prop].push({ edificio, cantidad: estado === 'Activo' ? cantidad : 0 });
 
     // propMap: use first occurrence for moneda (a prop can appear in multiple buildings)
     if (!propMap[prop]) {
@@ -632,17 +635,8 @@ function render(prop, per) {
     if (entry) myEdifMap[edif] = entry.cantidad || 1;
   }
 
-  // Fuente 3: usar deptoToEdif — mapa directo depto→edificio construido desde hoja propietarios
-  // Si el prop tiene filas con depto que mapea a un edificio compartido, lo detecta
-  for (const r of directRows) {
-    if (!r.depto) continue;
-    const edif = deptoToEdif[r.depto];
-    if (edif && sharedBuildings.has(edif) && !myEdifMap[edif]) {
-      // Contar deptos únicos del prop en este edificio
-      const deptos = new Set(directRows.filter(dr => deptoToEdif[dr.depto] === edif).map(dr => dr.depto));
-      myEdifMap[edif] = deptos.size;
-    }
-  }
+  // Fuente 3: propToEdif ahora está bien construido con cols correctas
+  // (ya cubierto por fuente 1 arriba)
 
   for (const [edif, cantidad] of Object.entries(myEdifMap)) {
 
