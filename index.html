@@ -612,6 +612,10 @@ function render(prop, per) {
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
     // Sumar egrPorDepto de todas las filas del mes, agrupadas por concepto
     const byConcepto = {};
+    // Debug: mostrar qué filas hay con depto=edif en este período
+    const debugRows = dataRows.filter(r => r.mesano===per && r.depto===edif);
+    if (debugRows.length === 0) console.log(`[EDIF] "${edif}" - 0 filas con depto="${edif}" en ${per}. prop tiene ${cantidad} deptos via edificio col.`);
+    else console.log(`[EDIF] "${edif}" - ${debugRows.length} filas`, debugRows.slice(0,3).map(r=>({depto:r.depto,edificio:r.edificio,concepto:r.conceptoEgreso,egr:r.egresos,egrPD:r.egrPorDepto})));
     for (const r of dataRows) {
       if (r.mesano !== per) continue;
       if (r.egresos >= 0 || !r.conceptoEgreso) continue;
