@@ -511,10 +511,20 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
     const isUSD  = moneda === 'u$';
 
-    // Para pesos: col35 (Ingresos u$ a $) si tiene valor (reserva en u$ convertida), sino col24 (TOTAL en $)
-    // Para u$: col AQ (Ingresos Total $)
-    const ingArs = pn(c[COL.ing_ars]) || pn(c[COL.ing_ars_orig]);
-    const ing = isUSD ? pn(c[COL.ing_usd]) : ingArs;
+    // For pesos: use col Y (TOTAL) which has original pesos income
+    // For USD: use col AQ (Ingresos Total $) which converts everything to u$
+    // Para pesos: si col24 (TOTAL) tiene decimales es un monto en u$ → usar col35 (ya convertido a pesos)
+    //             si col24 es entero → es pesos directo, usar col24
+    // Para u$: usar col AQ
+    let ing;
+    if (isUSD) {
+      ing = pn(c[COL.ing_usd]);
+    } else {
+      const v24 = (c[COL.ing_ars_orig]||'').trim();
+      const n24 = pn(v24);
+      const isUSDrow = n24 > 0 && v24.includes('.');
+      ing = isUSDrow ? pn(c[COL.ing_ars]) : (n24 || pn(c[COL.ing_ars]));
+    }
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
@@ -713,7 +723,7 @@ function render(prop, per) {
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
-    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0); // incluye devoluciones negativas
+    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0&&r.conceptoIngreso!=='Booking');
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
     const ing   = stays.reduce((s,r)=>s+r.ingresos,0); // neto: bruto - devoluciones
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
