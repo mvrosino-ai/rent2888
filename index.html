@@ -672,6 +672,7 @@ function render(prop, per) {
       const key = r.conceptoEgreso;
       // Use USD column if prop bills in u$, otherwise pesos column
       const isUSD = mon === 'u$';
+      if (edif==='Monta'&&r.conceptoEgreso==='Limpieza') console.log('[MONTA LIM]', {egrPorDepto:r.egrPorDepto, egrPorDeptoU:r.egrPorDeptoU, egrAaU:r.egrAaU, egresos:r.egresos});
       const porDepto = isUSD
         ? ((r.egrPorDeptoU != null && r.egrPorDeptoU !== 0) ? r.egrPorDeptoU : (r.egrAaU != null && r.egrAaU !== 0 ? r.egrAaU / (sbMap[edif] || 1) : r.egresos / (sbMap[edif] || 1)))
         : ((r.egrPorDepto  != null && r.egrPorDepto  !== 0) ? r.egrPorDepto  : r.egresos / (sbMap[edif] || 1));
