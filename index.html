@@ -575,6 +575,15 @@ function render(prop, per) {
   // Direct rows: prop has their own rows in $$$
   const directRows = dataRows.filter(r => r.propietario===prop && r.mesano===per);
 
+  // DEBUG: mostrar edificioMap y si el prop está en cada edificio
+  console.log('[DEBUG] prop buscado:', JSON.stringify(prop));
+  console.log('[DEBUG] edificioMap keys:', Object.keys(edificioMap));
+  for (const [edif, members] of Object.entries(edificioMap)) {
+    console.log(`[DEBUG] edificio="${edif}" members:`, members.map(m=>({prop:JSON.stringify(m.prop), cantidad:m.cantidad, activo:m.activo})));
+    const found = members.find(m => m.prop === prop);
+    console.log(`[DEBUG] -> myEntry para "${prop}":`, found);
+  }
+
   // Building expenses: filas donde col B (depto) = nombre del edificio compartido.
   // El valor ya viene dividido por 1 depto en col AB ($ por Depto).
   // Se multiplica x cantidad de deptos que tiene este prop en ese edificio.
