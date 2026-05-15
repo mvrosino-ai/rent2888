@@ -602,12 +602,19 @@ function render(prop, per) {
   const buildingExpenses = [];
 
   for (const edif of sharedBuildings) {
-    // Deptos del prop en este edificio (col U = edif en sus filas directas)
-    const myDeptos = new Set(
+    // Detectar si el prop tiene deptos en este edificio:
+    // Primero por col U de sus filas directas, luego por edificioMap (hoja propietarios)
+    const myDeptosByU = new Set(
       directRows.filter(r => r.edificio === edif).map(r => r.depto)
     );
-    const cantidad = myDeptos.size;
-    if (cantidad === 0) continue;
+    const inEdifMap = (edificioMap[edif] || []).find(m => m.activo && 
+      m.prop.toLowerCase().trim() === prop.toLowerCase().trim());
+    
+    let cantidad = myDeptosByU.size;
+    if (cantidad === 0) {
+      if (!inEdifMap) continue;
+      cantidad = inEdifMap.cantidad || 1;
+    }
 
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
     // Sumar egrPorDepto de todas las filas del mes, agrupadas por concepto
