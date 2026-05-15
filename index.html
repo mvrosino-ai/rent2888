@@ -335,20 +335,7 @@ function fmt(n, mo) {
     : '$'+Math.round(abs).toLocaleString('es-AR');
   return neg?'-'+s:s;
 }
-const pn = s => {
-  if(!s||s==='#N/A'||s===''||s==='FALSE') return 0;
-  let v=String(s).replace(/[^\d.,\-]/g,'');
-  if(!v) return 0;
-  const dots=v.split('.').length-1, commas=v.split(',').length-1;
-  if(dots>1){v=v.replace(/\./g,'').replace(',','.');}           // 1.532.626 -> 1532626
-  else if(dots===1&&commas===0){
-    const dec=v.split('.')[1];
-    if(dec&&dec.length===3) v=v.replace('.','');                // 253.500 -> 253500
-    // else keep as decimal: 1.5 stays 1.5
-  } else if(dots===1&&commas===1){v=v.replace('.','').replace(',','.');} // 1.234,56
-  else if(dots===0&&commas===1){v=v.replace(',','.');}
-  return parseFloat(v)||0;
-};
+const pn = s => { if(!s||s==='#N/A'||s===''||s==='FALSE') return 0; return parseFloat(String(s).replace(/[^\d.\-]/g,''))||0; };
 const sp = (a,b) => { const [ma,ya]=a.split('/').map(Number),[mb,yb]=b.split('/').map(Number); return ya!==yb?ya-yb:ma-mb; };
 function toast(msg, t='') { const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show '+t; setTimeout(()=>el.className='toast',3200); }
 
@@ -524,16 +511,9 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || propMap[prop]?.moneda || '$';
     const isUSD  = moneda === 'u$';
 
-    // Moneda de la fila (col 11) puede ser u$ aunque el reporte del prop sea en pesos
-    const monedaFila = (c[11]||'').trim();
-    // Props en pesos: fila u$ -> usar col AJ (ingUaP), fila $ -> usar col Y (ing_ars_orig)
-    // Props en u$: usar col AQ (ing_usd)
-    let ing;
-    if(isUSD){
-      ing = pn(c[COL.ing_usd]);
-    } else {
-      ing = monedaFila==='u$' ? pn(c[COL.ingUaP]) : (pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
-    }
+    // For pesos: use col Y (TOTAL) which has original pesos income
+    // For USD: use col AQ (Ingresos Total $) which converts everything to u$
+    const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars_orig]) || pn(c[COL.ing_ars]));
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
