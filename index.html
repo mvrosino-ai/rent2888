@@ -674,14 +674,13 @@ function render(prop, per) {
       const isUSD = mon === 'u$';
       let porDepto;
       if (isUSD) {
-        // col AI ($ por depto en u$) — ya dividido por cantidad de deptos del edificio
-        // Si es null usar egrAaU/total, si es 0 la limpieza no aplica (usar 0)
-        if (r.egrPorDeptoU != null) {
-          porDepto = r.egrPorDeptoU; // includes 0 case
+        if (r.egrPorDeptoU != null && r.egrPorDeptoU !== 0) {
+          porDepto = r.egrPorDeptoU;
         } else if (r.egrAaU != null && r.egrAaU !== 0) {
+          // egrAaU is total building egreso in u$ — divide by total deptos
           porDepto = r.egrAaU / (sbMap[edif] || 1);
         } else {
-          porDepto = r.egresos / (sbMap[edif] || 1);
+          porDepto = 0;
         }
       } else {
         porDepto = (r.egrPorDepto != null && r.egrPorDepto !== 0)
