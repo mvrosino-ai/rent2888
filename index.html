@@ -280,6 +280,7 @@ const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agos
 let dataRows = [];       // filas de $$$
 let propMap = {};        // propietario -> { moneda, activo }
 let edificioMap = {};    // edificio -> [ { prop, cantidad, moneda } ]
+let propToEdif  = {};    // prop -> [ { edificio, cantidad } ] (inverso de edificioMap)
 let edificioNames = new Set(); // nombres de edificios (para detectar egresos de edificio)
 let activeMoneda = 'u$';
 let chartN = null, chartD = null;
@@ -374,6 +375,7 @@ function parsePropSheet(csv) {
 
   propMap = {};
   edificioMap = {};
+  propToEdif = {};
   edificioNames = new Set();
 
   for (let i=hi+1;i<lines.length;i++) {
@@ -390,6 +392,9 @@ function parsePropSheet(csv) {
 
     if (!edificioMap[edificio]) edificioMap[edificio] = [];
     edificioMap[edificio].push({ prop, cantidad, moneda, activo: estado === 'Activo' && cantidad > 0 });
+    // Mapa inverso: prop -> lista de {edificio, cantidad}
+    if (!propToEdif[prop]) propToEdif[prop] = [];
+    propToEdif[prop].push({ edificio, cantidad: estado === 'Activo' ? cantidad : 0 });
 
     // propMap: use first occurrence for moneda (a prop can appear in multiple buildings)
     if (!propMap[prop]) {
@@ -601,20 +606,10 @@ function render(prop, per) {
   // y contar cuántos deptos únicos tiene (= filas con depto distinto en ese edificio)
   const buildingExpenses = [];
 
-  for (const edif of sharedBuildings) {
-    // Detectar si el prop tiene deptos en este edificio:
-    // Primero por col U de sus filas directas, luego por edificioMap (hoja propietarios)
-    const myDeptosByU = new Set(
-      directRows.filter(r => r.edificio === edif).map(r => r.depto)
-    );
-    const inEdifMap = (edificioMap[edif] || []).find(m => m.activo && 
-      m.prop.toLowerCase().trim() === prop.toLowerCase().trim());
-    
-    let cantidad = myDeptosByU.size;
-    if (cantidad === 0) {
-      if (!inEdifMap) continue;
-      cantidad = inEdifMap.cantidad || 1;
-    }
+  // propToEdif: lista de edificios compartidos donde este prop tiene deptos activos
+  const myEdifEntries = (propToEdif[prop] || []).filter(e => sharedBuildings.has(e.edificio) && e.cantidad > 0);
+
+  for (const { edificio: edif, cantidad } of myEdifEntries) {
 
     // Filas de egreso del edificio: col B (depto) = nombre del edificio
     // Sumar egrPorDepto de todas las filas del mes, agrupadas por concepto
