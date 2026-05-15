@@ -372,6 +372,7 @@ function parsePropSheet(csv) {
     }
   }
   if (hi < 0) hi = 0; // fallback: first row is header
+  console.log('[PROP SHEET] hi=', hi, 'primeras 5 filas:', lines.slice(0,5));
 
   propMap = {};
   edificioMap = {};
