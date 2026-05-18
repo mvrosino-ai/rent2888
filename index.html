@@ -532,7 +532,7 @@ function parseMainSheet(csv) {
       fechaIngreso:    (c[COL.fechaIn]||'').trim(),
       fechaEgreso:     (c[COL.fechaEg]||'').trim(),
       noches:          pn(c[COL.noches]),
-      ingresos:        ing,
+      ingresos:        Math.round(ing),
       egresos:         egr,
       egrPorDepto:     COL.eprDepto>=0   ? pn(c[COL.eprDepto])   : null,
       egrPorDeptoU:    COL.eprDeptoU>=0  ? pn(c[COL.eprDeptoU]) : null,
