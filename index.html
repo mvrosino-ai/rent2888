@@ -1,23 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rent2888 — Reportes</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#F5F4F0;--card:#fff;--ink:#22284F;--ink2:#4A4F6B;--ink3:#9497A8;--line:#E4E4E7;--navy:#22284F;--red:#E54040;--red-bg:#FDEAEA;--gold:#C9A84C;--gold-bg:#FBF5E6;--gold-lt:#C9A84C;--green:#166534;--green-bg:#DCFCE7;--blue:#22284F;--blue-bg:#ECEDF5}
+:root{
+  --bg:#F5F4F0;--card:#fff;--ink:#22284F;--ink2:#4A4F6B;--ink3:#9497A8;--line:#E4E4E7;
+  --navy:#22284F;--red:#E54040;--red-bg:#FDEAEA;--gold:#C9A84C;--gold-bg:#FBF5E6;
+  --gold-lt:#C9A84C;--green:#166534;--green-bg:#DCFCE7;--blue:#22284F;--blue-bg:#ECEDF5
+}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5}
 
 /* TOPBAR */
-.topbar{background:var(--ink);color:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200}
+.topbar{background:var(--navy);color:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200}
 .logo{font-family:'DM Serif Display',serif;font-size:19px;cursor:pointer;user-select:none}
-.logo span{color:var(--gold-lt)}
+.logo .r2{color:#E54040}
 .tbtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;transition:.15s}
 .tbtn:hover{background:rgba(255,255,255,.12)}
-.tbtn-gold{background:var(--gold);border-color:var(--gold)}
+.tbtn-gold{background:var(--gold);border-color:var(--gold);color:#fff}
 .tbtn-gold:hover{opacity:.88}
 .topbar-r{display:flex;gap:8px}
 
@@ -41,7 +37,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .fdiv{border:none;border-top:1px solid var(--line);margin:20px 0}
 .mbtns{display:flex;gap:10px;margin-top:20px}
 .mbtn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;cursor:pointer;transition:.15s;flex:1;border:none}
-.mbtn-p{background:var(--ink);color:#fff}.mbtn-p:hover{opacity:.85}
+.mbtn-p{background:var(--navy);color:#fff}.mbtn-p:hover{opacity:.85}
 .mbtn-g{background:transparent;color:var(--ink2);border:1px solid var(--line)}.mbtn-g:hover{background:var(--bg)}
 .err{font-size:12px;color:var(--red);margin-top:7px;display:none}
 
@@ -53,129 +49,126 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .fsel:focus{outline:none;border-color:var(--gold)}
 .moneda-tabs{display:flex;gap:4px}
 .mtab{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink2);cursor:pointer;transition:.15s;letter-spacing:.02em}
-.mtab.active-usd{background:var(--blue);border-color:var(--blue);color:#fff}
+.mtab.active-usd{background:var(--navy);border-color:var(--navy);color:#fff}
 .mtab.active-ars{background:var(--green);border-color:var(--green);color:#fff}
 .fsep{width:1px;height:40px;background:var(--line);align-self:center}
 .ml-a{margin-left:auto;align-self:center;display:flex;gap:8px}
 .abtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 .abtn:hover{background:var(--bg)}
-.abtn.grn{background:var(--green);border-color:var(--green);color:#fff}.abtn.grn:hover{opacity:.88}
 
 /* MAIN */
-#screen-main{display:none;padding:28px;max-width:880px;margin:0 auto}
+#screen-main{display:none;padding:28px;max-width:900px;margin:0 auto}
 
-/* HERO */
-.hero{background:var(--navy);color:#fff;border-radius:0 0 16px 16px;padding:24px 32px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;border-top:3px solid var(--red)}
-.hero-ey{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.38);margin-bottom:4px}
-.hero-nm{font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:2px}
-.hero-sb{font-size:13px;color:rgba(255,255,255,.48)}
-.hero-r{text-align:right}
-.hero-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.32);margin-bottom:4px}
-.hero-amt{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;color:var(--gold)}
-.mbadge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;margin-top:6px}
-.mb-u{background:rgba(201,168,76,.25);color:var(--gold)}
-.mb-a{background:rgba(22,101,52,.3);color:#6EE7A0}
+/* ── NUEVO DISEÑO RENT2888 ── */
+.r2-wrap{background:#fff;border-radius:10px;overflow:hidden;border:0.5px solid #ddd;font-family:'DM Sans',sans-serif}
 
-/* METRICS */
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:20px}
-.mc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
-.mc-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:7px}
-.mc-v{font-size:20px;font-weight:600}
-.g{color:var(--green)}.r{color:var(--red)}.b{color:var(--blue)}.au{color:var(--gold)}
+/* Header */
+.r2-header{background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-top:3px solid var(--red)}
+.r2-brand{font-size:18px;font-weight:700;color:#fff}
+.r2-brand span{color:var(--red)}
+.r2-tag{font-size:10px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:2px 8px;border-radius:3px;margin-top:5px;display:inline-block;letter-spacing:.06em}
+.r2-hr{text-align:right}
+.r2-hl{font-size:10px;color:rgba(255,255,255,0.45)}
+.r2-hv{font-size:28px;font-weight:700;color:var(--gold)}
 
-/* SECTION */
-.sec{margin-bottom:24px}
-.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.sec-ttl{font-family:'DM Serif Display',serif;font-size:18px}
-.sec-ln{flex:1;height:1px;background:var(--line)}
-.sec-ct{font-size:12px;color:var(--ink3);font-weight:500}
+/* Namebar */
+.r2-namebar{background:#1c2240;padding:10px 24px}
+.r2-propname{font-size:19px;font-weight:500;color:#fff}
+.r2-propsub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px}
 
-/* DEPTO BLOCKS */
-.dblock{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
-.dhdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;user-select:none;transition:.1s}
-.dhdr:hover{background:var(--bg)}
-.dhdr-l{display:flex;align-items:center;gap:10px}
-.dnm{font-weight:600;font-size:14px}
-.dng{font-size:12px;color:var(--blue);background:var(--blue-bg);padding:2px 8px;border-radius:20px;font-weight:500}
-.dhdr-r{display:flex;align-items:center;gap:14px}
-.damt{font-weight:600;font-size:15px;color:var(--green)}
-.dchv{color:var(--ink3);transition:transform .2s;font-size:14px}
-.dblock.open .dchv{transform:rotate(180deg)}
-.dbody{display:none;border-top:1px solid var(--line)}
-.dblock.open .dbody{display:block}
+/* Stats */
+.r2-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:0.5px solid #eee}
+.r2-stat{padding:13px 16px;border-right:0.5px solid #eee}
+.r2-stat:last-child{border-right:none}
+.r2-sl{font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px}
+.r2-sv{font-size:15px;font-weight:600;color:var(--navy)}
+.r2-sv.r{color:var(--red)}
+.r2-sv.g{color:var(--green)}
 
-/* TABLE */
-.stbl{width:100%;border-collapse:collapse}
-.stbl th{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);padding:9px 18px;text-align:left;border-bottom:1px solid var(--line)}
-.stbl th.r{text-align:right}
-.stbl td{padding:10px 18px;font-size:13px;border-bottom:1px solid var(--line)}
-.stbl td.r{text-align:right;font-weight:500}
-.stbl tr:last-child td{border-bottom:none}
-.stbl tr:hover td{background:#FAFAF8}
-.stbl tfoot td{font-weight:700;background:var(--bg)}
-.stbl tfoot td.r{color:var(--green);font-size:14px}
-.gn{font-weight:500}.gp{font-size:11px;color:var(--ink3)}
-.np{font-size:11px;background:var(--blue-bg);color:var(--blue);padding:1px 7px;border-radius:20px;font-weight:600}
-.lt{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:4px;margin-left:4px;font-weight:600}
+/* Section */
+.r2-section{padding:14px 24px;border-bottom:0.5px solid #eee}
+.r2-stitle{font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.08em;border-bottom:2px solid var(--red);padding-bottom:5px;margin-bottom:10px;display:inline-block}
 
-/* EGRESOS */
-.egr-s{padding:14px 18px;background:var(--bg);border-top:1px solid var(--line)}
-.egr-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
-.egr-r{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
-.egr-r:last-of-type{border-bottom:none}
-.egr-c{color:var(--ink2)}.egr-m{color:var(--red);font-weight:500}
-.egr-prop{font-size:10px;color:var(--ink3);margin-top:1px}
-.egr-tot{display:flex;justify-content:space-between;font-size:13px;font-weight:700;border-top:1px solid var(--line);margin-top:10px;padding-top:10px}
-.egrc{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.egrc-h{padding:14px 18px;background:var(--red-bg);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #FECACA}
-.egrc-ht{font-weight:600;font-size:13px;color:var(--red)}.egrc-hv{font-weight:700;font-size:15px;color:var(--red)}
-.egrc-i{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;font-size:13px;border-bottom:1px solid var(--line)}
-.egrc-i:last-child{border-bottom:none}
-.egrc-id{font-size:10px;color:var(--ink3);margin-top:2px}
-.prop-tag{font-size:10px;background:#FEF3C7;color:#92400E;padding:1px 7px;border-radius:20px;margin-left:6px;font-weight:600}
+/* Tabla estadías */
+.r2-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.r2-tbl thead tr{background:#F7F6F3}
+.r2-tbl th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:#888;letter-spacing:.05em;border-bottom:0.5px solid #e8e8e8}
+.r2-tbl th.r{text-align:right}
+.r2-tbl td{padding:8px 10px;border-bottom:0.5px solid #f4f4f4;color:#444;vertical-align:middle}
+.r2-tbl td.r{text-align:right;font-weight:600;color:var(--green)}
+.r2-tbl tbody tr:last-child td{border-bottom:none}
+.r2-tbl tfoot td{padding:8px 10px;background:#f9f9f7;font-size:11px;color:#888}
+.r2-dtag{display:inline-block;background:#eef0f6;color:var(--navy);font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+.r2-plat{font-size:10px;color:#aaa;margin-top:2px}
+.r2-late{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
 
-/* LIQUIDACION */
-.liq{background:var(--gold-bg);border:1px solid #E8D5A0;border-radius:12px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
-.liq-rows{display:flex;flex-direction:column;gap:8px}
-.liq-r{display:flex;justify-content:space-between;align-items:center;gap:32px;font-size:13px}
-.liq-rl{color:var(--ink2)}.liq-rv{font-weight:600}
-.liq-div{border:none;border-top:1px solid #D4B870;margin:4px 0}
-.liq-tl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:4px;text-align:right}
-.liq-tv{font-family:'DM Serif Display',serif;font-size:42px;color:var(--ink);line-height:1}
+/* Tabla egresos */
+.r2-etbl{width:100%;border-collapse:collapse;font-size:12px}
+.r2-etbl thead tr{background:#F7F6F3}
+.r2-etbl th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:#888;letter-spacing:.05em;border-bottom:0.5px solid #e8e8e8}
+.r2-etbl th.r{text-align:right}
+.r2-etbl td{padding:8px 10px;border-bottom:0.5px solid #f4f4f4;color:#444;font-size:12px}
+.r2-etbl td.r{text-align:right;font-weight:600;color:var(--red)}
+.r2-etbl tbody tr:last-child td{border-bottom:none}
+.r2-esrc{font-size:10px;color:#aaa;margin-top:1px}
 
-/* CHARTS */
-.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-@media(max-width:600px){.charts-grid{grid-template-columns:1fr}}
-.chart-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
-.chart-ttl{font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:14px;text-transform:uppercase;letter-spacing:.06em}
-.chart-wrap{position:relative;height:160px}
+/* Liquidación */
+.r2-liq{padding:14px 24px;border-bottom:0.5px solid #eee}
+.r2-lrow{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.r2-lrow.total{border-top:1.5px solid var(--navy);margin-top:6px;padding-top:10px;font-weight:700;font-size:14px}
+.r2-ll{color:#666}
+.r2-ll.b{color:var(--navy);font-weight:700}
+.r2-lv{color:var(--navy)}
+.r2-lv.r{color:var(--red);font-weight:500}
+.r2-lv.g{color:var(--green);font-weight:700}
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;right:24px;background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none}
+/* Charts */
+.r2-charts{display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid #eee}
+.r2-chart-box{padding:14px 20px}
+.r2-chart-box:first-child{border-right:0.5px solid #eee}
+.r2-chart-title{font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.06em;margin-bottom:10px}
+.r2-chart-area{position:relative;height:100px}
+.r2-gridlines{position:absolute;top:0;left:34px;right:0;height:82px}
+.r2-gridline{position:absolute;left:0;right:0;border-top:1px solid #bbb}
+.r2-glbl{position:absolute;left:-34px;font-size:8px;color:#666;white-space:nowrap;transform:translateY(-50%);font-weight:500}
+.r2-bars{position:absolute;bottom:14px;left:34px;right:0;top:0;display:flex;align-items:flex-end;gap:3px}
+.r2-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;height:100%;justify-content:flex-end}
+.r2-bar{width:100%;border-radius:2px 2px 0 0;flex-shrink:0}
+.r2-bar-lbl{font-size:7px;color:#999;text-align:center;line-height:1.2;flex-shrink:0}
+
+/* Footer */
+.r2-footer{background:var(--navy);padding:9px 24px;display:flex;justify-content:space-between}
+.r2-fl{font-size:10px;color:rgba(255,255,255,0.35)}
+
+/* Empty */
+.empty{text-align:center;padding:60px;color:var(--ink3);font-size:14px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none}
 .toast.show{transform:translateY(0);opacity:1}
 .toast.ok{background:var(--green)}.toast.err{background:var(--red)}
 
-.empty{text-align:center;padding:60px;color:var(--ink3);font-size:14px}
-
 @media(max-width:640px){
-  .topbar,.screen-filters,#screen-main{padding-left:16px;padding-right:16px}
-  .hero{padding:20px}.hero-amt{font-size:36px}.liq-tv{font-size:30px}
-  .liq{flex-direction:column;align-items:flex-start}
+  .topbar,#screen-filters,#screen-main{padding-left:16px;padding-right:16px}
+  .r2-stats{grid-template-columns:repeat(2,1fr)}
+  .r2-charts{grid-template-columns:1fr}
 }
 @media print{
   .topbar,#screen-filters,.abtn,.tbtn{display:none!important}
   body{background:#fff}
-  .hero{background:#18181B!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .hero-amt{color:#F0C040!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
   #screen-main{display:block!important;padding:0;max-width:100%}
-  .dblock{break-inside:avoid}
+  .r2-wrap{border:none;border-radius:0}
+  .r2-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .r2-namebar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .r2-footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
+
 </head>
 <body>
 
 <div class="topbar">
-  <div class="logo" id="logo" onclick="logoClick()"><span style="color:#fff">Rent</span><span style="color:#E54040">2888</span></div>
+  <div class="logo" id="logo" onclick="logoClick()">Rent<span class="r2">2888</span></div>
   <div class="topbar-r">
     <button class="tbtn tbtn-gold" onclick="window.print()" id="btn-pdf" style="display:none">↓ PDF</button>
   </div>
@@ -751,141 +744,166 @@ function render(prop, per) {
   // ── Build HTML ──
   let h='';
 
-  // HERO
-  h+=`<div class="hero">
-    <div>
-      <div class="hero-ey">Rent2888 · Liquidación mensual</div>
-      <div class="hero-nm">${prop}</div>
-      <div class="hero-sb">${deptos.length} depto${deptos.length!==1?'s':''} · ${tNoch} noches · ${ml(per)}</div>
-      <span class="mbadge ${mon==='u$'?'mb-u':'mb-a'}">${mon==='u$'?'USD':'PESOS'}</span>
-    </div>
-    <div class="hero-r">
-      <div class="hero-lbl">Total a transferir</div>
-      <div class="hero-amt">${fmt(neto,mon)}</div>
-    </div>
-  </div>`;
-
-  // METRICS
-  h+=`<div class="metrics">
-    <div class="mc"><div class="mc-l">Ingresos</div><div class="mc-v g">${fmt(tIng,mon)}</div></div>
-    <div class="mc"><div class="mc-l">Egresos</div><div class="mc-v r">${fmt(tEgr,mon)}</div></div>
-    <div class="mc"><div class="mc-l">Comisión ${Math.round(CFG.com*100)}%</div><div class="mc-v r">-${fmt(com,mon)}</div></div>
-    <div class="mc"><div class="mc-l">Noches</div><div class="mc-v b">${tNoch}</div></div>
-    <div class="mc"><div class="mc-l">Deptos</div><div class="mc-v au">${deptos.length}</div></div>
-  </div>`;
-
-  // ESTADIAS
-  if (deptos.length) {
-    h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div><div class="sec-ct">${deptos.length} deptos</div></div>`;
-    for (const d of deptos) {
-      const {stays,egrs,ing,egr,noch}=dd[d];
-      const k=d.replace(/[^a-z0-9]/gi,'_');
-      h+=`<div class="dblock" id="db-${k}">
-        <div class="dhdr" onclick="tog('${k}')">
-          <div class="dhdr-l"><span class="dnm">${d}</span><span class="dng">${noch}n</span></div>
-          <div class="dhdr-r"><span class="damt">${fmt(ing,mon)}</span><span class="dchv">▾</span></div>
-        </div>
-        <div class="dbody">`;
-      if (stays.length) {
-        h+=`<table class="stbl"><thead><tr><th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Ingreso</th></tr></thead><tbody>`;
-        stays.forEach(s=>{
-          const m2=s.ingresos||(s.comisionBK||0);
-          const isL=(s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
-          h+=`<tr><td><div class="gn">${s.huesped||'—'}${isL?'<span class="lt">Late CO</span>':''}</div><div class="gp">${s.plataforma||s.conceptoIngreso||''}</div></td>
-            <td style="font-size:12px;color:var(--ink2)">${s.fechaIngreso||'—'}</td>
-            <td style="font-size:12px;color:var(--ink2)">${s.fechaEgreso||'—'}</td>
-            <td style="text-align:center"><span class="np">${s.noches||'—'}</span></td>
-            <td class="r">${fmt(m2,mon)}</td></tr>`;
-        });
-        h+=`</tbody><tfoot><tr><td colspan="3" style="padding:11px 18px">Total ${d}</td><td class="r" style="padding:11px 18px">${fmt(ing,mon)}</td></tr></tfoot></table>`;
-      } else {
-        h+=`<div style="padding:14px 18px;color:var(--ink3);font-size:13px;font-style:italic">Sin estadías — uso propio o depto vacío</div>`;
-      }
-      if (egrs.length) {
-        h+=`<div class="egr-s"><div class="egr-t">Egresos del depto</div>`;
-        egrs.forEach(e=>{h+=`<div class="egr-r"><span class="egr-c">${e.conceptoEgreso}</span><span class="egr-m">${fmt(e.egresos,mon)}</span></div>`;});
-        h+=`<div class="egr-tot"><span>Total</span><span style="color:var(--red)">${fmt(egr,mon)}</span></div></div>`;
-      }
-      h+=`</div></div>`;
-    }
-    h+=`</div>`;
-  } else {
-    h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Estadías del mes</div><div class="sec-ln"></div></div><div style="background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;color:var(--ink3);font-style:italic;font-size:13px">Sin estadías registradas para este período</div></div>`;
-  }
-
-  // EGRESOS — group by concepto+depto (direct) and concepto+edificio (building)
+  // Agrupar egresos
   const directGrouped = {};
   for (const e of directEgrs) {
     const key = `${e.depto}||${e.conceptoEgreso||'Egreso'}`;
-    if (!directGrouped[key]) directGrouped[key] = { concepto: e.conceptoEgreso||'Egreso', sub: e.depto, monto: 0 };
+    if (!directGrouped[key]) directGrouped[key] = { concepto: e.conceptoEgreso||'Egreso', sub: e.depto, esEdif: false, monto: 0 };
     directGrouped[key].monto += e.egresos;
   }
   const buildGrouped = {};
   for (const e of buildingExpenses) {
     const key = `${e.edificio}||${e.concepto}`;
-    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, sub: e.edificio, monto: 0 };
+    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, sub: e.edificio, esEdif: true, monto: 0 };
     buildGrouped[key].monto += e.egresos;
   }
   const allEgrGrouped = [...Object.values(directGrouped), ...Object.values(buildGrouped)];
 
+  const monLabel = mon==='u$' ? 'USD' : 'PESOS';
+
+  h += `<div class="r2-wrap">`;
+
+  // HEADER
+  h += `<div class="r2-header">
+    <div>
+      <div class="r2-brand">Rent<span>2888</span></div>
+      <div class="r2-tag">LIQUIDACIÓN MENSUAL · ${monLabel}</div>
+    </div>
+    <div class="r2-hr">
+      <div class="r2-hl">Total a transferir</div>
+      <div class="r2-hv">${fmt(neto,mon)}</div>
+    </div>
+  </div>`;
+
+  // NAMEBAR
+  h += `<div class="r2-namebar">
+    <div class="r2-propname">${prop}</div>
+    <div class="r2-propsub">${deptos.join(', ')||'—'} · ${deptos.length} depto${deptos.length!==1?'s':''} · ${tNoch} noches · ${ml(per)}</div>
+  </div>`;
+
+  // STATS
+  h += `<div class="r2-stats">
+    <div class="r2-stat"><div class="r2-sl">INGRESOS</div><div class="r2-sv g">${fmt(tIng,mon)}</div></div>
+    <div class="r2-stat"><div class="r2-sl">EGRESOS</div><div class="r2-sv r">${fmt(tEgr,mon)}</div></div>
+    <div class="r2-stat"><div class="r2-sl">COMISIÓN ${Math.round(CFG.com*100)}%</div><div class="r2-sv r">-${fmt(com,mon)}</div></div>
+    <div class="r2-stat"><div class="r2-sl">NOCHES</div><div class="r2-sv">${tNoch}</div></div>
+  </div>`;
+
+  // ESTADÍAS
+  h += `<div class="r2-section"><div class="r2-stitle">ESTADÍAS DEL MES</div>`;
+  if (deptos.length) {
+    h += `<table class="r2-tbl"><thead><tr>
+      <th>Depto</th><th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Monto</th>
+    </tr></thead><tbody>`;
+    for (const d of deptos) {
+      const {stays} = dd[d];
+      stays.forEach(s => {
+        const isL = (s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
+        h += `<tr>
+          <td><span class="r2-dtag">${d}</span></td>
+          <td><div>${s.huesped||'—'}${isL?'<span class="r2-late">Late CO</span>':''}</div><div class="r2-plat">${s.plataforma||s.conceptoIngreso||''}</div></td>
+          <td style="font-size:12px;color:#666">${s.fechaIngreso||'—'}</td>
+          <td style="font-size:12px;color:#666">${s.fechaEgreso||'—'}</td>
+          <td style="text-align:center;font-size:12px;font-weight:600;color:var(--navy)">${s.noches||'—'}</td>
+          <td class="r">${fmt(s.ingresos,mon)}</td>
+        </tr>`;
+      });
+    }
+    h += `</tbody></table>`;
+  } else {
+    h += `<div style="padding:14px 0;color:#aaa;font-size:13px;font-style:italic">Sin estadías registradas para este período</div>`;
+  }
+  h += `</div>`;
+
+  // EGRESOS
   if (allEgrGrouped.length) {
-    h+=`<div class="sec">
-      <div class="sec-hdr"><div class="sec-ttl">Egresos del mes</div><div class="sec-ln"></div><div class="sec-ct" style="color:var(--red)">${fmt(tEgr,mon)}</div></div>
-      <div class="egrc">
-`;
-    allEgrGrouped.forEach(e=>{
-      const isShared = edificioNames.has(e.sub) && !Object.keys(deptoToEdif||{}).includes(e.sub);
-      h+=`<div class="egrc-i">
-        <div>
-          <div>${e.concepto}</div>
-          <div class="egrc-id">${e.sub}${isShared?' · <em style=\"font-style:normal;font-size:10px;color:var(--ink3)\">Edificio compartido</em>':''}</div>
-        </div>
-        <span style="color:var(--red);font-weight:600">${fmt(e.monto,mon)}</span>
-      </div>`;
+    h += `<div class="r2-section"><div class="r2-stitle">EGRESOS DEL MES</div>
+    <table class="r2-etbl"><thead><tr><th>Concepto</th><th>Origen</th><th class="r">Monto</th></tr></thead><tbody>`;
+    allEgrGrouped.forEach(e => {
+      h += `<tr>
+        <td>${e.concepto}</td>
+        <td><div>${e.sub}</div>${e.esEdif?'<div class="r2-esrc">Edificio compartido</div>':''}</td>
+        <td class="r">${fmt(e.monto,mon)}</td>
+      </tr>`;
     });
-    h+=`</div></div>`;
+    h += `</tbody></table></div>`;
   }
 
-  // LIQUIDACION
-  h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Liquidación final</div><div class="sec-ln"></div></div>
-  <div class="liq">
-    <div class="liq-rows">
-      <div class="liq-r"><span class="liq-rl">Ingresos</span><span class="liq-rv g">${fmt(tIng,mon)}</span></div>
-      <div class="liq-r"><span class="liq-rl">Egresos</span><span class="liq-rv r">${fmt(tEgr,mon)}</span></div>
-      <div class="liq-r"><span class="liq-rl">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="liq-rv r">-${fmt(com,mon)}</span></div>
-      <hr class="liq-div">
-      <div class="liq-r"><span class="liq-rl" style="font-weight:700;color:var(--navy)">Neto a transferir</span><span class="liq-rv g" style="font-size:16px;font-weight:700">${fmt(neto,mon)}</span></div>
-    </div>
-  </div></div>`;
+  // LIQUIDACIÓN
+  h += `<div class="r2-liq">
+    <div class="r2-lrow"><span class="r2-ll">Ingresos</span><span class="r2-lv">${fmt(tIng,mon)}</span></div>
+    <div class="r2-lrow"><span class="r2-ll">Egresos</span><span class="r2-lv r">${fmt(tEgr,mon)}</span></div>
+    <div class="r2-lrow"><span class="r2-ll">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="r2-lv r">-${fmt(com,mon)}</span></div>
+    <div class="r2-lrow total"><span class="r2-ll b">Neto a transferir</span><span class="r2-lv g">${fmt(neto,mon)}</span></div>
+  </div>`;
 
   // CHARTS
-  h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Histórico</div><div class="sec-ln"></div></div>
-  <div class="charts-grid">
-    <div class="chart-card"><div class="chart-ttl">Noches por mes</div><div class="chart-wrap"><canvas id="cN"></canvas></div></div>
-    <div class="chart-card"><div class="chart-ttl">Monto liquidado por mes</div><div class="chart-wrap"><canvas id="cD"></canvas></div></div>
-  </div></div>`;
+  h += `<div class="r2-charts">
+    <div class="r2-chart-box">
+      <div class="r2-chart-title">NOCHES POR MES</div>
+      <div class="r2-chart-area">
+        <div class="r2-gridlines" id="r2-gl-n"></div>
+        <div class="r2-bars" id="r2-bn"></div>
+      </div>
+    </div>
+    <div class="r2-chart-box">
+      <div class="r2-chart-title">MONTO LIQUIDADO POR MES</div>
+      <div class="r2-chart-area">
+        <div class="r2-gridlines" id="r2-gl-m"></div>
+        <div class="r2-bars" id="r2-bm"></div>
+      </div>
+    </div>
+  </div>`;
 
-  h+=`<div style="text-align:center;font-size:11px;color:var(--ink3);padding:16px 0 8px">Rent2888 · ${ml(per)} · ${new Date().toLocaleDateString('es-AR')}</div>`;
+  // FOOTER
+  h += `<div class="r2-footer">
+    <span class="r2-fl">rent2888.com</span>
+    <span class="r2-fl">Liquidación generada el ${new Date().toLocaleDateString('es-AR')}</span>
+  </div>`;
+
+  h += `</div>`;
 
   ra.innerHTML = h;
-  setTimeout(()=>renderCharts(hL,hN,hD,ci,mon), 50);
+  setTimeout(()=>r2RenderCharts(hL,hN,hD,ci,mon), 50);
 }
 
-function tog(k){document.getElementById('db-'+k)?.classList.toggle('open');}
+function r2NiceSteps(max,steps){
+  const raw=max/steps;
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  return [1,2,5,10].map(x=>x*mag).find(x=>x>=raw)||mag*10;
+}
 
-// ── CHARTS ──
-function renderCharts(labels,noches,dinero,ci,mon){
-  if(chartN){chartN.destroy();chartN=null;} if(chartD){chartD.destroy();chartD=null;}
-  const bgN=labels.map((_,i)=>i===ci?'#22284F':'#C5C8D8');
-  const bgD=labels.map((_,i)=>i===ci?'#C9A84C':'#E8E0C4');
-  const opt=(isN)=>({responsive:true,maintainAspectRatio:false,
-    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>isN?ctx.parsed.y+' noches':fmt(ctx.parsed.y,mon)}}},
-    scales:{x:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#888',maxRotation:45}},
-            y:{grid:{color:'#C8C8C8',lineWidth:1},border:{dash:[3,3]},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#666'}}}});
-  const cN=document.getElementById('cN'),cD=document.getElementById('cD');
-  if(!cN||!cD) return;
-  chartN=new Chart(cN,{type:'bar',data:{labels,datasets:[{data:noches,backgroundColor:bgN,borderRadius:4,borderSkipped:false}]},options:opt(true)});
-  chartD=new Chart(cD,{type:'bar',data:{labels,datasets:[{data:dinero,backgroundColor:bgD,borderRadius:4,borderSkipped:false}]},options:opt(false)});
+function r2RenderCharts(labels,noches,dinero,ci,mon){
+  const CHART_H=82;
+
+  function renderOne(barsId,glId,data,activeColor,dimColor,fmtFn){
+    const max=Math.max(...data.map(d=>d.v),1);
+    const step=r2NiceSteps(max,4);
+    const niceMax=Math.ceil(max/step)*step;
+    const gl=document.getElementById(glId);
+    if(!gl) return;
+    let glHtml='';
+    for(let v=step;v<=niceMax;v+=step){
+      const top=CHART_H-(v/niceMax)*CHART_H;
+      glHtml+=`<div class="r2-gridline" style="top:${top}px"><span class="r2-glbl">${fmtFn(v)}</span></div>`;
+    }
+    gl.innerHTML=glHtml;
+    const el=document.getElementById(barsId);
+    if(!el) return;
+    el.innerHTML=data.map((d,i)=>{
+      const h=niceMax>0?Math.max(d.v>0?2:0,Math.round((d.v/niceMax)*CHART_H)):0;
+      const isActive=i===data.length-1;
+      return `<div class="r2-bar-wrap"><div class="r2-bar" style="height:${h}px;background:${isActive?activeColor:dimColor}"></div><div class="r2-bar-lbl">${d.m}</div></div>`;
+    }).join('');
+  }
+
+  const chartData = labels.map((l,i)=>({m:l,vN:noches[i],vD:dinero[i]}));
+  renderOne('r2-bn','r2-gl-n',chartData.map(d=>({m:d.m,v:d.vN})),'#22284F','#C5C8D8',v=>v);
+  renderOne('r2-bm','r2-gl-m',chartData.map(d=>({m:d.m,v:d.vD})),'#C9A84C','#E8E0C4',v=>{
+    if(v>=1000000) return (v/1000000).toFixed(1)+'M';
+    if(v>=1000) return (v/1000).toFixed(0)+'k';
+    return v;
+  });
 }
 
 function showLoad(){
