@@ -513,19 +513,10 @@ function parseMainSheet(csv) {
 
     // For pesos: use col Y (TOTAL) which has original pesos income
     // For USD: use col AQ (Ingresos Total $) which converts everything to u$
-    // Para pesos: col24 puede ser entero ($) o decimal real (u$)
-    //   Si tiene punto seguido de exactamente 1 o 2 digitos → es u$ → usar col35
-    //   Si es entero o .000 (miles) → es $ → usar col24
-    let ing;
-    if (isUSD) {
-      ing = pn(c[COL.ing_usd]);
-    } else {
-      const v24 = (c[COL.ing_ars_orig]||'').replace(/[^\d.]/g,'');
-      const n24 = pn(c[COL.ing_ars_orig]);
-      const decMatch = v24.match(/\.(\d+)$/);
-      const isRealDecimal = decMatch && decMatch[1].length < 3;
-      ing = (n24 > 0 && isRealDecimal) ? pn(c[COL.ing_ars]) : (n24 || pn(c[COL.ing_ars]));
-    }
+    // Para pesos: col35 (Ingresos u$ a $) tiene valor solo en reservas Airbnb/u$ ya convertidas
+    //               col24 (TOTAL) tiene valor en reservas en $ directas
+    //               → usar col35 si tiene valor, sino col24
+    const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars]) || pn(c[COL.ing_ars_orig]));
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
     if (!ing && !egr) continue;
