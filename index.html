@@ -692,7 +692,8 @@ function render(prop, per) {
           ? r.egrPorDepto
           : r.egresos / (sbMap[edif] || 1);
       }
-      byConcepto[key] = (byConcepto[key] || 0) + Math.round(porDepto);
+      // Para u$: redondear a 2 decimales por fila (como PowerBI). Para $: redondear a entero.
+      byConcepto[key] = (byConcepto[key] || 0) + (isUSD ? Math.round(porDepto * 100) / 100 : Math.round(porDepto));
     }
 
     for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
