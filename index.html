@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{--bg:#F5F3EE;--card:#fff;--ink:#18181B;--ink2:#52525B;--ink3:#A1A1AA;--line:#E4E4E7;--gold:#B8860B;--gold-bg:#FDF8EC;--gold-lt:#F0C040;--green:#166534;--green-bg:#DCFCE7;--red:#991B1B;--red-bg:#FEE2E2;--blue:#1E3A5F;--blue-bg:#EFF6FF}
+:root{--bg:#F5F4F0;--card:#fff;--ink:#22284F;--ink2:#4A4F6B;--ink3:#9497A8;--line:#E4E4E7;--navy:#22284F;--red:#E54040;--red-bg:#FDEAEA;--gold:#C9A84C;--gold-bg:#FBF5E6;--gold-lt:#C9A84C;--green:#166534;--green-bg:#DCFCE7;--blue:#22284F;--blue-bg:#ECEDF5}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5}
 
@@ -65,15 +65,15 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 #screen-main{display:none;padding:28px;max-width:880px;margin:0 auto}
 
 /* HERO */
-.hero{background:var(--ink);color:#fff;border-radius:16px;padding:28px 32px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px}
+.hero{background:var(--navy);color:#fff;border-radius:0 0 16px 16px;padding:24px 32px 28px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:20px;border-top:3px solid var(--red)}
 .hero-ey{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.38);margin-bottom:4px}
 .hero-nm{font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:2px}
 .hero-sb{font-size:13px;color:rgba(255,255,255,.48)}
 .hero-r{text-align:right}
 .hero-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.32);margin-bottom:4px}
-.hero-amt{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;color:var(--gold-lt)}
+.hero-amt{font-family:'DM Serif Display',serif;font-size:52px;line-height:1;color:var(--gold)}
 .mbadge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.06em;padding:3px 10px;border-radius:20px;margin-top:6px}
-.mb-u{background:rgba(240,192,64,.2);color:var(--gold-lt)}
+.mb-u{background:rgba(201,168,76,.25);color:var(--gold)}
 .mb-a{background:rgba(22,101,52,.3);color:#6EE7A0}
 
 /* METRICS */
@@ -175,7 +175,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 <body>
 
 <div class="topbar">
-  <div class="logo" id="logo" onclick="logoClick()">Rent<span>2888</span></div>
+  <div class="logo" id="logo" onclick="logoClick()"><span style="color:#fff">Rent</span><span style="color:#E54040">2888</span></div>
   <div class="topbar-r">
     <button class="tbtn tbtn-gold" onclick="window.print()" id="btn-pdf" style="display:none">↓ PDF</button>
   </div>
@@ -787,12 +787,13 @@ function render(prop, per) {
         </div>
         <div class="dbody">`;
       if (stays.length) {
-        h+=`<table class="stbl"><thead><tr><th>Huésped</th><th>Período</th><th style="text-align:center">Noches</th><th class="r">Ingreso</th></tr></thead><tbody>`;
+        h+=`<table class="stbl"><thead><tr><th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Ingreso</th></tr></thead><tbody>`;
         stays.forEach(s=>{
           const m2=s.ingresos||(s.comisionBK||0);
           const isL=(s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
           h+=`<tr><td><div class="gn">${s.huesped||'—'}${isL?'<span class="lt">Late CO</span>':''}</div><div class="gp">${s.plataforma||s.conceptoIngreso||''}</div></td>
-            <td><span style="font-size:12px;color:var(--ink2)">${s.fechaIngreso||'—'} → ${s.fechaEgreso||'—'}</span></td>
+            <td style="font-size:12px;color:var(--ink2)">${s.fechaIngreso||'—'}</td>
+            <td style="font-size:12px;color:var(--ink2)">${s.fechaEgreso||'—'}</td>
             <td style="text-align:center"><span class="np">${s.noches||'—'}</span></td>
             <td class="r">${fmt(m2,mon)}</td></tr>`;
         });
@@ -831,12 +832,13 @@ function render(prop, per) {
     h+=`<div class="sec">
       <div class="sec-hdr"><div class="sec-ttl">Egresos del mes</div><div class="sec-ln"></div><div class="sec-ct" style="color:var(--red)">${fmt(tEgr,mon)}</div></div>
       <div class="egrc">
-        <div class="egrc-h"><span class="egrc-ht">Total egresos</span><span class="egrc-hv">${fmt(tEgr,mon)}</span></div>`;
+`;
     allEgrGrouped.forEach(e=>{
+      const isShared = edificioNames.has(e.sub) && !Object.keys(deptoToEdif||{}).includes(e.sub);
       h+=`<div class="egrc-i">
         <div>
           <div>${e.concepto}</div>
-          <div class="egrc-id">${e.sub}</div>
+          <div class="egrc-id">${e.sub}${isShared?' · <em style=\"font-style:normal;font-size:10px;color:var(--ink3)\">Edificio compartido</em>':''}</div>
         </div>
         <span style="color:var(--red);font-weight:600">${fmt(e.monto,mon)}</span>
       </div>`;
@@ -848,13 +850,12 @@ function render(prop, per) {
   h+=`<div class="sec"><div class="sec-hdr"><div class="sec-ttl">Liquidación final</div><div class="sec-ln"></div></div>
   <div class="liq">
     <div class="liq-rows">
-      <div class="liq-r"><span class="liq-rl">Ingresos brutos</span><span class="liq-rv g">${fmt(tIng,mon)}</span></div>
-      <div class="liq-r"><span class="liq-rl">Egresos del mes</span><span class="liq-rv r">${fmt(tEgr,mon)}</span></div>
+      <div class="liq-r"><span class="liq-rl">Ingresos</span><span class="liq-rv g">${fmt(tIng,mon)}</span></div>
+      <div class="liq-r"><span class="liq-rl">Egresos</span><span class="liq-rv r">${fmt(tEgr,mon)}</span></div>
       <div class="liq-r"><span class="liq-rl">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="liq-rv r">-${fmt(com,mon)}</span></div>
       <hr class="liq-div">
-      <div class="liq-r"><span class="liq-rl" style="font-weight:700">Neto a transferir</span><span class="liq-rv" style="font-size:15px">${fmt(neto,mon)}</span></div>
+      <div class="liq-r"><span class="liq-rl" style="font-weight:700;color:var(--navy)">Neto a transferir</span><span class="liq-rv g" style="font-size:16px;font-weight:700">${fmt(neto,mon)}</span></div>
     </div>
-    <div><div class="liq-tl">A cobrar</div><div class="liq-tv">${fmt(neto,mon)}</div></div>
   </div></div>`;
 
   // CHARTS
@@ -875,12 +876,12 @@ function tog(k){document.getElementById('db-'+k)?.classList.toggle('open');}
 // ── CHARTS ──
 function renderCharts(labels,noches,dinero,ci,mon){
   if(chartN){chartN.destroy();chartN=null;} if(chartD){chartD.destroy();chartD=null;}
-  const bgN=labels.map((_,i)=>i===ci?'#1E3A5F':'#BFDBFE');
-  const bgD=labels.map((_,i)=>i===ci?'#B8860B':'#FDE68A');
+  const bgN=labels.map((_,i)=>i===ci?'#22284F':'#C5C8D8');
+  const bgD=labels.map((_,i)=>i===ci?'#C9A84C':'#E8E0C4');
   const opt=(isN)=>({responsive:true,maintainAspectRatio:false,
     plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>isN?ctx.parsed.y+' noches':fmt(ctx.parsed.y,mon)}}},
-    scales:{x:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#A1A1AA',maxRotation:45}},
-            y:{grid:{color:'#F4F4F5'},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#A1A1AA'}}}});
+    scales:{x:{grid:{display:false},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#888',maxRotation:45}},
+            y:{grid:{color:'#C8C8C8',lineWidth:1},border:{dash:[3,3]},ticks:{font:{size:10,family:"'DM Sans',sans-serif"},color:'#666'}}}});
   const cN=document.getElementById('cN'),cD=document.getElementById('cD');
   if(!cN||!cD) return;
   chartN=new Chart(cN,{type:'bar',data:{labels,datasets:[{data:noches,backgroundColor:bgN,borderRadius:4,borderSkipped:false}]},options:opt(true)});
