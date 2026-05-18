@@ -732,8 +732,8 @@ function render(prop, per) {
   tEgr  = directEgrTotal + buildEgrTotal;
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
 
-  const com  = tIng * CFG.com;
-  const neto = tIng + tEgr - com;
+  const com  = Math.round(tIng * CFG.com);
+  const neto = Math.round(tIng + tEgr - com);
 
   // ── Historical ──
   const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).slice(-18);
