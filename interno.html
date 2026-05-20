@@ -291,27 +291,33 @@ function parseMainSheet(csv) {
     const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || '$';
     const isUSD  = moneda === 'u$';
 
-    const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars]) || pn(c[COL.ing_ars_orig]));
-    const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
+    // Para cuentas internas, todo el movimiento está en col X (Egresos) o col AH (USD)
+    // Positivo = entrada a la cuenta, Negativo = salida de la cuenta
+    const rawARS = pn(c[COL.egr_ars]);
+    const rawUSD = pn(c[COL.egr_usd]);
+    const raw = isUSD ? rawUSD : rawARS;
 
-    if(!ing && !egr) continue;
+    if(!raw) continue;
+
+    const entrada = raw > 0 ? raw  : 0;   // positivo = entra dinero
+    const salida  = raw < 0 ? raw  : 0;   // negativo = sale dinero
+    const concepto = (c[COL.concEgr]||'').trim() || (c[COL.concIngr]||'').trim();
 
     dataRows.push({
       cuenta,
-      depto:           (c[COL.depto]||'').trim(),
-      propietario:     (c[COL.propietario]||'').trim(),
+      depto:       (c[COL.depto]||'').trim(),
+      propietario: (c[COL.propietario]||'').trim(),
       moneda,
       isUSD,
-      plataforma:      (c[COL.plataforma]||'').trim(),
-      conceptoIngreso: (c[COL.concIngr]||'').trim(),
-      huesped:         (c[COL.huesped]||'').trim(),
-      fechaIngreso:    (c[COL.fechaIn]||'').trim(),
-      fechaEgreso:     (c[COL.fechaEg]||'').trim(),
-      noches:          pn(c[COL.noches]),
-      ingresos:        Math.round(ing),
-      egresos:         egr,
-      conceptoEgreso:  (c[COL.concEgr]||'').trim(),
-      mesano:          mano,
+      plataforma:  (c[COL.plataforma]||'').trim(),
+      concepto,
+      huesped:     (c[COL.huesped]||'').trim(),
+      fechaIngreso:(c[COL.fechaIn]||'').trim(),
+      fechaEgreso: (c[COL.fechaEg]||'').trim(),
+      noches:      pn(c[COL.noches]),
+      entrada:     Math.round(entrada),
+      salida:      Math.round(salida),
+      mesano:      mano,
     });
   }
   console.log('[interno] filas cargadas:', dataRows.length);
@@ -364,16 +370,16 @@ function render(cuenta) {
   const rowsARS = rows.filter(r => !r.isUSD);
   const rowsUSD = rows.filter(r =>  r.isUSD);
 
-  // Totales acumulados
-  const totalIngARS = rowsARS.filter(r=>r.ingresos>0).reduce((s,r)=>s+r.ingresos, 0);
-  const totalEgrARS = rowsARS.filter(r=>r.egresos<0).reduce((s,r)=>s+r.egresos, 0);
+  // Totales acumulados — entrada = positivo (entra a cuenta), salida = negativo (sale)
+  const totalIngARS = rowsARS.reduce((s,r)=>s+r.entrada, 0);
+  const totalEgrARS = rowsARS.reduce((s,r)=>s+r.salida,  0);
   const saldoARS    = totalIngARS + totalEgrARS;
 
-  const totalIngUSD = rowsUSD.filter(r=>r.ingresos>0).reduce((s,r)=>s+r.ingresos, 0);
-  const totalEgrUSD = rowsUSD.filter(r=>r.egresos<0).reduce((s,r)=>s+r.egresos, 0);
+  const totalIngUSD = rowsUSD.reduce((s,r)=>s+r.entrada, 0);
+  const totalEgrUSD = rowsUSD.reduce((s,r)=>s+r.salida,  0);
   const saldoUSD    = totalIngUSD + totalEgrUSD;
 
-  const tNoch = rows.filter(r=>r.ingresos>0&&r.noches).reduce((s,r)=>s+(r.noches||0),0);
+  const tNoch = rows.filter(r=>r.noches&&r.entrada>0).reduce((s,r)=>s+(r.noches||0),0);
 
   // Todos los movimientos ordenados por mes desc
   const allRows = [...rows].sort((a,b) => -sp(a.mesano, b.mesano));
@@ -425,10 +431,10 @@ function render(cuenta) {
 
   for(const mes of meses){
     const mRows = allRows.filter(r=>r.mesano===mes);
-    const mIngARS = mRows.filter(r=>!r.isUSD&&r.ingresos>0).reduce((s,r)=>s+r.ingresos,0);
-    const mEgrARS = mRows.filter(r=>!r.isUSD&&r.egresos<0).reduce((s,r)=>s+r.egresos,0);
-    const mIngUSD = mRows.filter(r=>r.isUSD&&r.ingresos>0).reduce((s,r)=>s+r.ingresos,0);
-    const mEgrUSD = mRows.filter(r=>r.isUSD&&r.egresos<0).reduce((s,r)=>s+r.egresos,0);
+    const mIngARS = mRows.filter(r=>!r.isUSD).reduce((s,r)=>s+r.entrada,0);
+    const mEgrARS = mRows.filter(r=>!r.isUSD).reduce((s,r)=>s+r.salida,0);
+    const mIngUSD = mRows.filter(r=>r.isUSD).reduce((s,r)=>s+r.entrada,0);
+    const mEgrUSD = mRows.filter(r=>r.isUSD).reduce((s,r)=>s+r.salida,0);
 
     // Fila de mes
     h += `<tr style="background:#f0f0f5">
@@ -440,20 +446,17 @@ function render(cuenta) {
     </tr>`;
 
     for(const r of mRows){
-      const desc = r.conceptoIngreso || r.conceptoEgreso || '—';
-      const huespLabel = r.huesped ? `${r.huesped}` : desc;
-      const isIngr = r.ingresos !== 0 && r.conceptoIngreso;
-      const isEgr  = r.egresos  !== 0 && r.conceptoEgreso;
+      const label = r.huesped || r.concepto || '—';
       h += `<tr>
         <td class="ri-mes"></td>
         <td>${r.depto ? `<span class="ri-dtag">${r.depto}</span>` : '—'}</td>
-        <td><div>${huespLabel}</div><div style="font-size:10px;color:#aaa">${r.plataforma||desc}</div></td>
+        <td><div>${label}</div><div style="font-size:10px;color:#aaa">${r.concepto||''}</div></td>
         <td style="font-size:12px;color:#666">${r.propietario||'—'}</td>
-        <td style="text-align:center;font-size:12px;font-weight:600;color:var(--navy)">${(isIngr&&r.noches)?r.noches:''}</td>
-        <td class="r g">${(!r.isUSD&&r.ingresos>0)?fmtARS(r.ingresos):''}</td>
-        <td class="r rd">${(!r.isUSD&&r.egresos<0)?fmtARS(r.egresos):''}</td>
-        <td class="r g">${(r.isUSD&&r.ingresos>0)?fmtUSD(r.ingresos):''}</td>
-        <td class="r rd">${(r.isUSD&&r.egresos<0)?fmtUSD(r.egresos):''}</td>
+        <td style="text-align:center;font-size:12px;font-weight:600;color:var(--navy)">${r.noches||''}</td>
+        <td class="r g">${(!r.isUSD&&r.entrada>0)?fmtARS(r.entrada):''}</td>
+        <td class="r rd">${(!r.isUSD&&r.salida<0)?fmtARS(r.salida):''}</td>
+        <td class="r g">${(r.isUSD&&r.entrada>0)?fmtUSD(r.entrada):''}</td>
+        <td class="r rd">${(r.isUSD&&r.salida<0)?fmtUSD(r.salida):''}</td>
       </tr>`;
     }
   }
