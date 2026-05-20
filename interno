@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rent2888 · Cuentas Internas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F4F0;--card:#fff;--ink:#22284F;--ink2:#4A4F6B;--ink3:#9497A8;--line:#E4E4E7;
+  --navy:#22284F;--red:#E54040;--gold:#C9A84C;--green:#166534;--green-bg:#DCFCE7;
+  --purple:#6D28D9;--purple-bg:#EDE9FE
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.5}
+
+.topbar{background:var(--navy);color:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200}
+.logo{font-family:'DM Serif Display',serif;font-size:19px;cursor:pointer;user-select:none}
+.logo .r2{color:#E54040}
+.logo-int{font-size:11px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:2px 8px;border-radius:4px;margin-left:10px;letter-spacing:.06em;font-family:'DM Sans',sans-serif;font-weight:600}
+.tbtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer;transition:.15s}
+.tbtn:hover{background:rgba(255,255,255,.12)}
+.tbtn-gold{background:var(--gold);border-color:var(--gold);color:#fff}
+.tbtn-gold:hover{opacity:.88}
+.topbar-r{display:flex;gap:8px}
+
+#screen-load{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:82vh;gap:14px}
+.spin{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.load-txt{color:var(--ink2);font-size:14px}
+
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal{background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:440px;margin:20px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-lg{max-width:520px}
+.modal-ttl{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px}
+.modal-sub{color:var(--ink2);font-size:13px;margin-bottom:24px}
+.fg{margin-bottom:16px}
+.fl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2);margin-bottom:5px;display:block}
+.fi{width:100%;padding:9px 13px;border:1px solid var(--line);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--bg)}
+.fi:focus{outline:none;border-color:var(--gold)}
+.fhint{font-size:11px;color:var(--ink3);margin-top:4px}
+.mbtns{display:flex;gap:10px;margin-top:20px}
+.mbtn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;cursor:pointer;transition:.15s;flex:1;border:none}
+.mbtn-p{background:var(--navy);color:#fff}.mbtn-p:hover{opacity:.85}
+.mbtn-g{background:transparent;color:var(--ink2);border:1px solid var(--line)}.mbtn-g:hover{background:var(--bg)}
+.err{font-size:12px;color:var(--red);margin-top:7px;display:none}
+
+#screen-filters{display:none;background:var(--card);border-bottom:1px solid var(--line);padding:14px 28px;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-group-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.fsel{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 30px 7px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;min-width:200px}
+.fsel:focus{outline:none;border-color:var(--gold)}
+.moneda-tabs{display:flex;gap:4px}
+.mtab{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;border:1px solid var(--line);background:var(--bg);color:var(--ink2);cursor:pointer;transition:.15s;letter-spacing:.02em}
+.mtab.active-usd{background:var(--navy);border-color:var(--navy);color:#fff}
+.mtab.active-ars{background:var(--green);border-color:var(--green);color:#fff}
+.ml-a{margin-left:auto;align-self:center;display:flex;gap:8px}
+.abtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:7px;cursor:pointer;transition:.15s;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.abtn:hover{background:var(--bg)}
+
+#screen-main{display:none;padding:28px;max-width:960px;margin:0 auto}
+
+/* ── REPORTE INTERNO ── */
+.ri-wrap{background:#fff;border-radius:10px;overflow:hidden;border:0.5px solid #ddd;font-family:'DM Sans',sans-serif}
+
+.ri-header{background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:flex-start;border-top:3px solid var(--purple)}
+.ri-brand{font-size:18px;font-weight:700;color:#fff}
+.ri-brand span{color:#E54040}
+.ri-tag{font-size:10px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:2px 8px;border-radius:3px;margin-top:5px;display:inline-block;letter-spacing:.06em}
+.ri-hr{text-align:right}
+.ri-hl{font-size:10px;color:rgba(255,255,255,0.45)}
+.ri-hv{font-size:28px;font-weight:700;color:var(--gold)}
+
+.ri-namebar{background:#1c2240;padding:10px 24px}
+.ri-cuentanombre{font-size:19px;font-weight:500;color:#fff}
+.ri-cuentasub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px}
+
+.ri-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:0.5px solid #eee}
+.ri-stat{padding:13px 16px;border-right:0.5px solid #eee}
+.ri-stat:last-child{border-right:none}
+.ri-sl{font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px}
+.ri-sv{font-size:15px;font-weight:600;color:var(--navy)}
+.ri-sv.r{color:var(--red)}
+.ri-sv.g{color:var(--green)}
+
+.ri-section{padding:14px 24px;border-bottom:0.5px solid #eee}
+.ri-stitle{font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.08em;border-bottom:2px solid var(--purple);padding-bottom:5px;margin-bottom:10px;display:inline-block}
+
+.ri-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ri-tbl thead tr{background:#F7F6F3}
+.ri-tbl th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:#888;letter-spacing:.05em;border-bottom:0.5px solid #e8e8e8}
+.ri-tbl th.r{text-align:right}
+.ri-tbl td{padding:8px 10px;border-bottom:0.5px solid #f4f4f4;color:#444;vertical-align:middle}
+.ri-tbl td.r{text-align:right;font-weight:600}
+.ri-tbl td.r.g{color:var(--green)}
+.ri-tbl td.r.r{color:var(--red)}
+.ri-tbl tbody tr:last-child td{border-bottom:none}
+.ri-dtag{display:inline-block;background:#eef0f6;color:var(--navy);font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+.ri-prop{font-size:10px;color:#aaa;margin-top:2px}
+.ri-late{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
+
+.ri-liq{padding:14px 24px;border-bottom:0.5px solid #eee}
+.ri-lrow{display:flex;justify-content:space-between;font-size:13px;padding:5px 0}
+.ri-lrow.total{border-top:1.5px solid var(--navy);margin-top:6px;padding-top:10px;font-weight:700;font-size:14px}
+.ri-ll{color:#666}
+.ri-ll.b{color:var(--navy);font-weight:700}
+.ri-lv{color:var(--navy)}
+.ri-lv.r{color:var(--red);font-weight:500}
+.ri-lv.g{color:var(--green);font-weight:700}
+
+.ri-charts{display:grid;grid-template-columns:1fr 1fr;border-bottom:0.5px solid #eee}
+.ri-chart-box{padding:14px 20px}
+.ri-chart-box:first-child{border-right:0.5px solid #eee}
+.ri-chart-title{font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.06em;margin-bottom:10px}
+.ri-chart-area{position:relative;height:100px}
+.ri-gridlines{position:absolute;top:0;left:34px;right:0;height:82px}
+.ri-gridline{position:absolute;left:0;right:0;border-top:1px solid #bbb}
+.ri-glbl{position:absolute;left:-34px;font-size:8px;color:#666;white-space:nowrap;transform:translateY(-50%);font-weight:500}
+.ri-bars{position:absolute;bottom:14px;left:34px;right:0;top:0;display:flex;align-items:flex-end;gap:3px}
+.ri-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;height:100%;justify-content:flex-end}
+.ri-bar{width:100%;border-radius:2px 2px 0 0;flex-shrink:0}
+.ri-bar-lbl{font-size:7px;color:#999;text-align:center;line-height:1.2;flex-shrink:0}
+
+.ri-footer{background:var(--navy);padding:9px 24px;display:flex;justify-content:space-between}
+.ri-fl{font-size:10px;color:rgba(255,255,255,0.35)}
+
+.empty{text-align:center;padding:60px;color:var(--ink3);font-size:14px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media(max-width:640px){
+  .topbar,#screen-filters,#screen-main{padding-left:16px;padding-right:16px}
+  .ri-stats{grid-template-columns:repeat(2,1fr)}
+  .ri-charts{grid-template-columns:1fr}
+}
+@media print{
+  .topbar,#screen-filters,.abtn,.tbtn{display:none!important}
+  body{background:#fff}
+  #screen-main{display:block!important;padding:0;max-width:100%}
+  .ri-wrap{border:none;border-radius:0}
+  .ri-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ri-namebar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ri-footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center">
+    <div class="logo" id="logo" onclick="logoClick()">Rent<span class="r2">2888</span></div>
+    <span class="logo-int">INTERNO</span>
+  </div>
+  <div class="topbar-r">
+    <button class="tbtn tbtn-gold" onclick="window.print()" id="btn-pdf" style="display:none">↓ PDF</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL PASSWORD -->
+<div class="ov" id="ov-pass" style="display:none">
+  <div class="modal">
+    <div class="modal-ttl">Administración</div>
+    <div class="modal-sub">Ingresá la contraseña para acceder a la configuración.</div>
+    <div class="fg">
+      <label class="fl">Contraseña</label>
+      <input class="fi" id="inp-pass" type="password" placeholder="••••" onkeydown="if(event.key==='Enter')checkPass()">
+      <div class="err" id="pass-err">Contraseña incorrecta</div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn mbtn-g" onclick="closePass()">Cancelar</button>
+      <button class="mbtn mbtn-p" onclick="checkPass()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="ov" id="ov-cfg" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-ttl">Configuración</div>
+    <div class="fg">
+      <label class="fl">ID del Google Sheet</label>
+      <input class="fi" id="c-sid">
+      <div class="fhint">El Sheet debe estar compartido como público</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Pestaña de datos (ej: $$$)</label>
+      <input class="fi" id="c-tab" value="$$$">
+    </div>
+    <div class="mbtns">
+      <button class="mbtn mbtn-g" onclick="closeCfg()">Cancelar</button>
+      <button class="mbtn mbtn-p" onclick="applyCfg()">Guardar y recargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div id="screen-filters" style="display:none">
+  <div class="filter-group">
+    <div class="filter-group-label">Moneda</div>
+    <div class="moneda-tabs">
+      <button class="mtab active-usd" id="tab-usd" onclick="setMoneda('u$')">💵 USD</button>
+      <button class="mtab" id="tab-ars" onclick="setMoneda('$')">🇦🇷 Pesos</button>
+    </div>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-label">Cuenta</div>
+    <select class="fsel" id="sel-cuenta" onchange="onFilter()">
+      <option value="">Seleccionar cuenta...</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <div class="filter-group-label">Período</div>
+    <select class="fsel" id="sel-per" onchange="onFilter()">
+      <option value="">Seleccionar...</option>
+    </select>
+  </div>
+  <div class="ml-a">
+    <button class="abtn" onclick="window.print()">↓ PDF</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="screen-main">
+  <div id="ra"><div class="empty">Seleccioná una cuenta y período.</div></div>
+</div>
+
+<script>
+let CFG = {
+  sid: '1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw',
+  tab: '$$$'
+};
+const PASS = '2888';
+const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+let dataRows = [];
+let activeMoneda = 'u$';
+let lclicks = 0, ltimer = null;
+
+function logoClick() {
+  lclicks++;
+  if (ltimer) clearTimeout(ltimer);
+  ltimer = setTimeout(() => lclicks = 0, 600);
+  if (lclicks >= 3) {
+    lclicks = 0;
+    document.getElementById('c-sid').value = CFG.sid;
+    document.getElementById('c-tab').value = CFG.tab;
+    document.getElementById('ov-pass').style.display = 'flex';
+    setTimeout(() => document.getElementById('inp-pass').focus(), 80);
+  }
+}
+function checkPass() {
+  if (document.getElementById('inp-pass').value === PASS) {
+    document.getElementById('ov-pass').style.display = 'none';
+    document.getElementById('inp-pass').value = '';
+    document.getElementById('pass-err').style.display = 'none';
+    document.getElementById('ov-cfg').style.display = 'flex';
+  } else {
+    document.getElementById('pass-err').style.display = 'block';
+    document.getElementById('inp-pass').value = '';
+    document.getElementById('inp-pass').focus();
+  }
+}
+function closePass() { document.getElementById('ov-pass').style.display='none'; document.getElementById('inp-pass').value=''; document.getElementById('pass-err').style.display='none'; }
+function closeCfg()  { document.getElementById('ov-cfg').style.display='none'; }
+function applyCfg()  {
+  CFG.sid = document.getElementById('c-sid').value.trim();
+  CFG.tab = document.getElementById('c-tab').value.trim() || '$$$';
+  closeCfg();
+  dataRows = [];
+  showLoad();
+  init();
+}
+
+const ml = mano => { if(!mano) return ''; const [m,y]=mano.split('/'); return (MESES[+m]||m)+' '+y; };
+function fmt(n, mo) {
+  if (n==null) return '—';
+  const neg=n<0, abs=Math.abs(n);
+  const s = mo==='u$'
+    ? 'u$'+Math.round(abs).toLocaleString('es-AR')
+    : '$'+Math.round(abs).toLocaleString('es-AR');
+  return neg?'-'+s:s;
+}
+const pn = s => { if(!s||s==='#N/A'||s===''||s==='FALSE') return 0; return parseFloat(String(s).replace(/[^\d.\-]/g,''))||0; };
+const sp = (a,b) => { const [ma,ya]=a.split('/').map(Number),[mb,yb]=b.split('/').map(Number); return ya!==yb?ya-yb:ma-mb; };
+function toast(msg) { const el=document.getElementById('toast'); el.textContent=msg; el.className='toast show'; setTimeout(()=>el.className='toast',3200); }
+
+function splitCSV(line) {
+  const res=[]; let cur=''; let inQ=false;
+  for (let i=0;i<line.length;i++) {
+    if (line[i]==='"'){inQ=!inQ;}
+    else if (line[i]===','&&!inQ){res.push(cur.replace(/^"|"$/g,'').trim());cur='';}
+    else{cur+=line[i];}
+  }
+  res.push(cur.replace(/^"|"$/g,'').trim());
+  return res;
+}
+
+async function fetchCSV(sheetId, tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`No se pudo acceder a la hoja "${tabName}".`);
+  return r.text();
+}
+
+function parseMainSheet(csv) {
+  const lines = csv.split('\n').filter(l=>l.trim());
+  let headers=[], hi=-1;
+
+  for (let i=0;i<Math.min(5,lines.length);i++) {
+    const c = splitCSV(lines[i]);
+    if (c.some(x=>x==='mes/ano') && c.some(x=>x==='Propietario')) {
+      headers=c; hi=i; break;
+    }
+  }
+  if (hi<0) throw new Error('No encontré los encabezados en la hoja $$$.');
+
+  const ci = n => headers.findIndex(h => h.trim() === n.trim());
+
+  const COL = {
+    depto:        ci('Departamento'),
+    concIngr:     ci('Concepto Ingresos'),
+    concEgr:      ci('Concepto Egresos'),
+    huesped:      ci('Huésped'),
+    plataforma:   ci('Plataforma'),
+    fechaIn:      ci('Fecha de ingreso'),
+    fechaEg:      ci('Fecha de Egreso'),
+    noches:       ci('Noches'),
+    ing_ars:      ci('Ingresos u$ a $'),
+    ing_ars_orig: ci('TOTAL'),
+    ing_usd:      ci('Ingresos Total $'),
+    egr_ars:      ci('Egresos'),
+    egr_usd:      ci('Egresos $ a u$'),
+    propietario:  ci('Propietario'),
+    mesano:       ci('mes/ano'),
+    moneda:       ci('Moneda del Reporte'),
+    moneda2:      ci('Moneda Reporte'),
+    moneda3:      ci('Moneda'),
+    dondePesos:   19,   // col T = "Donde $?" — índice fijo
+  };
+
+  const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
+
+  dataRows = [];
+
+  for (let i=hi+1;i<lines.length;i++) {
+    const c = splitCSV(lines[i]);
+    const mano = (c[COL.mesano]||'').trim();
+    if (!mano || mano==='#N/A' || mano==='mes/ano') continue;
+    if (!/^\d{1,2}\/\d{4}$/.test(mano)) continue;
+
+    const prop     = (c[COL.propietario]||'').trim();
+    const cuenta   = (c[COL.dondePesos]||'').trim();  // col T: Donde $?
+    if (!prop && !cuenta) continue;
+
+    const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || '$';
+    const isUSD  = moneda === 'u$';
+
+    const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars]) || pn(c[COL.ing_ars_orig]));
+    const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
+
+    if (!ing && !egr) continue;
+
+    dataRows.push({
+      cuenta,
+      depto:           (c[COL.depto]||'').trim(),
+      propietario:     prop,
+      moneda,
+      plataforma:      (c[COL.plataforma]||'').trim(),
+      conceptoIngreso: (c[COL.concIngr]||'').trim(),
+      huesped:         (c[COL.huesped]||'').trim(),
+      fechaIngreso:    (c[COL.fechaIn]||'').trim(),
+      fechaEgreso:     (c[COL.fechaEg]||'').trim(),
+      noches:          pn(c[COL.noches]),
+      ingresos:        Math.round(ing),
+      egresos:         egr,
+      conceptoEgreso:  (c[COL.concEgr]||'').trim(),
+      mesano:          mano,
+    });
+  }
+}
+
+async function init() {
+  try {
+    const csv = await fetchCSV(CFG.sid, CFG.tab);
+    parseMainSheet(csv);
+    if (!dataRows.length) throw new Error('Sin datos en la hoja $$$.');
+    buildUI();
+  } catch(e) {
+    document.getElementById('screen-load').innerHTML =
+      `<div style="text-align:center;color:var(--ink2);padding:40px;max-width:380px">
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-weight:600;margin-bottom:6px;color:var(--ink)">Error al cargar</div>
+        <div style="font-size:13px;margin-bottom:14px">${e.message}</div>
+        <div style="font-size:12px;color:var(--ink3)">Hacé <strong>triple clic</strong> en el logo para ir a configuración</div>
+      </div>`;
+  }
+}
+
+function buildUI() {
+  const pers = [...new Set(dataRows.map(r=>r.mesano).filter(Boolean))].sort(sp);
+  const sper = document.getElementById('sel-per');
+  sper.innerHTML = '<option value="">Seleccionar período...</option>' + pers.map(p=>`<option value="${p}">${ml(p)}</option>`).join('');
+  if (pers.length) sper.value = pers[pers.length-1];
+
+  buildCuentaDropdown();
+
+  document.getElementById('screen-load').style.display = 'none';
+  document.getElementById('screen-filters').style.display = 'flex';
+  document.getElementById('screen-main').style.display = 'block';
+  document.getElementById('btn-pdf').style.display = 'block';
+  onFilter();
+}
+
+function buildCuentaDropdown() {
+  // Cuentas que tienen movimientos en la moneda activa
+  const cuentas = [...new Set(
+    dataRows
+      .filter(r => r.moneda === activeMoneda && r.cuenta)
+      .map(r => r.cuenta)
+  )].sort();
+
+  const sel = document.getElementById('sel-cuenta');
+  const prev = sel.value;
+  sel.innerHTML = '<option value="">Seleccionar cuenta...</option>' +
+    cuentas.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if (cuentas.includes(prev)) sel.value = prev;
+
+  document.getElementById('tab-usd').className = 'mtab' + (activeMoneda==='u$'?' active-usd':'');
+  document.getElementById('tab-ars').className = 'mtab' + (activeMoneda==='$'?' active-ars':'');
+}
+
+function setMoneda(m) {
+  activeMoneda = m;
+  buildCuentaDropdown();
+  onFilter();
+}
+
+function onFilter() {
+  const cuenta = document.getElementById('sel-cuenta').value;
+  const per    = document.getElementById('sel-per').value;
+  render(cuenta, per);
+}
+
+function showLoad() {
+  document.getElementById('screen-load').style.display='flex';
+  document.getElementById('screen-load').innerHTML='<div class="spin"></div><div class="load-txt">Cargando datos...</div>';
+  document.getElementById('screen-filters').style.display='none';
+  document.getElementById('screen-main').style.display='none';
+}
+
+// ── RENDER ──
+function render(cuenta, per) {
+  const ra = document.getElementById('ra');
+  if (!cuenta||!per) { ra.innerHTML='<div class="empty">Seleccioná una cuenta y período.</div>'; return; }
+
+  const mon = activeMoneda;
+
+  // Filas de esta cuenta en este período
+  const rows = dataRows.filter(r => r.cuenta===cuenta && r.mesano===per && r.moneda===mon);
+
+  // Separar ingresos y egresos
+  const ingRows = rows.filter(r => r.ingresos !== 0 && r.conceptoIngreso);
+  const egrRows = rows.filter(r => r.egresos  !== 0 && r.conceptoEgreso);
+
+  const tIng  = ingRows.reduce((s,r)=>s+r.ingresos, 0);
+  const tEgr  = egrRows.reduce((s,r)=>s+r.egresos,  0);
+  const neto  = Math.round(tIng + tEgr);
+  const tNoch = ingRows.filter(r=>r.ingresos>0).reduce((s,r)=>s+(r.noches||0), 0);
+  const props  = [...new Set(ingRows.map(r=>r.propietario).filter(Boolean))];
+
+  // Histórico de la cuenta
+  const allPers = [...new Set(dataRows.filter(r=>r.cuenta===cuenta&&r.moneda===mon).map(r=>r.mesano))].sort(sp).slice(-18);
+  const hN = allPers.map(p => dataRows.filter(x=>x.cuenta===cuenta&&x.mesano===p&&x.moneda===mon&&x.conceptoIngreso&&x.ingresos>0).reduce((s,x)=>s+(x.noches||0),0));
+  const hD = allPers.map(p => {
+    const pr = dataRows.filter(x=>x.cuenta===cuenta&&x.mesano===p&&x.moneda===mon);
+    const i  = pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos, 0);
+    const e  = pr.filter(x=>x.conceptoEgreso).reduce((s,x)=>s+x.egresos, 0);
+    return i + e;
+  });
+  const hL = allPers.map(p=>{const[m,y]=p.split('/');return MESES[+m].slice(0,3)+"'"+String(y).slice(2);});
+  const ci = allPers.indexOf(per);
+
+  // ── Build HTML ──
+  let h = '<div class="ri-wrap">';
+
+  // HEADER
+  h += `<div class="ri-header">
+    <div>
+      <div class="ri-brand">Rent<span>2888</span></div>
+      <div class="ri-tag">CUENTA INTERNA · ${mon==='u$'?'USD':'PESOS'}</div>
+    </div>
+    <div class="ri-hr">
+      <div class="ri-hl">Saldo neto</div>
+      <div class="ri-hv">${fmt(neto,mon)}</div>
+    </div>
+  </div>`;
+
+  // NAMEBAR
+  h += `<div class="ri-namebar">
+    <div class="ri-cuentanombre">${cuenta}</div>
+    <div class="ri-cuentasub">${ml(per)} · ${tNoch} noches · ${props.length} propietario${props.length!==1?'s':''}</div>
+  </div>`;
+
+  // STATS
+  h += `<div class="ri-stats">
+    <div class="ri-stat"><div class="ri-sl">INGRESOS</div><div class="ri-sv g">${fmt(tIng,mon)}</div></div>
+    <div class="ri-stat"><div class="ri-sl">EGRESOS</div><div class="ri-sv r">${fmt(tEgr,mon)}</div></div>
+    <div class="ri-stat"><div class="ri-sl">NETO</div><div class="ri-sv ${neto>=0?'g':'r'}">${fmt(neto,mon)}</div></div>
+    <div class="ri-stat"><div class="ri-sl">NOCHES</div><div class="ri-sv">${tNoch}</div></div>
+  </div>`;
+
+  // INGRESOS
+  h += `<div class="ri-section"><div class="ri-stitle">INGRESOS DEL MES</div>`;
+  if (ingRows.length) {
+    h += `<table class="ri-tbl"><thead><tr>
+      <th>Depto</th><th>Propietario</th><th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Monto</th>
+    </tr></thead><tbody>`;
+    for (const s of ingRows) {
+      const isL = (s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
+      h += `<tr>
+        <td><span class="ri-dtag">${s.depto||'—'}</span></td>
+        <td><div style="font-size:12px;color:#555">${s.propietario||'—'}</div><div class="ri-prop">${s.plataforma||s.conceptoIngreso||''}</div></td>
+        <td><div>${s.huesped||'—'}${isL?'<span class="ri-late">Late CO</span>':''}</div></td>
+        <td style="font-size:12px;color:#666">${s.fechaIngreso||'—'}</td>
+        <td style="font-size:12px;color:#666">${s.fechaEgreso||'—'}</td>
+        <td style="text-align:center;font-size:12px;font-weight:600;color:var(--navy)">${s.noches||'—'}</td>
+        <td class="r g">${fmt(s.ingresos,mon)}</td>
+      </tr>`;
+    }
+    h += `</tbody><tfoot><tr><td colspan="6" style="text-align:right;font-weight:600;font-size:11px;color:#666;padding:8px 10px">Total ingresos</td><td class="r g" style="padding:8px 10px;font-size:12px">${fmt(tIng,mon)}</td></tr></tfoot></table>`;
+  } else {
+    h += `<div style="padding:14px 0;color:#aaa;font-size:13px;font-style:italic">Sin ingresos registrados en este período.</div>`;
+  }
+  h += `</div>`;
+
+  // EGRESOS
+  h += `<div class="ri-section"><div class="ri-stitle">EGRESOS DEL MES</div>`;
+  if (egrRows.length) {
+    // Agrupar por concepto + depto
+    const grouped = {};
+    for (const e of egrRows) {
+      const key = `${e.depto}||${e.conceptoEgreso}`;
+      if (!grouped[key]) grouped[key] = { concepto: e.conceptoEgreso, depto: e.depto, prop: e.propietario, monto: 0 };
+      grouped[key].monto += e.egresos;
+    }
+    h += `<table class="ri-tbl"><thead><tr>
+      <th>Concepto</th><th>Depto</th><th>Propietario</th><th class="r">Monto</th>
+    </tr></thead><tbody>`;
+    for (const e of Object.values(grouped)) {
+      h += `<tr>
+        <td>${e.concepto}</td>
+        <td><span class="ri-dtag">${e.depto||'—'}</span></td>
+        <td style="font-size:12px;color:#666">${e.prop||'—'}</td>
+        <td class="r r">${fmt(e.monto,mon)}</td>
+      </tr>`;
+    }
+    h += `</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:600;font-size:11px;color:#666;padding:8px 10px">Total egresos</td><td class="r" style="color:var(--red);font-weight:600;padding:8px 10px;font-size:12px">${fmt(tEgr,mon)}</td></tr></tfoot></table>`;
+  } else {
+    h += `<div style="padding:14px 0;color:#aaa;font-size:13px;font-style:italic">Sin egresos registrados en este período.</div>`;
+  }
+  h += `</div>`;
+
+  // RESUMEN
+  h += `<div class="ri-liq">
+    <div class="ri-lrow"><span class="ri-ll">Total ingresos</span><span class="ri-lv">${fmt(tIng,mon)}</span></div>
+    <div class="ri-lrow"><span class="ri-ll">Total egresos</span><span class="ri-lv r">${fmt(tEgr,mon)}</span></div>
+    <div class="ri-lrow total"><span class="ri-ll b">Saldo neto</span><span class="ri-lv ${neto>=0?'g':'r'}">${fmt(neto,mon)}</span></div>
+  </div>`;
+
+  // CHARTS
+  h += `<div class="ri-charts">
+    <div class="ri-chart-box">
+      <div class="ri-chart-title">NOCHES POR MES</div>
+      <div class="ri-chart-area">
+        <div class="ri-gridlines" id="ri-gl-n"></div>
+        <div class="ri-bars" id="ri-bn"></div>
+      </div>
+    </div>
+    <div class="ri-chart-box">
+      <div class="ri-chart-title">INGRESOS POR MES</div>
+      <div class="ri-chart-area">
+        <div class="ri-gridlines" id="ri-gl-m"></div>
+        <div class="ri-bars" id="ri-bm"></div>
+      </div>
+    </div>
+  </div>`;
+
+  // FOOTER
+  h += `<div class="ri-footer">
+    <span class="ri-fl">rent2888.com · USO INTERNO</span>
+    <span class="ri-fl">Generado el ${new Date().toLocaleDateString('es-AR')}</span>
+  </div>`;
+
+  h += '</div>';
+  ra.innerHTML = h;
+  setTimeout(() => riRenderCharts(hL,hN,hD,ci,mon), 50);
+}
+
+function riNiceSteps(max,steps){
+  const raw=max/steps;
+  const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  return [1,2,5,10].map(x=>x*mag).find(x=>x>=raw)||mag*10;
+}
+
+function riRenderCharts(labels,noches,dinero,ci,mon){
+  const CHART_H=82;
+  function renderOne(barsId,glId,data,activeColor,dimColor,fmtFn){
+    const max=Math.max(...data.map(d=>d.v),1);
+    const step=riNiceSteps(max,4);
+    const niceMax=Math.ceil(max/step)*step;
+    const gl=document.getElementById(glId);
+    if(!gl) return;
+    let glHtml='';
+    for(let v=step;v<=niceMax;v+=step){
+      const top=CHART_H-(v/niceMax)*CHART_H;
+      glHtml+=`<div class="ri-gridline" style="top:${top}px"><span class="ri-glbl">${fmtFn(v)}</span></div>`;
+    }
+    gl.innerHTML=glHtml;
+    const el=document.getElementById(barsId);
+    if(!el) return;
+    el.innerHTML=data.map((d,i)=>{
+      const h=niceMax>0?Math.max(d.v>0?2:0,Math.round((d.v/niceMax)*CHART_H)):0;
+      const isActive=i===ci;
+      return `<div class="ri-bar-wrap"><div class="ri-bar" style="height:${h}px;background:${isActive?activeColor:dimColor}"></div><div class="ri-bar-lbl">${d.m}</div></div>`;
+    }).join('');
+  }
+  const chartData=labels.map((l,i)=>({m:l,vN:noches[i],vD:dinero[i]}));
+  renderOne('ri-bn','ri-gl-n',chartData.map(d=>({m:d.m,v:d.vN})),'#22284F','#C5C8D8',v=>v);
+  renderOne('ri-bm','ri-gl-m',chartData.map(d=>({m:d.m,v:d.vD})),'#6D28D9','#DDD6FE',v=>{
+    if(v>=1000000) return (v/1000000).toFixed(1)+'M';
+    if(v>=1000) return (v/1000).toFixed(0)+'k';
+    return v;
+  });
+}
+
+init();
+</script>
+</body>
+</html>
