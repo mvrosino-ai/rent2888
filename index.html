@@ -685,21 +685,16 @@ function render(prop, per) {
           ? r.egrPorDepto
           : r.egresos / (sbMap[edif] || 1);
       }
-      // Para u$: redondear a 2 decimales por fila (como PowerBI). Para $: redondear a entero.
-      byConcepto[key] = (byConcepto[key] || 0) + (isUSD ? Math.round(porDepto * 100) / 100 : Math.round(porDepto));
+      // Redondear a entero por fila antes de acumular (igual que PowerBI)
+      byConcepto[key] = (byConcepto[key] || 0) + Math.round(porDepto);
     }
 
-    const isUSDedif = mon === 'u$';
     for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
-      const porDeptoRounded = isUSDedif
-        ? Math.round(totalPorDepto * 100) / 100
-        : Math.round(totalPorDepto);
+      // totalPorDepto ya es suma de enteros (redondeados por fila, igual que PowerBI)
       buildingExpenses.push({
         concepto: concepto,
         edificio: edif,
-        egresos:  isUSDedif
-          ? Math.round(porDeptoRounded * cantidad * 100) / 100
-          : Math.round(porDeptoRounded * cantidad),
+        egresos:  Math.round(totalPorDepto * cantidad),
         myDeptos: cantidad,
       });
     }
