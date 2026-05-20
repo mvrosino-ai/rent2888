@@ -405,15 +405,35 @@ async function init() {
 function buildUI() {
   const pers = [...new Set(dataRows.map(r=>r.mesano).filter(Boolean))].sort(sp);
   const sper = document.getElementById('sel-per');
-  sper.innerHTML = '<option value="">Seleccionar período...</option>' + pers.map(p=>`<option value="${p}">${ml(p)}</option>`).join('');
+  if (!sper) { console.error('sel-per not found'); return; }
+  sper.innerHTML = '<option value="">Seleccionar periodo...</option>' + pers.map(p=>`<option value="${p}">${ml(p)}</option>`).join('');
   if (pers.length) sper.value = pers[pers.length-1];
+
+  // Debug
+  const todasLasCuentas = [...new Set(dataRows.map(r=>r.cuenta).filter(Boolean))];
+  const todasLasMonedas = [...new Set(dataRows.map(r=>r.moneda).filter(Boolean))];
+  console.log('[interno] cuentas:', todasLasCuentas);
+  console.log('[interno] monedas:', todasLasMonedas);
+  console.log('[interno] filas:', dataRows.length);
+
+  // Si no hay cuentas en u$, cambiar a $ automaticamente
+  const cuentasUSD = dataRows.filter(r=>r.moneda==='u$'&&r.cuenta).map(r=>r.cuenta);
+  if (cuentasUSD.length === 0) {
+    activeMoneda = '$';
+    document.getElementById('tab-usd').className = 'mtab';
+    document.getElementById('tab-ars').className = 'mtab active-ars';
+  }
 
   buildCuentaDropdown();
 
-  document.getElementById('screen-load').style.display = 'none';
-  document.getElementById('screen-filters').style.display = 'flex';
-  document.getElementById('screen-main').style.display = 'block';
-  document.getElementById('btn-pdf').style.display = 'block';
+  const sl = document.getElementById('screen-load');
+  const sf = document.getElementById('screen-filters');
+  const sm = document.getElementById('screen-main');
+  const bp = document.getElementById('btn-pdf');
+  if (sl) sl.style.display = 'none';
+  if (sf) sf.style.display = 'flex';
+  if (sm) sm.style.display = 'block';
+  if (bp) bp.style.display = 'block';
   onFilter();
 }
 
