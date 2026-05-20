@@ -389,6 +389,9 @@ async function init() {
     if (!dataRows.length) throw new Error('Sin datos en la hoja $$$.');
     buildUI();
   } catch(e) {
+    console.error('Error en init:', e);
+    const sl = document.getElementById('screen-load');
+    if (sl) sl.style.display = 'flex';
     document.getElementById('screen-load').innerHTML =
       `<div style="text-align:center;color:var(--ink2);padding:40px;max-width:380px">
         <div style="font-size:36px;margin-bottom:12px">⚠️</div>
@@ -636,7 +639,7 @@ function riRenderCharts(labels,noches,dinero,ci,mon){
   });
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
