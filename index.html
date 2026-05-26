@@ -687,14 +687,37 @@ function render(prop, per) {
       byConcepto[key] = (byConcepto[key] || 0) + porDepto;
     }
 
-    for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
-      // PowerBI: Math.round(sum(egrPorDeptoU) * cantidad) — multiplicar decimales primero, redondear al final
-      buildingExpenses.push({
-        concepto: concepto,
-        edificio: edif,
-        egresos:  Math.round(totalPorDepto * cantidad),
-        myDeptos: cantidad,
-      });
+    if (mon === 'u$') {
+      // USD: round por concepto (Math.round(sum * cantidad))
+      for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
+        buildingExpenses.push({
+          concepto: concepto,
+          edificio: edif,
+          egresos:  Math.round(totalPorDepto * cantidad),
+          myDeptos: cantidad,
+        });
+      }
+    } else {
+      // Pesos: round sobre el total del edificio completo (todos los conceptos juntos)
+      const totalEdif = Object.values(byConcepto).reduce((s,v)=>s+v,0);
+      const totalEdifRounded = Math.round(totalEdif * cantidad);
+      // Distribuir el total redondeado entre los conceptos (el último absorbe el residuo)
+      const conceptos = Object.entries(byConcepto);
+      let acum = 0;
+      for (let i = 0; i < conceptos.length; i++) {
+        const [concepto, v] = conceptos[i];
+        const esUltimo = i === conceptos.length - 1;
+        const egrConc = esUltimo
+          ? totalEdifRounded - acum
+          : Math.round(v / totalEdif * totalEdifRounded);
+        acum += egrConc;
+        buildingExpenses.push({
+          concepto: concepto,
+          edificio: edif,
+          egresos:  egrConc,
+          myDeptos: cantidad,
+        });
+      }
     }
   }
 
