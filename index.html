@@ -721,13 +721,12 @@ function render(prop, per) {
   // Excluir de directEgrs las filas que ya se procesaron como gasto de edificio compartido
   // (son las filas donde col B = nombre de un edificio en edificioMap)
   const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
-  // Agrupar egresos directos por depto+concepto, sumar decimales y redondear el total (como PowerBI)
-  const dirEgrByKey = {};
+  // Agrupar egresos directos por depto (igual que PowerBI), sumar decimales y redondear por depto
+  const dirEgrByDepto = {};
   for (const r of directEgrs) {
-    const key = r.depto + '||' + r.conceptoEgreso;
-    dirEgrByKey[key] = (dirEgrByKey[key] || 0) + r.egresos;
+    dirEgrByDepto[r.depto] = (dirEgrByDepto[r.depto] || 0) + r.egresos;
   }
-  const directEgrTotal = Object.values(dirEgrByKey).reduce((s,v)=>s+Math.round(v),0);
+  const directEgrTotal = Object.values(dirEgrByDepto).reduce((s,v)=>s+Math.round(v),0);
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
