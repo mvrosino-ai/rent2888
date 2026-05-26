@@ -525,7 +525,7 @@ function parseMainSheet(csv) {
       fechaIngreso:    (c[COL.fechaIn]||'').trim(),
       fechaEgreso:     (c[COL.fechaEg]||'').trim(),
       noches:          pn(c[COL.noches]),
-      ingresos:        Math.round(ing),
+      ingresos:        ing,
       egresos:         egr,
       egrPorDepto:     COL.eprDepto>=0   ? pn(c[COL.eprDepto])   : null,
       egrPorDeptoU:    COL.eprDeptoU>=0  ? pn(c[COL.eprDeptoU]) : null,
@@ -712,7 +712,8 @@ function render(prop, per) {
     const drs   = directRows.filter(r=>r.depto===d);
     const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0&&r.conceptoIngreso!=='Booking');
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
-    const ing   = stays.reduce((s,r)=>s+r.ingresos,0); // neto: bruto - devoluciones
+    const ingRaw = stays.reduce((s,r)=>s+r.ingresos,0); // suma decimales primero
+    const ing    = Math.round(ingRaw);                    // redondear total del depto (como PowerBI)
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.filter(r=>r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
     dd[d]={stays,egrs,ing,egr,noch};
