@@ -703,25 +703,24 @@ function render(prop, per) {
   // Aggregate stays and direct egresos by depto
   // Excluir edificios compartidos de la lista de deptos (van en buildingExpenses)
   const deptos = [...new Set(directRows.map(r=>r.depto).filter(d=>d&&!sharedBuildings.has(d)))].sort();
-  let tIng=0, tEgr=0, tNoch=0;
+  let tIng=0, tIngRaw=0, tEgr=0, tEgrRaw=0, tNoch=0;
   const dd={};
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
     const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0&&r.conceptoIngreso!=='Booking');
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
-    const ingRaw = stays.reduce((s,r)=>s+r.ingresos,0); // suma decimales primero
-    const ing    = Math.round(ingRaw);                    // redondear total del depto (como PowerBI)
+    const ingRaw = stays.reduce((s,r)=>s+r.ingresos,0);
+    const ing    = Math.round(ingRaw); // para mostrar en tabla
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.filter(r=>r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
     dd[d]={stays,egrs,ing,egr,noch};
     tIng+=ing;
+    tIngRaw+=ingRaw; // acumular crudo para neto final
   }
 
-  // Excluir de directEgrs las filas que ya se procesaron como gasto de edificio compartido
-  // (son las filas donde col B = nombre de un edificio en edificioMap)
+  // Egresos directos: acumular crudos por depto, sumar al raw total
   const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
-  // Agrupar egresos directos por depto (igual que PowerBI), sumar decimales y redondear por depto
   const dirEgrByDepto = {};
   for (const r of directEgrs) {
     dirEgrByDepto[r.depto] = (dirEgrByDepto[r.depto] || 0) + r.egresos;
@@ -729,10 +728,14 @@ function render(prop, per) {
   const directEgrTotal = Object.values(dirEgrByDepto).reduce((s,v)=>s+Math.round(v),0);
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
+  // Egreso crudo total (sin rounds intermedios) para neto final
+  tEgrRaw = directEgrs.reduce((s,r)=>s+r.egresos,0) + buildEgrTotal;
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
 
   const com  = Math.round(tIng * CFG.com);
-  const neto = Math.round(tIng + tEgr - com);
+  // PowerBI: neto = round(ingRaw - ingRaw*com% + egrRaw) — todo crudo, un solo round al final
+  const comRaw = tIngRaw * CFG.com;
+  const neto = Math.round(tIngRaw - comRaw + tEgrRaw);
 
   // ── Historical ──
   const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).slice(-18);
