@@ -666,16 +666,14 @@ function render(prop, per) {
     for (const r of dataRows) {
       if (r.mesano !== per) continue;
       if (r.egresos === 0 || !r.conceptoEgreso) continue;
-      if (r.depto !== edif) continue; // col B = nombre del edificio
+      if (r.depto !== edif) continue;
       const key = r.conceptoEgreso;
-      // Use USD column if prop bills in u$, otherwise pesos column
       const isUSD = mon === 'u$';
       let porDepto;
       if (isUSD) {
         if (r.egrPorDeptoU != null && r.egrPorDeptoU !== 0) {
           porDepto = r.egrPorDeptoU;
         } else if (r.egrAaU != null && r.egrAaU !== 0) {
-          // egrAaU is total building egreso in u$ — divide by total deptos
           porDepto = r.egrAaU / (sbMap[edif] || 1);
         } else {
           porDepto = 0;
@@ -685,17 +683,16 @@ function render(prop, per) {
           ? r.egrPorDepto
           : r.egresos / (sbMap[edif] || 1);
       }
-      // Acumular decimales; se redondea el total del concepto (no fila a fila)
+      // Acumular decimales por concepto (sin redondear por fila)
       byConcepto[key] = (byConcepto[key] || 0) + porDepto;
     }
 
     for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
-      // Redondear la suma del concepto, luego multiplicar por deptos del prop
-      const porDeptoRounded = Math.round(totalPorDepto);
+      // PowerBI: Math.round(sum(egrPorDeptoU) * cantidad) — multiplicar decimales primero, redondear al final
       buildingExpenses.push({
         concepto: concepto,
         edificio: edif,
-        egresos:  porDeptoRounded * cantidad,
+        egresos:  Math.round(totalPorDepto * cantidad),
         myDeptos: cantidad,
       });
     }
