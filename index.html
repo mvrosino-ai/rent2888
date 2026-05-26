@@ -685,16 +685,17 @@ function render(prop, per) {
           ? r.egrPorDepto
           : r.egresos / (sbMap[edif] || 1);
       }
-      // Redondear a entero por fila antes de acumular (igual que PowerBI)
-      byConcepto[key] = (byConcepto[key] || 0) + Math.round(porDepto);
+      // Acumular decimales; se redondea el total del concepto (no fila a fila)
+      byConcepto[key] = (byConcepto[key] || 0) + porDepto;
     }
 
     for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
-      // totalPorDepto ya es suma de enteros (redondeados por fila, igual que PowerBI)
+      // Redondear la suma del concepto, luego multiplicar por deptos del prop
+      const porDeptoRounded = Math.round(totalPorDepto);
       buildingExpenses.push({
         concepto: concepto,
         edificio: edif,
-        egresos:  Math.round(totalPorDepto * cantidad),
+        egresos:  porDeptoRounded * cantidad,
         myDeptos: cantidad,
       });
     }
@@ -723,7 +724,13 @@ function render(prop, per) {
   // Excluir de directEgrs las filas que ya se procesaron como gasto de edificio compartido
   // (son las filas donde col B = nombre de un edificio en edificioMap)
   const directEgrs    = directRows.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
-  const directEgrTotal = directEgrs.reduce((s,r)=>s+r.egresos,0);
+  // Agrupar egresos directos por depto+concepto, sumar decimales y redondear el total (como PowerBI)
+  const dirEgrByKey = {};
+  for (const r of directEgrs) {
+    const key = r.depto + '||' + r.conceptoEgreso;
+    dirEgrByKey[key] = (dirEgrByKey[key] || 0) + r.egresos;
+  }
+  const directEgrTotal = Object.values(dirEgrByKey).reduce((s,v)=>s+Math.round(v),0);
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
