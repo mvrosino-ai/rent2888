@@ -758,7 +758,7 @@ function render(prop, per) {
   const neto = Math.round(tIngRaw - comRaw + tEgrRaw);
 
   // ── Historical ──
-  const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).slice(-18);
+  const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).filter(p=>sp(p,per)<=0).slice(-18);
   const hN = allPers.map(p=>dataRows.filter(x=>x.propietario===prop&&x.mesano===p&&x.conceptoIngreso).reduce((s,x)=>s+(x.noches||0),0));
   const hD = allPers.map(p=>{
     const pr=dataRows.filter(x=>x.propietario===prop&&x.mesano===p);
