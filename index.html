@@ -764,7 +764,7 @@ function render(prop, per) {
     const pr=dataRows.filter(x=>x.propietario===prop&&x.mesano===p);
     const i=pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos+(x.comisionBK||0),0);
     const e=pr.filter(x=>x.conceptoEgreso&&x.egresos<0).reduce((s,x)=>s+x.egresos,0);
-    return Math.max(0,i+e-i*CFG.com);
+    return Math.round(Math.max(0,i+e-i*CFG.com));
   });
   const hL=allPers.map(p=>{const[m,y]=p.split('/');return MESES[+m].slice(0,3)+"'"+String(y).slice(2);});
   const ci=allPers.indexOf(per);
@@ -782,7 +782,7 @@ function render(prop, per) {
   const buildGrouped = {};
   for (const e of buildingExpenses) {
     const key = `${e.edificio}||${e.concepto}`;
-    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, sub: `${e.edificio} – Edificio compartido`, esEdif: true, monto: 0 };
+    if (!buildGrouped[key]) buildGrouped[key] = { concepto: e.concepto, sub: e.edificio, esEdif: true, monto: 0 };
     buildGrouped[key].monto += e.egresos;
   }
   const allEgrGrouped = [...Object.values(directGrouped), ...Object.values(buildGrouped)];
