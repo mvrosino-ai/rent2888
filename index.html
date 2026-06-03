@@ -151,6 +151,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
   .r2-charts{grid-template-columns:1fr}
 }
 @media print{
+  @page{margin:0}
   .topbar,#screen-filters,.abtn,.tbtn{display:none!important}
   body{background:#fff}
   #screen-main{display:block!important;padding:0;max-width:100%}
@@ -509,7 +510,8 @@ function parseMainSheet(csv) {
     const ing = isUSD ? pn(c[COL.ing_usd]) : (pn(c[COL.ing_ars]) || pn(c[COL.ing_ars_orig]));
     const egr = isUSD ? pn(c[COL.egr_usd]) : pn(c[COL.egr_ars]);
 
-    if (!ing && !egr) continue;
+    const concIngr = (c[COL.concIngr]||'').trim();
+    if (!ing && !egr && !concIngr) continue;
 
     dataRows.push({
       edificio:        edif,
@@ -517,7 +519,7 @@ function parseMainSheet(csv) {
       propietario:     prop,
       moneda,
       plataforma:      (c[COL.plataforma]||'').trim(),
-      conceptoIngreso: (c[COL.concIngr]||'').trim(),
+      conceptoIngreso: concIngr,
       huesped:         (c[COL.huesped]||'').trim(),
       fechaIngreso:    (c[COL.fechaIn]||'').trim(),
       fechaEgreso:     (c[COL.fechaEg]||'').trim(),
