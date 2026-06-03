@@ -728,7 +728,7 @@ function render(prop, per) {
 
   for (const d of deptos) {
     const drs   = directRows.filter(r=>r.depto===d);
-    const stays = drs.filter(r=>r.conceptoIngreso&&r.ingresos!==0&&r.conceptoIngreso!=='Booking');
+    const stays = drs.filter(r=>r.conceptoIngreso&&r.conceptoIngreso!=='Booking');
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
     const ingRaw = stays.reduce((s,r)=>s+r.ingresos,0);
     const ing    = Math.round(ingRaw); // para mostrar en tabla
