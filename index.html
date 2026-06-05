@@ -762,6 +762,7 @@ function render(prop, per) {
   // PowerBI: neto = round(ingRaw - ingRaw*com% + egrRaw) — todo crudo, un solo round al final
   const comRaw = tIngRaw * CFG.com;
   const neto = Math.round(tIngRaw - comRaw + tEgrRaw);
+  console.table([{prop, tIngRaw, tEgrRaw, comRaw, neto, buildEgrTotal, directEgrTotal}]);
   // Display: use raw-based round for ingreso total (avoids sum-of-rounds drift)
   const tIngDisplay = Math.round(tIngRaw);
 
