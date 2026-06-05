@@ -689,10 +689,12 @@ function render(prop, per) {
     if (mon === 'u$') {
       // USD: round por concepto (Math.round(sum * cantidad))
       for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
+        const rawVal = totalPorDepto * cantidad;
         buildingExpenses.push({
           concepto: concepto,
           edificio: edif,
-          egresos:  Math.round(totalPorDepto * cantidad),
+          egresos:    Math.round(rawVal),
+          egresosRaw: rawVal,
           myDeptos: cantidad,
         });
       }
@@ -700,6 +702,7 @@ function render(prop, per) {
       // Pesos: round sobre el total del edificio completo (todos los conceptos juntos)
       const totalEdif = Object.values(byConcepto).reduce((s,v)=>s+v,0);
       const totalEdifRounded = Math.round(totalEdif * cantidad);
+      const totalEdifRaw = totalEdif * cantidad;
       // Distribuir el total redondeado entre los conceptos (el último absorbe el residuo)
       const conceptos = Object.entries(byConcepto);
       let acum = 0;
@@ -713,7 +716,8 @@ function render(prop, per) {
         buildingExpenses.push({
           concepto: concepto,
           edificio: edif,
-          egresos:  egrConc,
+          egresos:    egrConc,
+          egresosRaw: v * cantidad,
           myDeptos: cantidad,
         });
       }
@@ -755,14 +759,13 @@ function render(prop, per) {
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
   // Egreso crudo total (sin rounds intermedios) para neto final
-  tEgrRaw = directEgrs.reduce((s,r)=>s+r.egresos,0) + buildEgrTotal;
+  tEgrRaw = directEgrs.reduce((s,r)=>s+r.egresos,0) + buildingExpenses.reduce((s,e)=>s+(e.egresosRaw??e.egresos),0);
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
 
   const com  = Math.round(tIngRaw * CFG.com);
   // PowerBI: neto = round(ingRaw - ingRaw*com% + egrRaw) — todo crudo, un solo round al final
   const comRaw = tIngRaw * CFG.com;
   const neto = Math.round(tIngRaw - comRaw + tEgrRaw);
-  console.table([{prop, tIngRaw, tEgrRaw, comRaw, neto, buildEgrTotal, directEgrTotal}]);
   // Display: use raw-based round for ingreso total (avoids sum-of-rounds drift)
   const tIngDisplay = Math.round(tIngRaw);
 
