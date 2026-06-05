@@ -758,10 +758,12 @@ function render(prop, per) {
   tEgrRaw = directEgrs.reduce((s,r)=>s+r.egresos,0) + buildEgrTotal;
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
 
-  const com  = Math.round(tIng * CFG.com);
+  const com  = Math.round(tIngRaw * CFG.com);
   // PowerBI: neto = round(ingRaw - ingRaw*com% + egrRaw) — todo crudo, un solo round al final
   const comRaw = tIngRaw * CFG.com;
   const neto = Math.round(tIngRaw - comRaw + tEgrRaw);
+  // Display: use raw-based round for ingreso total (avoids sum-of-rounds drift)
+  const tIngDisplay = Math.round(tIngRaw);
 
   // ── Historical ──
   const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).filter(p=>sp(p,per)<=0).slice(-18);
@@ -824,7 +826,7 @@ function render(prop, per) {
 
   // STATS
   h += `<div class="r2-stats">
-    <div class="r2-stat"><div class="r2-sl">Ingresos</div><div class="r2-sv g">${fmt(tIng,mon)}</div></div>
+    <div class="r2-stat"><div class="r2-sl">Ingresos</div><div class="r2-sv g">${fmt(tIngDisplay,mon)}</div></div>
     <div class="r2-stat"><div class="r2-sl">Egresos</div><div class="r2-sv r">−${fmt(Math.abs(tEgr),mon)}</div></div>
     <div class="r2-stat"><div class="r2-sl">Comisión ${Math.round(CFG.com*100)}%</div><div class="r2-sv r">−${fmt(com,mon)}</div></div>
     <div class="r2-stat"><div class="r2-sl">Noches</div><div class="r2-sv">${tNoch}</div></div>
@@ -871,7 +873,7 @@ function render(prop, per) {
 
     // SUMMARY BOX dentro de la sección de egresos
     h += `<div class="r2-liq">
-      <div class="r2-lrow"><span class="r2-ll">Ingresos</span><span class="r2-lv">${fmt(tIng,mon)}</span></div>
+      <div class="r2-lrow"><span class="r2-ll">Ingresos</span><span class="r2-lv">${fmt(tIngDisplay,mon)}</span></div>
       <div class="r2-lrow"><span class="r2-ll">Egresos</span><span class="r2-lv r">−${fmt(Math.abs(tEgr),mon)}</span></div>
       <div class="r2-lrow"><span class="r2-ll">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="r2-lv r">−${fmt(com,mon)}</span></div>
       <div class="r2-lrow total"><span class="r2-ll b">Neto a transferir</span><span class="r2-lv g">${fmt(neto,mon)}</span></div>
@@ -882,7 +884,7 @@ function render(prop, per) {
     // Sin egresos: igual mostramos summary
     h += `<div class="r2-section">
       <div class="r2-liq">
-        <div class="r2-lrow"><span class="r2-ll">Ingresos</span><span class="r2-lv">${fmt(tIng,mon)}</span></div>
+        <div class="r2-lrow"><span class="r2-ll">Ingresos</span><span class="r2-lv">${fmt(tIngDisplay,mon)}</span></div>
         <div class="r2-lrow"><span class="r2-ll">Comisión Rent2888 (${Math.round(CFG.com*100)}%)</span><span class="r2-lv r">−${fmt(com,mon)}</span></div>
         <div class="r2-lrow total"><span class="r2-ll b">Neto a transferir</span><span class="r2-lv g">${fmt(neto,mon)}</span></div>
       </div>
