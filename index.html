@@ -689,12 +689,10 @@ function render(prop, per) {
     if (mon === 'u$') {
       // USD: round por concepto (Math.round(sum * cantidad))
       for (const [concepto, totalPorDepto] of Object.entries(byConcepto)) {
-        const rawVal = totalPorDepto * cantidad;
         buildingExpenses.push({
           concepto: concepto,
           edificio: edif,
-          egresos:    Math.round(rawVal),
-          egresosRaw: rawVal,
+          egresos:  Math.round(totalPorDepto * cantidad),
           myDeptos: cantidad,
         });
       }
@@ -702,7 +700,6 @@ function render(prop, per) {
       // Pesos: round sobre el total del edificio completo (todos los conceptos juntos)
       const totalEdif = Object.values(byConcepto).reduce((s,v)=>s+v,0);
       const totalEdifRounded = Math.round(totalEdif * cantidad);
-      const totalEdifRaw = totalEdif * cantidad;
       // Distribuir el total redondeado entre los conceptos (el último absorbe el residuo)
       const conceptos = Object.entries(byConcepto);
       let acum = 0;
@@ -716,8 +713,7 @@ function render(prop, per) {
         buildingExpenses.push({
           concepto: concepto,
           edificio: edif,
-          egresos:    egrConc,
-          egresosRaw: v * cantidad,
+          egresos:  egrConc,
           myDeptos: cantidad,
         });
       }
@@ -730,6 +726,7 @@ function render(prop, per) {
   // Excluir edificios compartidos de la lista de deptos (van en buildingExpenses)
   const deptos = [...new Set(directRows.map(r=>r.depto).filter(d=>d&&!sharedBuildings.has(d)))].sort();
   let tIng=0, tIngRaw=0, tEgr=0, tEgrRaw=0, tNoch=0;
+  let tNetoIng=0; // suma de round(ingRaw_depto * (1-com)) — match PowerBI
   const dd={};
 
   for (const d of deptos) {
@@ -741,12 +738,13 @@ function render(prop, per) {
       });
     const egrs  = drs.filter(r=>r.conceptoEgreso&&r.egresos!==0&&!sharedBuildings.has(r.depto));
     const ingRaw = stays.reduce((s,r)=>s+r.ingresos,0);
-    const ing    = Math.round(ingRaw); // para mostrar en tabla
+    const ing    = Math.round(ingRaw);
     const egr   = egrs.reduce((s,r)=>s+r.egresos,0);
     const noch  = stays.filter(r=>r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
     dd[d]={stays,egrs,ing,egr,noch};
     tIng+=ing;
-    tIngRaw+=ingRaw; // acumular crudo para neto final
+    tIngRaw+=ingRaw;
+    tNetoIng+=Math.round(ingRaw * (1 - CFG.com)); // PowerBI: round por depto
   }
 
   // Egresos directos: acumular crudos por depto, sumar al raw total
@@ -759,13 +757,13 @@ function render(prop, per) {
   const buildEgrTotal  = buildingExpenses.reduce((s,e)=>s+e.egresos,0);
   tEgr  = directEgrTotal + buildEgrTotal;
   // Egreso crudo total (sin rounds intermedios) para neto final
-  tEgrRaw = directEgrs.reduce((s,r)=>s+r.egresos,0) + buildingExpenses.reduce((s,e)=>s+(e.egresosRaw??e.egresos),0);
+  tEgrRaw = directEgrs.reduce((s,r)=>s+r.egresos,0) + buildEgrTotal;
   tNoch = directRows.filter(r=>r.conceptoIngreso&&r.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
 
   const com  = Math.round(tIngRaw * CFG.com);
   // PowerBI: neto = round(ingRaw - ingRaw*com% + egrRaw) — todo crudo, un solo round al final
   const comRaw = tIngRaw * CFG.com;
-  const neto = Math.round(tIngRaw - comRaw + tEgrRaw);
+  const neto = tNetoIng + tEgr; // PowerBI: sum of per-depto round(ing*(1-com)) + egresos
   // Display: use raw-based round for ingreso total (avoids sum-of-rounds drift)
   const tIngDisplay = Math.round(tIngRaw);
 
