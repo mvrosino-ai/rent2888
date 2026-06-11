@@ -100,6 +100,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .r2-tbl td.r{text-align:right;font-weight:600;color:#1a8c5a;padding-right:0}
 .r2-tbl tbody tr:last-child td{border-bottom:none}
 .r2-dtag{font-size:10px;font-weight:700;background:#e8ecf3;color:var(--navy);padding:3px 8px;border-radius:4px;display:inline-block}
+.r2-depto-block{border:0.5px solid #e8ecf3;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.r2-depto-block:last-child{margin-bottom:0}
+.r2-depto-hdr{background:var(--navy);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.r2-dtag-hdr{background:rgba(255,255,255,0.12)!important;color:#fff!important;font-size:12px}
+.r2-depto-noches{font-size:12px;color:rgba(255,255,255,0.45)}
+.r2-depto-subtotal{margin-left:auto;font-size:13px;font-weight:700;color:#4ade80}
+.r2-tbl-inner{width:100%;border-collapse:collapse}
+.r2-tbl-inner th{padding:8px 20px;background:#fafbfc;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8a95a8;border-bottom:0.5px solid #e8ecf3;text-align:left}
+.r2-tbl-inner td{padding:10px 20px;border-bottom:0.5px solid #f4f6fa;color:var(--navy);vertical-align:middle;font-size:13px}
+.r2-tbl-inner tr:last-child td{border-bottom:none}
+.r2-tbl-inner td:last-child{text-align:right;font-weight:600}
 .r2-plat{font-size:11px;color:#8a95a8;margin-top:1px}
 .r2-late{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
 
@@ -837,24 +848,56 @@ function render(prop, per) {
   // ESTADÍAS
   h += `<div class="r2-section"><div class="r2-stitle">Estadías del mes</div>`;
   if (deptos.length) {
-    h += `<table class="r2-tbl"><thead><tr>
-      <th>Depto</th><th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Monto</th>
-    </tr></thead><tbody>`;
-    for (const d of deptos) {
-      const {stays} = dd[d];
-      stays.forEach(s => {
-        const isL = (s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
-        h += `<tr>
-          <td><span class="r2-dtag">${d}</span></td>
-          <td><div>${s.huesped||'—'}${isL?'<span class="r2-late">Late CO</span>':''}</div></td>
-          <td style="font-size:12px;color:#8a95a8">${s.fechaIngreso||'—'}</td>
-          <td style="font-size:12px;color:#8a95a8">${s.fechaEgreso||'—'}</td>
-          <td style="text-align:center;font-size:13px;font-weight:600;color:var(--navy)">${s.noches||'—'}</td>
-          <td class="r">${fmt(s.ingresos,mon)}</td>
-        </tr>`;
-      });
+    const multiDepto = deptos.length > 1;
+    if (multiDepto) {
+      // Una tabla por depto con header
+      for (const d of deptos) {
+        const {stays} = dd[d];
+        if (!stays.length) continue;
+        const deptoNoch = stays.filter(s=>s.ingresos>0).reduce((s,r)=>s+(r.noches||0),0);
+        const deptoIng  = stays.reduce((s,r)=>s+r.ingresos,0);
+        h += `<div class="r2-depto-block">
+          <div class="r2-depto-hdr">
+            <span class="r2-dtag r2-dtag-hdr">${d}</span>
+            <span class="r2-depto-noches">${deptoNoch} noche${deptoNoch!==1?'s':''}</span>
+            <span class="r2-depto-subtotal">${fmt(Math.round(deptoIng),mon)}</span>
+          </div>
+          <table class="r2-tbl r2-tbl-inner"><thead><tr>
+            <th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Monto</th>
+          </tr></thead><tbody>`;
+        stays.forEach(s => {
+          const isL = (s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
+          h += `<tr>
+            <td><div>${s.huesped||'—'}${isL?'<span class="r2-late">Late CO</span>':''}</div></td>
+            <td style="font-size:12px;color:#8a95a8">${s.fechaIngreso||'—'}</td>
+            <td style="font-size:12px;color:#8a95a8">${s.fechaEgreso||'—'}</td>
+            <td style="text-align:center;font-size:13px;font-weight:600;color:var(--navy)">${s.noches||'—'}</td>
+            <td class="r">${fmt(s.ingresos,mon)}</td>
+          </tr>`;
+        });
+        h += `</tbody></table></div>`;
+      }
+    } else {
+      // Tabla única para propietarios con 1 depto (sin columna depto)
+      h += `<table class="r2-tbl"><thead><tr>
+        <th>Depto</th><th>Huésped</th><th>F. Ingreso</th><th>F. Egreso</th><th style="text-align:center">Noches</th><th class="r">Monto</th>
+      </tr></thead><tbody>`;
+      for (const d of deptos) {
+        const {stays} = dd[d];
+        stays.forEach(s => {
+          const isL = (s.huesped+s.conceptoIngreso).toLowerCase().includes('late');
+          h += `<tr>
+            <td><span class="r2-dtag">${d}</span></td>
+            <td><div>${s.huesped||'—'}${isL?'<span class="r2-late">Late CO</span>':''}</div></td>
+            <td style="font-size:12px;color:#8a95a8">${s.fechaIngreso||'—'}</td>
+            <td style="font-size:12px;color:#8a95a8">${s.fechaEgreso||'—'}</td>
+            <td style="text-align:center;font-size:13px;font-weight:600;color:var(--navy)">${s.noches||'—'}</td>
+            <td class="r">${fmt(s.ingresos,mon)}</td>
+          </tr>`;
+        });
+      }
+      h += `</tbody></table>`;
     }
-    h += `</tbody></table>`;
   } else {
     h += `<div style="padding:14px 0;color:#aaa;font-size:13px;font-style:italic">Sin estadías registradas para este período</div>`;
   }
