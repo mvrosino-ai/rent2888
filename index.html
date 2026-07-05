@@ -782,6 +782,8 @@ function render(prop, per) {
   const allPers = [...new Set(dataRows.filter(r=>r.propietario===prop).map(r=>r.mesano))].sort(sp).filter(p=>sp(p,per)<=0).slice(-18);
   const hN = allPers.map(p=>dataRows.filter(x=>x.propietario===prop&&x.mesano===p&&x.conceptoIngreso).reduce((s,x)=>s+(x.noches||0),0));
   const hD = allPers.map(p=>{
+    // Para el mes actual usamos el neto ya calculado (incluye buildingExpenses correctamente)
+    if (p === per) return neto;
     const pr=dataRows.filter(x=>x.propietario===prop&&x.mesano===p);
     const i=pr.filter(x=>x.conceptoIngreso).reduce((s,x)=>s+x.ingresos+(x.comisionBK||0),0);
     const e=pr.filter(x=>x.conceptoEgreso&&x.egresos<0).reduce((s,x)=>s+x.egresos,0);
