@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { TopProgressBar } from "@/components/TopProgressBar";
 
 export function LoginForm({
   action,
@@ -14,6 +15,7 @@ export function LoginForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      {pending && <TopProgressBar />}
       <div>
         <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink2 mb-1.5">
           Email

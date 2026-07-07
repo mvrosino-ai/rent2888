@@ -87,7 +87,9 @@ function cfg() {
 
 async function fetchCSV(sheetId: string, tabName: string): Promise<string> {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
-  const r = await fetch(url, { next: { revalidate: 60 } });
+  // Caché server-side de 5 minutos: navegar entre períodos/propietarios es instantáneo
+  // dentro de esa ventana; los cambios en el sheet tardan hasta 5 min en reflejarse.
+  const r = await fetch(url, { next: { revalidate: 300 } });
   if (!r.ok)
     throw new Error(
       `No se pudo acceder a la hoja "${tabName}". Verificá que el Sheet sea público.`

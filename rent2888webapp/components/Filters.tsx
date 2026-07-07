@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useTransition } from "react";
+import { TopProgressBar } from "./TopProgressBar";
 
 const selCls =
   "text-[13px] px-3 py-2 pr-8 border border-line rounded-lg bg-bg text-ink cursor-pointer focus:outline-none focus:border-brand-gold min-w-[220px] appearance-none bg-no-repeat bg-[right_9px_center] bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2710%27%20height=%2710%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%2371717A%27%20stroke-width=%272%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E')]";
@@ -21,6 +22,20 @@ function useParamNav() {
     start(() => router.push(`${pathname}?${next.toString()}`));
   };
   return { params, setParams, pending };
+}
+
+/** Overlay con spinner + barra de progreso mientras se recargan los datos al cambiar un filtro. */
+function PendingOverlay({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <>
+      <TopProgressBar />
+      <div className="no-print fixed inset-0 z-[300] bg-white/60 backdrop-blur-[1px] flex flex-col items-center justify-center gap-3.5">
+        <div className="w-9 h-9 rounded-full border-[3px] border-line border-t-brand-gold animate-spin" />
+        <div className="text-ink2 text-sm">Cargando reportes...</div>
+      </div>
+    </>
+  );
 }
 
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
@@ -52,6 +67,7 @@ export function AdminFilters({
       className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
     >
+      <PendingOverlay show={pending} />
       <Group label="Moneda">
         <div className="flex gap-1">
           <button
@@ -113,6 +129,7 @@ export function PeriodFilter({
       className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
     >
+      <PendingOverlay show={pending} />
       <Group label="Período">
         <select className={selCls} value={per} onChange={(e) => setParams({ per: e.target.value })}>
           {periodos.map((p) => (
@@ -139,6 +156,7 @@ export function CuentaFilter({
       className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
     >
+      <PendingOverlay show={pending} />
       <Group label="Cuenta">
         <select className={selCls} value={cuenta} onChange={(e) => setParams({ cuenta: e.target.value })}>
           {cuentas.map((c) => (
