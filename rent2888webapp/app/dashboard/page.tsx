@@ -16,7 +16,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ per?: string }>;
 }) {
   const session = await auth();
-  if (!session) redirect("/login");
+  if (!session?.user) redirect("/login");
   const prop = session.user.propietarioName;
 
   if (!prop) {
