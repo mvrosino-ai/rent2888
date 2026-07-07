@@ -32,6 +32,23 @@ function Group({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
+function LoadingOverlay({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div
+      className="no-print fixed inset-0 z-50 flex items-center justify-center bg-bg/60 backdrop-blur-[2px]"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <div className="flex flex-col items-center gap-3 rounded-xl bg-card border border-line px-6 py-5 shadow-lg">
+        <span className="h-8 w-8 rounded-full border-[3px] border-line border-t-brand-gold animate-spin" />
+        <span className="text-[13px] font-medium text-ink2">Cargando datos…</span>
+      </div>
+    </div>
+  );
+}
+
 export function AdminFilters({
   propietarios,
   periodos,
@@ -48,6 +65,8 @@ export function AdminFilters({
   const { setParams, pending } = useParamNav();
 
   return (
+    <>
+    <LoadingOverlay show={pending} />
     <div
       className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
@@ -97,6 +116,7 @@ export function AdminFilters({
         </select>
       </Group>
     </div>
+    </>
   );
 }
 
@@ -109,6 +129,8 @@ export function PeriodFilter({
 }) {
   const { setParams, pending } = useParamNav();
   return (
+    <>
+    <LoadingOverlay show={pending} />
     <div
       className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
@@ -123,6 +145,7 @@ export function PeriodFilter({
         </select>
       </Group>
     </div>
+    </>
   );
 }
 
@@ -135,6 +158,8 @@ export function CuentaFilter({
 }) {
   const { setParams, pending } = useParamNav();
   return (
+    <>
+    <LoadingOverlay show={pending} />
     <div
       className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
@@ -149,5 +174,6 @@ export function CuentaFilter({
         </select>
       </Group>
     </div>
+    </>
   );
 }
