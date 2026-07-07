@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f5f4f0;
+  --card: #fff;
+  --ink: #22284f;
+  --ink2: #4a4f6b;
+  --ink3: #9497a8;
+  --line: #e4e4e7;
+  --navy: #22284f;
+  --red: #e54040;
+  --gold: #c9a84c;
+  --green: #166534;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ── Print (portado casi verbatim de index.html) ── */
+@media print {
+  @page {
+    margin: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+  }
+  main {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .r2-wrap {
+    gap: 0 !important;
+  }
+  .r2-page {
+    border-radius: 0 !important;
+    border: none !important;
+    page-break-after: always;
+  }
+  .r2-page:last-child {
+    page-break-after: auto;
+  }
+  .print-exact {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ══ DISEÑO RENT2888 (portado verbatim de index.html) ══ */
+.r2-wrap{font-family:var(--font-dm-sans),sans-serif;display:flex;flex-direction:column;gap:20px}
+.r2-page{background:#fff;border:0.5px solid #e8ecf3;border-radius:12px;overflow:hidden}
+.r2-header{background:var(--navy);padding:22px 28px;display:flex;justify-content:space-between;align-items:center}
+.r2-brand{font-family:var(--font-dm-serif),serif;font-size:22px;color:#fff}
+.r2-brand span{color:var(--red)}
+.r2-tag{font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px}
+.r2-hr{text-align:right}
+.r2-hl{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:1px;text-transform:uppercase}
+.r2-hv{font-family:var(--font-dm-serif),serif;font-size:36px;color:#4ade80;line-height:1.1;margin-top:2px}
+.r2-namebar{padding:18px 28px;border-bottom:0.5px solid #e8ecf3}
+.r2-propname{font-family:var(--font-dm-serif),serif;font-size:26px;color:var(--navy)}
+.r2-propsub{font-size:12px;color:#5a6880;margin-top:3px}
+.r2-stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:0.5px solid #e8ecf3}
+.r2-stat{padding:14px 22px;border-right:0.5px solid #e8ecf3}
+.r2-stat:last-child{border-right:none}
+.r2-sl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#8a95a8}
+.r2-sv{font-size:19px;font-weight:700;margin-top:4px;color:var(--navy)}
+.r2-sv.r{color:#d63030}
+.r2-sv.g{color:#1a8c5a}
+.r2-section{padding:20px 28px;border-bottom:0.5px solid #e8ecf3}
+.r2-stitle{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+.r2-tbl{width:100%;border-collapse:collapse;font-size:13px}
+.r2-tbl th{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8a95a8;padding:0 0 9px;border-bottom:1.5px solid #e8ecf3;text-align:left}
+.r2-tbl th.r{text-align:right}
+.r2-tbl td{padding:10px 6px 10px 0;border-bottom:0.5px solid #e8ecf3;color:var(--navy);vertical-align:middle;font-size:13px}
+.r2-tbl td.r{text-align:right;font-weight:600;color:#1a8c5a;padding-right:0}
+.r2-tbl tbody tr:last-child td{border-bottom:none}
+.r2-dtag{font-size:10px;font-weight:700;background:#e8ecf3;color:var(--navy);padding:3px 8px;border-radius:4px;display:inline-block}
+.r2-depto-block{border:0.5px solid #e8ecf3;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.r2-depto-block:last-child{margin-bottom:0}
+.r2-depto-hdr{background:var(--navy);padding:10px 20px;display:flex;align-items:center;gap:12px}
+.r2-dtag-hdr{background:rgba(255,255,255,0.12)!important;color:#fff!important;font-size:12px}
+.r2-depto-noches{font-size:12px;color:rgba(255,255,255,0.45)}
+.r2-depto-subtotal{margin-left:auto;font-size:13px;font-weight:700;color:#4ade80}
+.r2-tbl-inner{width:100%;border-collapse:collapse}
+.r2-tbl-inner th{padding:8px 20px;background:#fafbfc;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8a95a8;border-bottom:0.5px solid #e8ecf3;text-align:left}
+.r2-tbl-inner td{padding:10px 20px;border-bottom:0.5px solid #f4f6fa;color:var(--navy);vertical-align:middle;font-size:13px}
+.r2-tbl-inner tr:last-child td{border-bottom:none}
+.r2-tbl-inner td:last-child{text-align:right;font-weight:600}
+.r2-plat{font-size:11px;color:#8a95a8;margin-top:1px}
+.r2-late{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
+.r2-etbl{width:100%;border-collapse:collapse;font-size:13px}
+.r2-etbl th{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#8a95a8;padding:0 0 9px;border-bottom:1.5px solid #e8ecf3;text-align:left}
+.r2-etbl th.r{text-align:right}
+.r2-etbl td{padding:10px 6px 10px 0;border-bottom:0.5px solid #e8ecf3;color:var(--navy);font-size:13px}
+.r2-etbl td.r{text-align:right;font-weight:600;color:#d63030;padding-right:0}
+.r2-etbl tbody tr:last-child td{border-bottom:none}
+.r2-esrc{font-size:11px;color:#8a95a8;margin-top:1px}
+.r2-liq{background:var(--navy);border-radius:10px;padding:16px 20px;margin-top:18px}
+.r2-lrow{display:flex;justify-content:space-between;font-size:13px;color:rgba(255,255,255,0.5);padding:5px 0}
+.r2-lrow.total{border-top:0.5px solid rgba(255,255,255,0.15);margin-top:8px;padding-top:12px;color:#fff;font-size:15px;font-weight:700}
+.r2-ll{color:inherit}
+.r2-ll.b{color:#fff;font-weight:700}
+.r2-lv{color:inherit}
+.r2-lv.r{color:#fca5a5}
+.r2-lv.g{color:#4ade80;font-size:18px}
+.r2-p2hdr{background:var(--navy);padding:16px 28px;display:flex;justify-content:space-between;align-items:center}
+.r2-p2title{font-family:var(--font-dm-serif),serif;font-size:17px;color:#fff}
+.r2-p2sub{font-size:11px;color:rgba(255,255,255,0.4)}
+.r2-charts{display:grid;grid-template-columns:1fr}
+.r2-chart-box{padding:28px 40px;border-right:none;border-bottom:0.5px solid #e8ecf3}
+.r2-chart-box:last-child{border-bottom:none}
+.r2-chart-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#5a6880;margin-bottom:16px}
+.r2-footer{padding:11px 28px;background:#f4f6fa;display:flex;justify-content:space-between;font-size:11px;color:#8a95a8;border-top:0.5px solid #e8ecf3}
+.r2-fl{font-size:11px;color:#8a95a8}
+
+/* ══ CUENTAS INTERNAS (portado de interno.html) ══ */
+.ri-wrap{background:#fff;border-radius:10px;overflow:hidden;border:0.5px solid #ddd}
+.ri-header{background:var(--navy);padding:20px 28px;border-top:3px solid var(--gold);display:flex;justify-content:space-between;align-items:center}
+.ri-brand{font-size:18px;font-weight:700;color:#fff}
+.ri-brand span{color:#E54040}
+.ri-tag{font-size:10px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:2px 8px;border-radius:3px;margin-top:4px;display:inline-block;letter-spacing:.06em}
+.ri-saldos{display:grid;grid-template-columns:1fr 1fr;border-right:0.5px solid rgba(255,255,255,0.1)}
+.ri-saldo-box{padding:16px 24px;border-right:0.5px solid rgba(255,255,255,0.1)}
+.ri-saldo-box:last-child{border-right:none}
+.ri-sl{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:.06em;margin-bottom:4px}
+.ri-sv{font-size:30px;font-weight:700;color:var(--gold)}
+.ri-namebar{background:#1c2240;padding:10px 28px;display:flex;justify-content:space-between;align-items:center}
+.ri-cuentanombre{font-size:18px;font-weight:500;color:#fff}
+.ri-cuentasub{font-size:11px;color:rgba(255,255,255,0.4)}
+.ri-section{padding:16px 24px;border-bottom:0.5px solid #eee}
+.ri-stitle{font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.08em;border-bottom:2px solid var(--gold);padding-bottom:5px;margin-bottom:12px;display:inline-block}
+.ri-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ri-tbl thead tr{background:#F7F6F3}
+.ri-tbl th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:#888;letter-spacing:.05em;border-bottom:0.5px solid #e8e8e8}
+.ri-tbl th.r{text-align:right}
+.ri-tbl td{padding:8px 10px;border-bottom:0.5px solid #f4f4f4;color:#444;vertical-align:middle}
+.ri-tbl td.r{text-align:right;font-weight:600}
+.ri-tbl td.r.g{color:var(--green)}
+.ri-tbl td.r.rd{color:var(--red)}
+.ri-tbl tbody tr:last-child td{border-bottom:none}
+.ri-dtag{display:inline-block;background:#eef0f6;color:var(--navy);font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+.ri-mes{font-size:10px;color:#aaa}
+.ri-footer{background:var(--navy);padding:9px 24px;display:flex;justify-content:space-between}
+.ri-fl{font-size:10px;color:rgba(255,255,255,0.35)}
+
+@media(max-width:640px){
+  .r2-stats{grid-template-columns:repeat(2,1fr)}
+}
