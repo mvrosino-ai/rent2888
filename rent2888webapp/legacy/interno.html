@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rent2888 · Cuentas Internas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F5F4F0;--card:#fff;--ink:#22284F;--ink2:#4A4F6B;--ink3:#9497A8;--line:#E4E4E7;
+  --navy:#22284F;--red:#E54040;--gold:#C9A84C;--green:#166534;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;font-size:14px}
+
+.topbar{background:var(--navy);color:#fff;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200}
+.logo{font-family:'DM Serif Display',serif;font-size:19px;cursor:pointer;user-select:none}
+.logo .r2{color:#E54040}
+.logo-int{font-size:11px;background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);padding:2px 8px;border-radius:4px;margin-left:10px;font-family:'DM Sans',sans-serif;font-weight:600}
+.tbtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;cursor:pointer}
+.tbtn-gold{background:var(--gold);border-color:var(--gold)}
+
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.modal{background:var(--card);border-radius:16px;padding:32px;width:100%;max-width:440px;margin:20px}
+.modal-lg{max-width:520px}
+.modal-ttl{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:6px}
+.modal-sub{color:var(--ink2);font-size:13px;margin-bottom:24px}
+.fg{margin-bottom:16px}
+.fl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink2);margin-bottom:5px;display:block}
+.fi{width:100%;padding:9px 13px;border:1px solid var(--line);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--bg)}
+.fi:focus{outline:none;border-color:var(--gold)}
+.fhint{font-size:11px;color:var(--ink3);margin-top:4px}
+.mbtns{display:flex;gap:10px;margin-top:20px}
+.mbtn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;border-radius:8px;cursor:pointer;flex:1;border:none}
+.mbtn-p{background:var(--navy);color:#fff}
+.mbtn-g{background:transparent;color:var(--ink2);border:1px solid var(--line)}
+.err{font-size:12px;color:var(--red);margin-top:7px;display:none}
+
+#screen-load{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:82vh;gap:14px}
+.spin{width:36px;height:36px;border:3px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.load-txt{color:var(--ink2);font-size:14px}
+
+#screen-filters{display:none;background:var(--card);border-bottom:1px solid var(--line);padding:14px 28px;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.filter-group{display:flex;flex-direction:column;gap:4px}
+.filter-group-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ink3)}
+.fsel{font-family:'DM Sans',sans-serif;font-size:13px;padding:7px 30px 7px 11px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2371717A' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;min-width:200px}
+.fsel:focus{outline:none;border-color:var(--gold)}
+.ml-a{margin-left:auto;align-self:center}
+.abtn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:7px 14px;border-radius:7px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+
+#screen-main{display:none;padding:28px;max-width:1000px;margin:0 auto}
+
+/* CARD */
+.ri-wrap{background:#fff;border-radius:10px;overflow:hidden;border:0.5px solid #ddd}
+
+.ri-header{background:var(--navy);padding:20px 28px;border-top:3px solid var(--gold);display:flex;justify-content:space-between;align-items:center}
+.ri-brand{font-size:18px;font-weight:700;color:#fff}
+.ri-brand span{color:#E54040}
+.ri-tag{font-size:10px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);padding:2px 8px;border-radius:3px;margin-top:4px;display:inline-block;letter-spacing:.06em}
+
+.ri-saldos{display:grid;grid-template-columns:1fr 1fr;border-right:0.5px solid rgba(255,255,255,0.1)}
+.ri-saldo-box{padding:16px 24px;border-right:0.5px solid rgba(255,255,255,0.1)}
+.ri-saldo-box:last-child{border-right:none}
+.ri-sl{font-size:10px;color:rgba(255,255,255,0.45);letter-spacing:.06em;margin-bottom:4px}
+.ri-sv{font-size:30px;font-weight:700;color:var(--gold)}
+
+.ri-namebar{background:#1c2240;padding:10px 28px;display:flex;justify-content:space-between;align-items:center}
+.ri-cuentanombre{font-size:18px;font-weight:500;color:#fff}
+.ri-cuentasub{font-size:11px;color:rgba(255,255,255,0.4)}
+
+.ri-section{padding:16px 24px;border-bottom:0.5px solid #eee}
+.ri-stitle{font-size:10px;font-weight:700;color:var(--navy);letter-spacing:.08em;border-bottom:2px solid var(--gold);padding-bottom:5px;margin-bottom:12px;display:inline-block}
+
+.ri-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.ri-tbl thead tr{background:#F7F6F3}
+.ri-tbl th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:#888;letter-spacing:.05em;border-bottom:0.5px solid #e8e8e8}
+.ri-tbl th.r{text-align:right}
+.ri-tbl td{padding:8px 10px;border-bottom:0.5px solid #f4f4f4;color:#444;vertical-align:middle}
+.ri-tbl td.r{text-align:right;font-weight:600}
+.ri-tbl td.r.g{color:var(--green)}
+.ri-tbl td.r.rd{color:var(--red)}
+.ri-tbl tbody tr:last-child td{border-bottom:none}
+.ri-dtag{display:inline-block;background:#eef0f6;color:var(--navy);font-size:10px;padding:2px 6px;border-radius:3px;font-weight:600}
+.ri-mes{font-size:10px;color:#aaa}
+
+.ri-footer{background:var(--navy);padding:9px 24px;display:flex;justify-content:space-between}
+.ri-fl{font-size:10px;color:rgba(255,255,255,0.35)}
+
+.empty{text-align:center;padding:60px;color:var(--ink3);font-size:14px}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(80px);opacity:0;transition:.3s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+@media print{
+  .topbar,#screen-filters,.abtn{display:none!important}
+  body{background:#fff}
+  #screen-main{display:block!important;padding:0;max-width:100%}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center">
+    <div class="logo" id="logo" onclick="logoClick()">Rent<span class="r2">2888</span></div>
+    <span class="logo-int">INTERNO</span>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button class="tbtn tbtn-gold" onclick="window.print()" id="btn-pdf" style="display:none">↓ PDF</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- MODAL PASSWORD -->
+<div class="ov" id="ov-pass" style="display:none">
+  <div class="modal">
+    <div class="modal-ttl">Administración</div>
+    <div class="modal-sub">Ingresá la contraseña para acceder a la configuración.</div>
+    <div class="fg">
+      <label class="fl">Contraseña</label>
+      <input class="fi" id="inp-pass" type="password" placeholder="••••" onkeydown="if(event.key==='Enter')checkPass()">
+      <div class="err" id="pass-err">Contraseña incorrecta</div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn mbtn-g" onclick="closePass()">Cancelar</button>
+      <button class="mbtn mbtn-p" onclick="checkPass()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="ov" id="ov-cfg" style="display:none">
+  <div class="modal modal-lg">
+    <div class="modal-ttl">Configuración</div>
+    <div class="fg">
+      <label class="fl">ID del Google Sheet</label>
+      <input class="fi" id="c-sid">
+      <div class="fhint">El Sheet debe estar compartido como público</div>
+    </div>
+    <div class="fg">
+      <label class="fl">Pestaña de datos (ej: $$$)</label>
+      <input class="fi" id="c-tab" value="$$$">
+    </div>
+    <div class="mbtns">
+      <button class="mbtn mbtn-g" onclick="closeCfg()">Cancelar</button>
+      <button class="mbtn mbtn-p" onclick="applyCfg()">Guardar y recargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div id="screen-filters">
+  <div class="filter-group">
+    <div class="filter-group-label">Cuenta</div>
+    <select class="fsel" id="sel-cuenta" onchange="onFilter()">
+      <option value="">Seleccionar cuenta...</option>
+    </select>
+  </div>
+  <div class="ml-a">
+    <button class="abtn" onclick="window.print()">↓ PDF</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="screen-main">
+  <div id="ra"><div class="empty">Seleccioná una cuenta.</div></div>
+</div>
+
+<!-- LOADING -->
+<div id="screen-load">
+  <div class="spin"></div>
+  <div class="load-txt">Cargando datos...</div>
+</div>
+
+<script>
+let CFG = {
+  sid: '1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw',
+  tab: '$$$'
+};
+const PASS = '2888';
+const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+let dataRows = [];
+let lclicks = 0, ltimer = null;
+
+function logoClick() {
+  lclicks++;
+  if (ltimer) clearTimeout(ltimer);
+  ltimer = setTimeout(() => lclicks = 0, 600);
+  if (lclicks >= 3) {
+    lclicks = 0;
+    document.getElementById('c-sid').value = CFG.sid;
+    document.getElementById('c-tab').value = CFG.tab;
+    document.getElementById('ov-pass').style.display = 'flex';
+    setTimeout(() => document.getElementById('inp-pass').focus(), 80);
+  }
+}
+function checkPass() {
+  if (document.getElementById('inp-pass').value === PASS) {
+    document.getElementById('ov-pass').style.display = 'none';
+    document.getElementById('inp-pass').value = '';
+    document.getElementById('pass-err').style.display = 'none';
+    document.getElementById('ov-cfg').style.display = 'flex';
+  } else {
+    document.getElementById('pass-err').style.display = 'block';
+    document.getElementById('inp-pass').value = '';
+  }
+}
+function closePass(){ document.getElementById('ov-pass').style.display='none'; document.getElementById('inp-pass').value=''; document.getElementById('pass-err').style.display='none'; }
+function closeCfg(){ document.getElementById('ov-cfg').style.display='none'; }
+function applyCfg(){
+  CFG.sid = document.getElementById('c-sid').value.trim();
+  CFG.tab = document.getElementById('c-tab').value.trim() || '$$$';
+  closeCfg(); dataRows=[]; init();
+}
+
+const MLAB = mano => { if(!mano) return ''; const [m,y]=mano.split('/'); return (MESES[+m]||m).slice(0,3)+"'"+String(y).slice(2); };
+const MFULL = mano => { if(!mano) return ''; const [m,y]=mano.split('/'); return (MESES[+m]||m)+' '+y; };
+function fmtARS(n){ if(n==null) return '—'; const neg=n<0; const s='$'+Math.round(Math.abs(n)).toLocaleString('es-AR'); return (neg?'-':'')+s; }
+function fmtUSD(n){ if(n==null) return '—'; const neg=n<0; const s='u$'+Math.round(Math.abs(n)).toLocaleString('es-AR'); return (neg?'-':'')+s; }
+const pn = s => { if(!s||s==='#N/A'||s===''||s==='FALSE') return 0; return parseFloat(String(s).replace(/[^\d.\-]/g,''))||0; };
+const sp = (a,b) => { const [ma,ya]=a.split('/').map(Number),[mb,yb]=b.split('/').map(Number); return ya!==yb?ya-yb:ma-mb; };
+
+function splitCSV(line) {
+  const res=[]; let cur=''; let inQ=false;
+  for(let i=0;i<line.length;i++){
+    if(line[i]==='"'){inQ=!inQ;}
+    else if(line[i]===','&&!inQ){res.push(cur.replace(/^"|"$/g,'').trim());cur='';}
+    else{cur+=line[i];}
+  }
+  res.push(cur.replace(/^"|"$/g,'').trim());
+  return res;
+}
+
+async function fetchCSV(sheetId, tabName) {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`No se pudo acceder a la hoja "${tabName}".`);
+  return r.text();
+}
+
+function parseMainSheet(csv) {
+  const lines = csv.split('\n').filter(l=>l.trim());
+  let headers=[], hi=-1;
+  for(let i=0;i<Math.min(5,lines.length);i++){
+    const c = splitCSV(lines[i]);
+    if(c.some(x=>x==='mes/ano') && c.some(x=>x==='Propietario')){ headers=c; hi=i; break; }
+  }
+  if(hi<0) throw new Error('No encontré los encabezados en la hoja $$$. Verificá el nombre de la pestaña.');
+
+  const ci = n => headers.findIndex(h => h.trim() === n.trim());
+
+  const COL = {
+    depto:        ci('Departamento'),
+    concIngr:     ci('Concepto Ingresos'),
+    concEgr:      ci('Concepto Egresos'),
+    huesped:      ci('Huésped'),
+    plataforma:   ci('Plataforma'),
+    fechaIn:      ci('Fecha de ingreso'),
+    fechaEg:      ci('Fecha de Egreso'),
+    noches:       ci('Noches'),
+    // Ingresos
+    ing_ars:      ci('Ingresos u$ a $'),    // col AJ
+    ing_ars_orig: ci('TOTAL'),              // col Y
+    ing_usd:      ci('Ingresos Total $'),   // col AQ
+    // Egresos
+    egr_ars:      ci('Egresos'),            // col X
+    egr_usd:      ci('Egresos $ a u$'),     // col AH
+    propietario:  ci('Propietario'),
+    mesano:       ci('mes/ano'),
+    moneda:       ci('Moneda del Reporte'),
+    moneda2:      ci('Moneda Reporte'),
+    moneda3:      ci('Moneda'),
+    dondePesos:   19,   // col T = "Donde $?" — índice fijo
+  };
+
+  const monCol = COL.moneda>=0 ? COL.moneda : COL.moneda2>=0 ? COL.moneda2 : COL.moneda3;
+
+  dataRows = [];
+  for(let i=hi+1;i<lines.length;i++){
+    const c = splitCSV(lines[i]);
+    const mano = (c[COL.mesano]||'').trim();
+    if(!mano || mano==='#N/A' || mano==='mes/ano') continue;
+    if(!/^\d{1,2}\/\d{4}$/.test(mano)) continue;
+
+    const cuenta = (c[COL.dondePesos]||'').trim();
+    if(!cuenta) continue;
+
+    const moneda = (monCol>=0 ? (c[monCol]||'').trim() : '') || '$';
+    const isUSD  = moneda === 'u$';
+
+    // Para cuentas internas, todo el movimiento está en col X (Egresos) o col AH (USD)
+    // Positivo = entrada a la cuenta, Negativo = salida de la cuenta
+    const rawARS = pn(c[COL.egr_ars]);
+    const rawUSD = pn(c[COL.egr_usd]);
+    const raw = isUSD ? rawUSD : rawARS;
+
+    if(!raw) continue;
+
+    const entrada = raw > 0 ? raw  : 0;   // positivo = entra dinero
+    const salida  = raw < 0 ? raw  : 0;   // negativo = sale dinero
+    const concepto = (c[COL.concEgr]||'').trim() || (c[COL.concIngr]||'').trim();
+
+    dataRows.push({
+      cuenta,
+      depto:       (c[COL.depto]||'').trim(),
+      propietario: (c[COL.propietario]||'').trim(),
+      moneda,
+      isUSD,
+      plataforma:  (c[COL.plataforma]||'').trim(),
+      concepto,
+      huesped:     (c[COL.huesped]||'').trim(),
+      fechaIngreso:(c[COL.fechaIn]||'').trim(),
+      fechaEgreso: (c[COL.fechaEg]||'').trim(),
+      noches:      pn(c[COL.noches]),
+      entrada:     Math.round(entrada),
+      salida:      Math.round(salida),
+      mesano:      mano,
+    });
+  }
+  console.log('[interno] filas cargadas:', dataRows.length);
+  console.log('[interno] cuentas:', [...new Set(dataRows.map(r=>r.cuenta))]);
+}
+
+async function init() {
+  try {
+    const csv = await fetchCSV(CFG.sid, CFG.tab);
+    parseMainSheet(csv);
+    if(!dataRows.length) throw new Error('Sin datos. Verificá que el Sheet sea público y el nombre de la pestaña sea correcto.');
+    buildUI();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('screen-load').innerHTML =
+      `<div style="text-align:center;padding:40px;max-width:380px">
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-weight:600;margin-bottom:8px">${e.message}</div>
+        <div style="font-size:12px;color:#999">Hacé triple clic en el logo para configuración</div>
+      </div>`;
+  }
+}
+
+function buildUI() {
+  const cuentas = [...new Set(dataRows.map(r=>r.cuenta).filter(Boolean))].sort();
+  const sel = document.getElementById('sel-cuenta');
+  sel.innerHTML = '<option value="">Seleccionar cuenta...</option>' +
+    cuentas.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(cuentas.length) sel.value = cuentas[0];
+
+  document.getElementById('screen-load').style.display = 'none';
+  document.getElementById('screen-filters').style.display = 'flex';
+  document.getElementById('screen-main').style.display = 'block';
+  document.getElementById('btn-pdf').style.display = 'block';
+  onFilter();
+}
+
+function onFilter(){
+  const cuenta = document.getElementById('sel-cuenta').value;
+  render(cuenta);
+}
+
+function render(cuenta) {
+  const ra = document.getElementById('ra');
+  if(!cuenta){ ra.innerHTML='<div class="empty">Seleccioná una cuenta.</div>'; return; }
+
+  const rows = dataRows.filter(r => r.cuenta === cuenta);
+
+  // Separar por moneda
+  const rowsARS = rows.filter(r => !r.isUSD);
+  const rowsUSD = rows.filter(r =>  r.isUSD);
+
+  // Totales acumulados — entrada = positivo (entra a cuenta), salida = negativo (sale)
+  const totalIngARS = rowsARS.reduce((s,r)=>s+r.entrada, 0);
+  const totalEgrARS = rowsARS.reduce((s,r)=>s+r.salida,  0);
+  const saldoARS    = totalIngARS + totalEgrARS;
+
+  const totalIngUSD = rowsUSD.reduce((s,r)=>s+r.entrada, 0);
+  const totalEgrUSD = rowsUSD.reduce((s,r)=>s+r.salida,  0);
+  const saldoUSD    = totalIngUSD + totalEgrUSD;
+
+  const tNoch = rows.filter(r=>r.noches&&r.entrada>0).reduce((s,r)=>s+(r.noches||0),0);
+
+  // Todos los movimientos ordenados por mes desc
+  const allRows = [...rows].sort((a,b) => -sp(a.mesano, b.mesano));
+
+  let h = '<div class="ri-wrap">';
+
+  // HEADER
+  h += `<div class="ri-header">
+    <div>
+      <div class="ri-brand">Rent<span>2888</span></div>
+      <div class="ri-tag">CUENTA INTERNA · SALDO ACUMULADO</div>
+    </div>
+    <div class="ri-saldos">
+      <div class="ri-saldo-box">
+        <div class="ri-sl">SALDO $</div>
+        <div class="ri-sv">${fmtARS(saldoARS)}</div>
+      </div>
+      <div class="ri-saldo-box">
+        <div class="ri-sl">SALDO u$</div>
+        <div class="ri-sv">${fmtUSD(saldoUSD)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // NAMEBAR
+  h += `<div class="ri-namebar">
+    <div class="ri-cuentanombre">${cuenta}</div>
+    <div class="ri-cuentasub">${tNoch} noches totales · ${rows.length} movimientos</div>
+  </div>`;
+
+  // RESUMEN RÁPIDO
+  h += `<div style="display:grid;grid-template-columns:repeat(3,1fr) repeat(3,1fr);border-bottom:0.5px solid #eee">
+    <div style="padding:13px 16px;border-right:0.5px solid #eee"><div style="font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px">INGRESOS $</div><div style="font-size:14px;font-weight:600;color:var(--green)">${fmtARS(totalIngARS)}</div></div>
+    <div style="padding:13px 16px;border-right:0.5px solid #eee"><div style="font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px">EGRESOS $</div><div style="font-size:14px;font-weight:600;color:var(--red)">${fmtARS(totalEgrARS)}</div></div>
+    <div style="padding:13px 16px;border-right:0.5px solid #eee"><div style="font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px">NETO $</div><div style="font-size:14px;font-weight:600;color:${saldoARS>=0?'var(--green)':'var(--red)}'}">${fmtARS(saldoARS)}</div></div>
+    <div style="padding:13px 16px;border-right:0.5px solid #eee"><div style="font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px">INGRESOS u$</div><div style="font-size:14px;font-weight:600;color:var(--green)">${fmtUSD(totalIngUSD)}</div></div>
+    <div style="padding:13px 16px;border-right:0.5px solid #eee"><div style="font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px">EGRESOS u$</div><div style="font-size:14px;font-weight:600;color:var(--red)">${fmtUSD(totalEgrUSD)}</div></div>
+    <div style="padding:13px 16px"><div style="font-size:10px;color:#999;letter-spacing:.04em;margin-bottom:3px">NETO u$</div><div style="font-size:14px;font-weight:600;color:${saldoUSD>=0?'var(--green)':'var(--red)}'}">${fmtUSD(saldoUSD)}</div></div>
+  </div>`;
+
+  // TODOS LOS MOVIMIENTOS
+  h += `<div class="ri-section"><div class="ri-stitle">MOVIMIENTOS</div>
+  <table class="ri-tbl"><thead><tr>
+    <th>Mes</th><th>Depto</th><th>Huésped / Concepto</th><th>Propietario</th><th style="text-align:center">Noches</th><th class="r">Ingresos $</th><th class="r">Egresos $</th><th class="r">Ingresos u$</th><th class="r">Egresos u$</th>
+  </tr></thead><tbody>`;
+
+  // Agrupar por mes para mostrar subtotales
+  const meses = [...new Set(allRows.map(r=>r.mesano))].sort((a,b)=>-sp(a,b));
+
+  for(const mes of meses){
+    const mRows = allRows.filter(r=>r.mesano===mes);
+    const mIngARS = mRows.filter(r=>!r.isUSD).reduce((s,r)=>s+r.entrada,0);
+    const mEgrARS = mRows.filter(r=>!r.isUSD).reduce((s,r)=>s+r.salida,0);
+    const mIngUSD = mRows.filter(r=>r.isUSD).reduce((s,r)=>s+r.entrada,0);
+    const mEgrUSD = mRows.filter(r=>r.isUSD).reduce((s,r)=>s+r.salida,0);
+
+    // Fila de mes
+    h += `<tr style="background:#f0f0f5">
+      <td colspan="5" style="font-weight:600;font-size:11px;color:var(--navy);padding:8px 10px">${MFULL(mes)}</td>
+      <td class="r g" style="font-weight:600;font-size:11px;padding:8px 10px;color:var(--green)">${mIngARS?fmtARS(mIngARS):''}</td>
+      <td class="r" style="font-weight:600;font-size:11px;padding:8px 10px;color:var(--red)">${mEgrARS?fmtARS(mEgrARS):''}</td>
+      <td class="r" style="font-weight:600;font-size:11px;padding:8px 10px;color:var(--green)">${mIngUSD?fmtUSD(mIngUSD):''}</td>
+      <td class="r" style="font-weight:600;font-size:11px;padding:8px 10px;color:var(--red)">${mEgrUSD?fmtUSD(mEgrUSD):''}</td>
+    </tr>`;
+
+    for(const r of mRows){
+      const label = r.huesped || r.concepto || '—';
+      h += `<tr>
+        <td class="ri-mes"></td>
+        <td>${r.depto ? `<span class="ri-dtag">${r.depto}</span>` : '—'}</td>
+        <td><div>${label}</div><div style="font-size:10px;color:#aaa">${r.concepto||''}</div></td>
+        <td style="font-size:12px;color:#666">${r.propietario||'—'}</td>
+        <td style="text-align:center;font-size:12px;font-weight:600;color:var(--navy)">${r.noches||''}</td>
+        <td class="r g">${(!r.isUSD&&r.entrada>0)?fmtARS(r.entrada):''}</td>
+        <td class="r rd">${(!r.isUSD&&r.salida<0)?fmtARS(r.salida):''}</td>
+        <td class="r g">${(r.isUSD&&r.entrada>0)?fmtUSD(r.entrada):''}</td>
+        <td class="r rd">${(r.isUSD&&r.salida<0)?fmtUSD(r.salida):''}</td>
+      </tr>`;
+    }
+  }
+
+  // Totales finales
+  h += `<tr style="background:#f9f9f7;border-top:1.5px solid var(--navy)">
+    <td colspan="5" style="font-weight:700;font-size:12px;color:var(--navy);padding:10px">SALDO TOTAL</td>
+    <td class="r" style="font-weight:700;padding:10px;color:var(--green)">${totalIngARS?fmtARS(totalIngARS):''}</td>
+    <td class="r" style="font-weight:700;padding:10px;color:var(--red)">${totalEgrARS?fmtARS(totalEgrARS):''}</td>
+    <td class="r" style="font-weight:700;padding:10px;color:var(--green)">${totalIngUSD?fmtUSD(totalIngUSD):''}</td>
+    <td class="r" style="font-weight:700;padding:10px;color:var(--red)">${totalEgrUSD?fmtUSD(totalEgrUSD):''}</td>
+  </tr>`;
+
+  h += `</tbody></table></div>`;
+
+  h += `<div class="ri-footer">
+    <span class="ri-fl">rent2888.com · USO INTERNO</span>
+    <span class="ri-fl">Generado el ${new Date().toLocaleDateString('es-AR')}</span>
+  </div>`;
+
+  h += '</div>';
+  ra.innerHTML = h;
+}
+
+init();
+</script>
+</body>
+</html>
