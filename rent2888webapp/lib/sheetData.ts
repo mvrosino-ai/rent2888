@@ -87,14 +87,39 @@ function cfg() {
 
 async function fetchCSV(sheetId: string, tabName: string): Promise<string> {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
-  // Caché server-side de 5 minutos: navegar entre períodos/propietarios es instantáneo
-  // dentro de esa ventana; los cambios en el sheet tardan hasta 5 min en reflejarse.
-  const r = await fetch(url, { next: { revalidate: 300 } });
-  if (!r.ok)
+  // Sin caché de Next.js: el CSV exportado puede pesar decenas de MB (la hoja $$$
+  // suele tener miles de filas de fórmulas arrastradas de más), muy por encima del
+  // límite de 2MB del data cache — cachearlo simplemente falla en silencio.
+  // Reintentamos ante cortes de conexión transitorios ("socket closed") que son
+  // más frecuentes cuanto más grande es el archivo a descargar.
+  const MAX_INTENTOS = 3;
+  let ultimoError: unknown;
+  for (let intento = 1; intento <= MAX_INTENTOS; intento++) {
+    try {
+      const r = await fetch(url, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(25_000),
+      });
+      if (!r.ok) {
+        throw new Error(
+          `No se pudo acceder a la hoja "${tabName}". Verificá que el Sheet sea público.`
+        );
+      }
+      const text = await r.text();
+      if (!text.trim()) throw new Error(`La hoja "${tabName}" devolvió una respuesta vacía.`);
+      return text;
+    } catch (e) {
+      ultimoError = e;
+      if (intento < MAX_INTENTOS) continue;
+    }
+  }
+  if (ultimoError instanceof Error) {
     throw new Error(
-      `No se pudo acceder a la hoja "${tabName}". Verificá que el Sheet sea público.`
+      `No se pudo leer la hoja "${tabName}" tras ${MAX_INTENTOS} intentos (${ultimoError.message}). ` +
+        `El archivo puede ser muy grande — revisá si hay filas vacías de más al final de la hoja.`
     );
-  return r.text();
+  }
+  throw new Error(`No se pudo leer la hoja "${tabName}" tras ${MAX_INTENTOS} intentos.`);
 }
 
 // ── Parse hoja de propietarios ──
