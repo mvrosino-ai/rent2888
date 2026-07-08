@@ -8,6 +8,7 @@ import { Topbar } from "@/components/Topbar";
 import { PeriodFilter } from "@/components/Filters";
 import { LiquidacionReport } from "@/components/LiquidacionReport";
 
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({

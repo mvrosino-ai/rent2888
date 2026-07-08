@@ -4,6 +4,7 @@ import { Topbar } from "@/components/Topbar";
 import { CuentaFilter } from "@/components/Filters";
 import { CuentaInternaReport } from "@/components/CuentaInternaReport";
 
+export const maxDuration = 60;
 export const dynamic = "force-dynamic";
 
 export default async function InternoPage({

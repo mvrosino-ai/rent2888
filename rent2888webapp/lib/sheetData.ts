@@ -98,7 +98,7 @@ async function fetchCSV(sheetId: string, tabName: string): Promise<string> {
     try {
       const r = await fetch(url, {
         cache: "no-store",
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(15_000),
       });
       if (!r.ok) {
         throw new Error(
