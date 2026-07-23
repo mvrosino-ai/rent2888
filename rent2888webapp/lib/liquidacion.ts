@@ -233,7 +233,8 @@ export function computeLiquidacion(
     if (p === per) return neto;
     const pr = dataRows.filter((x) => x.propietario === prop && x.mesano === p);
     const i = pr.filter((x) => x.conceptoIngreso).reduce((s, x) => s + x.ingresos, 0);
-    const e = pr.filter((x) => x.conceptoEgreso && x.egresos < 0).reduce((s, x) => s + x.egresos, 0);
+    // Egresos con su signo real: negativos restan, positivos suman (igual que el neto del mes actual).
+    const e = pr.filter((x) => x.conceptoEgreso && x.egresos !== 0).reduce((s, x) => s + x.egresos, 0);
     return Math.round(Math.max(0, i + e - i * commissionPct));
   });
   const hL = allPers.map((p) => {
