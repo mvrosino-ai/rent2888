@@ -33,7 +33,7 @@ function AdminSkeleton() {
   return (
     <>
       <div className="no-print bg-card border-b border-line px-7 py-3.5 h-[62px]" />
-      <main className="max-w-[900px] mx-auto p-7">
+      <main className="max-w-[900px] mx-auto p-3 sm:p-7">
         <div className="flex flex-col items-center justify-center py-24 gap-3">
           <span className="h-7 w-7 rounded-full border-[3px] border-line border-t-brand-gold animate-spin" />
           <div className="text-[13px] text-ink3">Cargando datos…</div>
@@ -85,7 +85,7 @@ async function AdminBody({
   return (
     <>
       {filters}
-      <main className="max-w-[900px] mx-auto p-7">
+      <main className="max-w-[900px] mx-auto p-3 sm:p-7">
         {error ? (
           <div className="text-center py-16 max-w-sm mx-auto">
             <div className="text-4xl mb-3">⚠️</div>

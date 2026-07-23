@@ -23,7 +23,7 @@ export default async function DashboardPage({
     return (
       <>
         <Topbar />
-        <main className="max-w-[900px] mx-auto p-7">
+        <main className="max-w-[900px] mx-auto p-3 sm:p-7">
           <div className="text-center py-16 text-ink3">
             Tu cuenta no está vinculada a ningún propietario. Contactá al administrador.
           </div>
@@ -72,7 +72,7 @@ export default async function DashboardPage({
     <>
       <Topbar />
       {filters}
-      <main className="max-w-[900px] mx-auto p-7">
+      <main className="max-w-[900px] mx-auto p-3 sm:p-7">
         {error ? (
           <div className="text-center py-16 max-w-sm mx-auto">
             <div className="text-4xl mb-3">⚠️</div>
