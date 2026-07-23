@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { listUsers, getCommissionPct } from "@/lib/db";
 import { getSheetData } from "@/lib/sheetData";
 import { getTodosPropietarios } from "@/lib/liquidacion";
@@ -58,6 +60,10 @@ function NuevoUsuarioSkeleton() {
 }
 
 export default async function UsersPage() {
+  // Solo ADMIN puede acceder a la gestión de usuarios.
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") redirect("/dashboard");
+
   let users: Awaited<ReturnType<typeof listUsers>> = [];
   let comPct = 0.2;
   let dbError: string | null = null;

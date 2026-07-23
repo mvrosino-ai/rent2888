@@ -17,9 +17,6 @@ export async function Topbar() {
             <Link href="/admin" className="px-3 py-1.5 rounded-md hover:bg-white/10 transition">
               Liquidaciones
             </Link>
-            <Link href="/admin/interno" className="px-3 py-1.5 rounded-md hover:bg-white/10 transition">
-              Interno
-            </Link>
             <Link href="/admin/users" className="px-3 py-1.5 rounded-md hover:bg-white/10 transition">
               Usuarios
             </Link>
