@@ -1,26 +1,28 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useTransition } from "react";
 
 const selCls =
   "text-[13px] px-3 py-2 pr-8 border border-line rounded-lg bg-bg text-ink cursor-pointer focus:outline-none focus:border-brand-gold min-w-[220px] appearance-none bg-no-repeat bg-[right_9px_center] bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2710%27%20height=%2710%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%2371717A%27%20stroke-width=%272%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E')]";
 
-function useParamNav() {
+// Construye la navegación a partir del set COMPLETO de parámetros vigentes
+// (resueltos por el servidor y pasados como props). No depende de
+// useSearchParams, que durante una transición pendiente puede estar
+// desactualizado y hacer que el primer cambio "no enganche".
+function useNav() {
   const router = useRouter();
   const pathname = usePathname();
-  const params = useSearchParams();
   const [pending, start] = useTransition();
 
-  const setParams = (updates: Record<string, string>) => {
-    const next = new URLSearchParams(params.toString());
-    for (const [k, v] of Object.entries(updates)) {
+  const navigate = (allParams: Record<string, string>) => {
+    const next = new URLSearchParams();
+    for (const [k, v] of Object.entries(allParams)) {
       if (v) next.set(k, v);
-      else next.delete(k);
     }
     start(() => router.push(`${pathname}?${next.toString()}`));
   };
-  return { params, setParams, pending };
+  return { navigate, pending };
 }
 
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
@@ -62,7 +64,10 @@ export function AdminFilters({
   prop: string;
   per: string;
 }) {
-  const { setParams, pending } = useParamNav();
+  const { navigate, pending } = useNav();
+  // Meses del más nuevo al más viejo: el seleccionado por defecto (el más
+  // reciente) queda arriba y el desplegable se abre hacia abajo.
+  const periodosDesc = [...periodos].reverse();
 
   return (
     <>
@@ -79,7 +84,7 @@ export function AdminFilters({
                 ? "bg-navy border-navy text-white"
                 : "bg-bg border-line text-ink2"
             }`}
-            onClick={() => setParams({ moneda: "u$", prop: "" })}
+            onClick={() => navigate({ moneda: "u$", prop: "", per })}
           >
             💵 USD
           </button>
@@ -89,14 +94,18 @@ export function AdminFilters({
                 ? "bg-brand-green border-brand-green text-white"
                 : "bg-bg border-line text-ink2"
             }`}
-            onClick={() => setParams({ moneda: "$", prop: "" })}
+            onClick={() => navigate({ moneda: "$", prop: "", per })}
           >
             🇦🇷 Pesos
           </button>
         </div>
       </Group>
       <Group label="Propietario">
-        <select className={selCls} value={prop} onChange={(e) => setParams({ prop: e.target.value })}>
+        <select
+          className={selCls}
+          value={prop}
+          onChange={(e) => navigate({ moneda, prop: e.target.value, per })}
+        >
           <option value="">Seleccionar...</option>
           {propietarios.map((p) => (
             <option key={p} value={p}>
@@ -106,9 +115,13 @@ export function AdminFilters({
         </select>
       </Group>
       <Group label="Período">
-        <select className={selCls} value={per} onChange={(e) => setParams({ per: e.target.value })}>
+        <select
+          className={selCls}
+          value={per}
+          onChange={(e) => navigate({ moneda, prop, per: e.target.value })}
+        >
           <option value="">Seleccionar...</option>
-          {periodos.map((p) => (
+          {periodosDesc.map((p) => (
             <option key={p.value} value={p.value}>
               {p.label}
             </option>
@@ -127,7 +140,8 @@ export function PeriodFilter({
   periodos: { value: string; label: string }[];
   per: string;
 }) {
-  const { setParams, pending } = useParamNav();
+  const { navigate, pending } = useNav();
+  const periodosDesc = [...periodos].reverse();
   return (
     <>
     <LoadingOverlay show={pending} />
@@ -136,8 +150,8 @@ export function PeriodFilter({
       style={{ opacity: pending ? 0.6 : 1 }}
     >
       <Group label="Período">
-        <select className={selCls} value={per} onChange={(e) => setParams({ per: e.target.value })}>
-          {periodos.map((p) => (
+        <select className={selCls} value={per} onChange={(e) => navigate({ per: e.target.value })}>
+          {periodosDesc.map((p) => (
             <option key={p.value} value={p.value}>
               {p.label}
             </option>
@@ -156,7 +170,7 @@ export function CuentaFilter({
   cuentas: string[];
   cuenta: string;
 }) {
-  const { setParams, pending } = useParamNav();
+  const { navigate, pending } = useNav();
   return (
     <>
     <LoadingOverlay show={pending} />
@@ -165,7 +179,7 @@ export function CuentaFilter({
       style={{ opacity: pending ? 0.6 : 1 }}
     >
       <Group label="Cuenta">
-        <select className={selCls} value={cuenta} onChange={(e) => setParams({ cuenta: e.target.value })}>
+        <select className={selCls} value={cuenta} onChange={(e) => navigate({ cuenta: e.target.value })}>
           {cuentas.map((c) => (
             <option key={c} value={c}>
               {c}
