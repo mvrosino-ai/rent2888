@@ -2,9 +2,11 @@
 
 import { useActionState } from "react";
 
-export function LoginForm({
+export function SetPasswordForm({
+  defaultEmail,
   action,
 }: {
+  defaultEmail: string;
   action: (
     prev: { error: string } | undefined,
     formData: FormData
@@ -22,6 +24,7 @@ export function LoginForm({
           name="email"
           type="email"
           required
+          defaultValue={defaultEmail}
           autoComplete="email"
           className="w-full px-3.5 py-2.5 border border-line rounded-lg text-[13px] bg-bg focus:outline-none focus:border-brand-gold"
           placeholder="tu@email.com"
@@ -29,28 +32,39 @@ export function LoginForm({
       </div>
       <div>
         <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink2 mb-1.5">
-          Contraseña
+          Nueva contraseña
         </label>
         <input
           name="password"
           type="password"
-          autoComplete="current-password"
+          required
+          minLength={6}
+          autoComplete="new-password"
+          className="w-full px-3.5 py-2.5 border border-line rounded-lg text-[13px] bg-bg focus:outline-none focus:border-brand-gold"
+          placeholder="mínimo 6 caracteres"
+        />
+      </div>
+      <div>
+        <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink2 mb-1.5">
+          Repetir contraseña
+        </label>
+        <input
+          name="confirm"
+          type="password"
+          required
+          minLength={6}
+          autoComplete="new-password"
           className="w-full px-3.5 py-2.5 border border-line rounded-lg text-[13px] bg-bg focus:outline-none focus:border-brand-gold"
           placeholder="••••••••"
         />
-        <p className="text-[11px] text-ink3 mt-1.5">
-          Primera vez? Ingresá solo tu email y te pediremos crear una contraseña.
-        </p>
       </div>
-      {state?.error && (
-        <p className="text-xs text-brand-red">{state.error}</p>
-      )}
+      {state?.error && <p className="text-xs text-brand-red">{state.error}</p>}
       <button
         type="submit"
         disabled={pending}
         className="w-full bg-navy text-white font-semibold text-[13px] py-2.5 rounded-lg hover:opacity-85 transition disabled:opacity-50"
       >
-        {pending ? "Ingresando..." : "Entrar"}
+        {pending ? "Guardando..." : "Crear contraseña y entrar"}
       </button>
     </form>
   );

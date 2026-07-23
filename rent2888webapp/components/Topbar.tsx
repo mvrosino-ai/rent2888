@@ -5,6 +5,7 @@ import { PrintButton } from "./PrintButton";
 export async function Topbar() {
   const session = await auth();
   const role = session?.user?.role;
+  const displayName = session?.user?.fullName || session?.user?.email || null;
 
   return (
     <div className="no-print sticky top-0 z-50 h-[52px] bg-navy text-white flex items-center justify-between px-7">
@@ -23,7 +24,20 @@ export async function Topbar() {
           </nav>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
+        {displayName && (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="hidden sm:inline text-white/50">Sesión:</span>
+            <span className="font-medium max-w-[180px] truncate" title={displayName}>
+              {displayName}
+            </span>
+            {role === "ADMIN" && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/15 text-white/90">
+                ADMIN
+              </span>
+            )}
+          </div>
+        )}
         <PrintButton />
         {session && (
           <form

@@ -1,38 +1,51 @@
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
+import bcrypt from "bcryptjs";
 import { signIn } from "@/lib/auth";
-import { findUserByEmail } from "@/lib/db";
-import { LoginForm } from "./login-form";
+import { setInitialPassword } from "@/lib/db";
+import { SetPasswordForm } from "./set-password-form";
 
-async function loginAction(
+async function setPasswordAction(
   _prev: { error: string } | undefined,
   formData: FormData
 ): Promise<{ error: string } | undefined> {
   "use server";
   const email = String(formData.get("email") || "").trim();
   const password = String(formData.get("password") || "");
-  if (!email) return { error: "Ingresá tu email" };
+  const confirm = String(formData.get("confirm") || "");
 
-  // Primer ingreso: si la cuenta existe, está activa y todavía no tiene
-  // contraseña, la mandamos a definirla en vez de pedir una que no tiene.
-  const user = await findUserByEmail(email);
-  if (user && user.active && !user.password_hash) {
-    redirect(`/set-password?email=${encodeURIComponent(email)}`);
+  if (!email) return { error: "Ingresá tu email" };
+  if (password.length < 6) return { error: "La contraseña debe tener al menos 6 caracteres" };
+  if (password !== confirm) return { error: "Las contraseñas no coinciden" };
+
+  const hash = await bcrypt.hash(password, 10);
+  const ok = await setInitialPassword(email, hash);
+  if (!ok) {
+    return {
+      error:
+        "No se pudo crear la contraseña. Puede que esta cuenta ya tenga una o no esté habilitada. Probá ingresar con tu contraseña.",
+    };
   }
 
-  if (!password) return { error: "Ingresá tu contraseña" };
   try {
     await signIn("credentials", { email, password, redirect: false });
   } catch (e) {
     if (e instanceof AuthError) {
-      return { error: "Email o contraseña incorrectos" };
+      // La contraseña se guardó bien; que ingrese desde el login.
+      redirect("/login");
     }
     throw e;
   }
   redirect("/");
 }
 
-export default function LoginPage() {
+export default async function SetPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>;
+}) {
+  const { email } = await searchParams;
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -45,11 +58,12 @@ export default function LoginPage() {
           </div>
         </div>
         <div className="bg-card rounded-2xl p-8 shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
-          <h1 className="font-serif text-2xl mb-1">Ingresar</h1>
+          <h1 className="font-serif text-2xl mb-1">Creá tu contraseña</h1>
           <p className="text-ink2 text-[13px] mb-6">
-            Accedé con tu email y contraseña.
+            Es tu primer ingreso. Elegí una contraseña para tu cuenta; la vas a usar
+            de ahora en más para entrar.
           </p>
-          <LoginForm action={loginAction} />
+          <SetPasswordForm defaultEmail={email ?? ""} action={setPasswordAction} />
         </div>
       </div>
     </div>
