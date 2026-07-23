@@ -5,12 +5,14 @@ declare module "next-auth" {
     user: {
       role: "ADMIN" | "OWNER";
       propietarioName: string | null;
+      fullName: string | null;
     } & DefaultSession["user"];
   }
 
   interface User {
     role?: "ADMIN" | "OWNER";
     propietarioName?: string | null;
+    fullName?: string | null;
   }
 }
 
@@ -18,5 +20,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     role?: "ADMIN" | "OWNER";
     propietarioName?: string | null;
+    fullName?: string | null;
   }
 }

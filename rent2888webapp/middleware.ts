@@ -9,7 +9,7 @@ export default auth((req) => {
   const role = req.auth?.user?.role;
   const path = nextUrl.pathname;
 
-  if (path.startsWith("/login")) {
+  if (path.startsWith("/login") || path.startsWith("/set-password")) {
     if (isLoggedIn) {
       return Response.redirect(new URL(role === "ADMIN" ? "/admin" : "/dashboard", nextUrl));
     }

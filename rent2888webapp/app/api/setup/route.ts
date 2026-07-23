@@ -17,12 +17,17 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 CREATE TABLE IF NOT EXISTS users (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email             TEXT UNIQUE NOT NULL,
-  password_hash     TEXT NOT NULL,
+  full_name         TEXT,
+  password_hash     TEXT,
   role              user_role NOT NULL,
   propietario_name  TEXT,
   active            BOOLEAN NOT NULL DEFAULT TRUE,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Migraciones aditivas idempotentes (para bases ya existentes):
+ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
 
 CREATE TABLE IF NOT EXISTS settings (
   id              BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),

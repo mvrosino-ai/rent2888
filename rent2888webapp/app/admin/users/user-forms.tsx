@@ -20,12 +20,12 @@ export function CreateUserForm({
   return (
     <form action={formAction} className="grid gap-3 sm:grid-cols-2">
       <div>
-        <label className={labelCls}>Email</label>
-        <input name="email" type="email" required className={inputCls} placeholder="propietario@email.com" />
+        <label className={labelCls}>Nombre</label>
+        <input name="fullName" type="text" className={inputCls} placeholder="Nombre y apellido" />
       </div>
       <div>
-        <label className={labelCls}>Contraseña temporal</label>
-        <input name="password" type="text" required minLength={6} className={inputCls} placeholder="mínimo 6 caracteres" />
+        <label className={labelCls}>Email</label>
+        <input name="email" type="email" required className={inputCls} placeholder="propietario@email.com" />
       </div>
       <div>
         <label className={labelCls}>Rol</label>

@@ -27,24 +27,24 @@ export async function createUserAction(
   try {
     await requireAdmin();
     const email = String(formData.get("email") || "").trim();
-    const password = String(formData.get("password") || "");
+    const fullName = String(formData.get("fullName") || "").trim() || null;
     const role = formData.get("role") === "ADMIN" ? "ADMIN" : "OWNER";
     const propietarioName = String(formData.get("propietarioName") || "").trim() || null;
 
-    if (!email || !password) return { error: "Email y contraseña son obligatorios" };
-    if (password.length < 6) return { error: "La contraseña debe tener al menos 6 caracteres" };
+    if (!email) return { error: "El email es obligatorio" };
     if (role === "OWNER" && !propietarioName)
       return { error: "Un usuario propietario debe estar vinculado a un propietario del sheet" };
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Se crea SIN contraseña: el usuario la define él mismo en su primer ingreso.
     await createUser({
       email,
-      passwordHash,
+      fullName,
+      passwordHash: null,
       role,
       propietarioName: role === "OWNER" ? propietarioName : null,
     });
     revalidatePath("/admin/users");
-    return { ok: `Usuario ${email} creado` };
+    return { ok: `Usuario ${email} creado. Definirá su contraseña al ingresar por primera vez.` };
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Error";
     if (msg.includes("duplicate") || msg.includes("unique"))

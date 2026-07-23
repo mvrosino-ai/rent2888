@@ -4,7 +4,9 @@ CREATE TYPE user_role AS ENUM ('ADMIN', 'OWNER');
 CREATE TABLE users (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email             TEXT UNIQUE NOT NULL,
-  password_hash     TEXT NOT NULL,
+  full_name         TEXT,
+  -- NULL = el usuario todavía no definió su contraseña (primer ingreso pendiente).
+  password_hash     TEXT,
   role              user_role NOT NULL,
   -- Debe coincidir EXACTAMENTE con el valor de la columna "Propietario" del Google Sheet.
   -- Requerido cuando role = 'OWNER'; NULL para ADMIN.

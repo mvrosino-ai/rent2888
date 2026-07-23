@@ -85,9 +85,15 @@ function cfg() {
   };
 }
 
+// Tiempo de cache del Sheet (segundos). El Sheet no cambia seguido, así que
+// un valor alto hace que casi todas las cargas sean instantáneas. Next.js usa
+// stale-while-revalidate: sirve la copia cacheada al instante y refresca en
+// segundo plano, por lo que solo la primera carga en frío espera a Google.
+const SHEET_REVALIDATE = Number(process.env.SHEET_REVALIDATE) || 300;
+
 async function fetchCSV(sheetId: string, tabName: string): Promise<string> {
   const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
-  const r = await fetch(url, { next: { revalidate: 60 } });
+  const r = await fetch(url, { next: { revalidate: SHEET_REVALIDATE, tags: ["sheet"] } });
   if (!r.ok)
     throw new Error(
       `No se pudo acceder a la hoja "${tabName}". Verificá que el Sheet sea público.`

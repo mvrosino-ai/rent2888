@@ -19,6 +19,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await findUserByEmail(email);
         if (!user || !user.active) return null;
+        // Sin contraseña definida todavía: no puede entrar por el login normal
+        // (debe pasar por /set-password para crear su contraseña primero).
+        if (!user.password_hash) return null;
 
         const ok = await bcrypt.compare(password, user.password_hash);
         if (!ok) return null;
@@ -28,6 +31,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           role: user.role,
           propietarioName: user.propietario_name,
+          fullName: user.full_name,
         };
       },
     }),

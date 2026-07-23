@@ -33,8 +33,9 @@ async function NuevoUsuario() {
   return (
     <>
       <p className="text-[13px] text-ink2 mb-5">
-        Los usuarios con rol Propietario solo ven sus propias liquidaciones. El campo
-        &quot;Propietario&quot; debe coincidir con el nombre en el sheet
+        No se define contraseña acá: el usuario la crea él mismo la primera vez que
+        ingresa con su email. Los usuarios con rol Propietario solo ven sus propias
+        liquidaciones y el campo &quot;Propietario&quot; debe coincidir con el nombre del sheet
         {sheetError && (
           <span className="text-brand-red"> (no pude leer el sheet: {sheetError})</span>
         )}
@@ -98,6 +99,7 @@ export default async function UsersPage() {
               <table className="w-full text-[13px]">
                 <thead>
                   <tr className="text-left text-[10px] uppercase tracking-wider text-ink3 border-b border-line">
+                    <th className="py-2 pr-4">Nombre</th>
                     <th className="py-2 pr-4">Email</th>
                     <th className="py-2 pr-4">Rol</th>
                     <th className="py-2 pr-4">Propietario</th>
@@ -109,6 +111,7 @@ export default async function UsersPage() {
                 <tbody>
                   {users.map((u) => (
                     <tr key={u.id} className="border-b border-line/60 last:border-0">
+                      <td className="py-2.5 pr-4">{u.full_name || "—"}</td>
                       <td className="py-2.5 pr-4">{u.email}</td>
                       <td className="py-2.5 pr-4">
                         <span
@@ -139,7 +142,18 @@ export default async function UsersPage() {
                         </form>
                       </td>
                       <td className="py-2.5 pr-4">
-                        <ResetPasswordForm userId={u.id} action={resetPasswordAction} />
+                        <div className="flex flex-col gap-1.5">
+                          <span
+                            className={`w-fit text-[10px] font-bold px-2 py-0.5 rounded ${
+                              u.password_hash
+                                ? "bg-brand-green-bg text-brand-green"
+                                : "bg-brand-gold-bg text-brand-gold"
+                            }`}
+                          >
+                            {u.password_hash ? "DEFINIDA" : "PENDIENTE"}
+                          </span>
+                          <ResetPasswordForm userId={u.id} action={resetPasswordAction} />
+                        </div>
                       </td>
                       <td className="py-2.5 text-right">
                         <form action={deleteUserAction} className="inline">
