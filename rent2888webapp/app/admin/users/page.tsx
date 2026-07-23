@@ -1,3 +1,6 @@
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { listUsers, getCommissionPct } from "@/lib/db";
 import { getSheetData } from "@/lib/sheetData";
 import { getTodosPropietarios } from "@/lib/liquidacion";
@@ -13,19 +16,14 @@ import { CreateUserForm, ResetPasswordForm, CommissionForm } from "./user-forms"
 
 export const dynamic = "force-dynamic";
 
-export default async function UsersPage() {
-  let users: Awaited<ReturnType<typeof listUsers>> = [];
+/**
+ * Sección "Nuevo usuario". Depende del Google Sheet (lento), por eso se renderiza
+ * dentro de un <Suspense> y se transmite por streaming: la tabla de usuarios (que
+ * viene de la base de datos) aparece de inmediato sin esperar el sheet.
+ */
+async function NuevoUsuario() {
   let propietarios: string[] = [];
-  let comPct = 0.2;
-  let dbError: string | null = null;
   let sheetError: string | null = null;
-
-  try {
-    [users, comPct] = await Promise.all([listUsers(), getCommissionPct()]);
-  } catch (e) {
-    dbError = e instanceof Error ? e.message : "Error de base de datos";
-  }
-
   try {
     propietarios = getTodosPropietarios(await getSheetData());
   } catch (e) {
@@ -34,19 +32,57 @@ export default async function UsersPage() {
 
   return (
     <>
+      <p className="text-[13px] text-ink2 mb-5">
+        Los usuarios con rol Propietario solo ven sus propias liquidaciones. El campo
+        &quot;Propietario&quot; debe coincidir con el nombre en el sheet
+        {sheetError && (
+          <span className="text-brand-red"> (no pude leer el sheet: {sheetError})</span>
+        )}
+        .
+      </p>
+      <CreateUserForm propietarios={propietarios} action={createUserAction} />
+    </>
+  );
+}
+
+function NuevoUsuarioSkeleton() {
+  return (
+    <div
+      className="flex items-center gap-3 py-4"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
+      <span className="h-5 w-5 rounded-full border-2 border-line border-t-brand-gold animate-spin" />
+      <span className="text-[13px] text-ink2">Cargando lista de propietarios…</span>
+    </div>
+  );
+}
+
+export default async function UsersPage() {
+  // Solo ADMIN puede acceder a la gestión de usuarios.
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") redirect("/dashboard");
+
+  let users: Awaited<ReturnType<typeof listUsers>> = [];
+  let comPct = 0.2;
+  let dbError: string | null = null;
+
+  try {
+    [users, comPct] = await Promise.all([listUsers(), getCommissionPct()]);
+  } catch (e) {
+    dbError = e instanceof Error ? e.message : "Error de base de datos";
+  }
+
+  return (
+    <>
       <Topbar />
       <main className="max-w-[900px] mx-auto p-7 space-y-6">
         <section className="bg-card rounded-xl border border-line p-6">
           <h2 className="font-serif text-xl mb-1">Nuevo usuario</h2>
-          <p className="text-[13px] text-ink2 mb-5">
-            Los usuarios con rol Propietario solo ven sus propias liquidaciones. El campo
-            &quot;Propietario&quot; debe coincidir con el nombre en el sheet
-            {sheetError && (
-              <span className="text-brand-red"> (no pude leer el sheet: {sheetError})</span>
-            )}
-            .
-          </p>
-          <CreateUserForm propietarios={propietarios} action={createUserAction} />
+          <Suspense fallback={<NuevoUsuarioSkeleton />}>
+            <NuevoUsuario />
+          </Suspense>
         </section>
 
         <section className="bg-card rounded-xl border border-line p-6">
