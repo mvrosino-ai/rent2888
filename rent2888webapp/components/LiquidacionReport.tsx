@@ -9,6 +9,16 @@ function LateTag({ huesped, concepto }: { huesped: string; concepto: string }) {
   return <span className="r2-late">Late CO</span>;
 }
 
+/**
+ * Egreso con su signo real. En la planilla los egresos negativos vienen con
+ * signo "-" (restan del neto) y los positivos vienen normales (suman al neto).
+ * Devuelve el texto con signo explícito y la clase de color (g = suma, r = resta).
+ */
+function fmtEgreso(n: number, mon: string): { text: string; cls: "g" | "r" } {
+  const suma = n >= 0;
+  return { text: (suma ? "+" : "−") + fmt(Math.abs(n), mon), cls: suma ? "g" : "r" };
+}
+
 export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
   const {
     prop,
@@ -64,7 +74,7 @@ export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
           </div>
           <div className="r2-stat">
             <div className="r2-sl">Egresos</div>
-            <div className="r2-sv r">−{fmt(Math.abs(tEgr), mon)}</div>
+            <div className={`r2-sv ${fmtEgreso(tEgr, mon).cls}`}>{fmtEgreso(tEgr, mon).text}</div>
           </div>
           <div className="r2-stat">
             <div className="r2-sl">Comisión {Math.round(comPct * 100)}%</div>
@@ -186,13 +196,21 @@ export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
                 </tr>
               </thead>
               <tbody>
-                {allEgrGrouped.map((e, i) => (
-                  <tr key={i}>
-                    <td>{e.concepto}</td>
-                    <td>{e.sub}</td>
-                    <td className="r">−{fmt(Math.abs(e.monto), mon)}</td>
-                  </tr>
-                ))}
+                {allEgrGrouped.map((e, i) => {
+                  const eg = fmtEgreso(e.monto, mon);
+                  return (
+                    <tr key={i}>
+                      <td>{e.concepto}</td>
+                      <td>{e.sub}</td>
+                      <td
+                        className="r"
+                        style={{ color: eg.cls === "g" ? "var(--green)" : "#d63030" }}
+                      >
+                        {eg.text}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <div className="r2-liq print-exact">
@@ -202,7 +220,7 @@ export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
               </div>
               <div className="r2-lrow">
                 <span className="r2-ll">Egresos</span>
-                <span className="r2-lv r">−{fmt(Math.abs(tEgr), mon)}</span>
+                <span className={`r2-lv ${fmtEgreso(tEgr, mon).cls}`}>{fmtEgreso(tEgr, mon).text}</span>
               </div>
               <div className="r2-lrow">
                 <span className="r2-ll">Comisión Rent2888 ({Math.round(comPct * 100)}%)</span>
