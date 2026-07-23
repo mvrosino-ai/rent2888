@@ -110,7 +110,7 @@ body {
 .r2-ll.b{color:#fff;font-weight:700}
 .r2-lv{color:inherit}
 .r2-lv.r{color:#fca5a5}
-.r2-lv.g{color:#4ade80;font-size:18px}
+.r2-lv.g{color:#4ade80}
 .r2-p2hdr{background:var(--navy);padding:16px 28px;display:flex;justify-content:space-between;align-items:center}
 .r2-p2title{font-family:var(--font-dm-serif),serif;font-size:17px;color:#fff}
 .r2-p2sub{font-size:11px;color:rgba(255,255,255,0.4)}
