@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTransition } from "react";
 
 const selCls =
-  "text-[13px] px-3 py-2 pr-8 border border-line rounded-lg bg-bg text-ink cursor-pointer focus:outline-none focus:border-brand-gold min-w-[220px] appearance-none bg-no-repeat bg-[right_9px_center] bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2710%27%20height=%2710%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%2371717A%27%20stroke-width=%272%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E')]";
+  "text-[13px] px-3 py-2 pr-8 border border-line rounded-lg bg-bg text-ink cursor-pointer focus:outline-none focus:border-brand-gold w-full sm:min-w-[220px] appearance-none bg-no-repeat bg-[right_9px_center] bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%2710%27%20height=%2710%27%20viewBox=%270%200%2024%2024%27%20fill=%27none%27%20stroke=%27%2371717A%27%20stroke-width=%272%27%3E%3Cpath%20d=%27M6%209l6%206%206-6%27/%3E%3C/svg%3E')]";
 
 // Construye la navegación a partir del set COMPLETO de parámetros vigentes
 // (resueltos por el servidor y pasados como props). No depende de
@@ -27,7 +27,7 @@ function useNav() {
 
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-1 w-full sm:w-auto">
       <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-ink3">{label}</div>
       {children}
     </div>
@@ -73,7 +73,7 @@ export function AdminFilters({
     <>
     <LoadingOverlay show={pending} />
     <div
-      className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
+      className="no-print bg-card border-b border-line px-3 sm:px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
     >
       <Group label="Moneda">
@@ -146,7 +146,7 @@ export function PeriodFilter({
     <>
     <LoadingOverlay show={pending} />
     <div
-      className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
+      className="no-print bg-card border-b border-line px-3 sm:px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
     >
       <Group label="Período">
@@ -175,7 +175,7 @@ export function CuentaFilter({
     <>
     <LoadingOverlay show={pending} />
     <div
-      className="no-print bg-card border-b border-line px-7 py-3.5 flex flex-wrap items-start gap-3"
+      className="no-print bg-card border-b border-line px-3 sm:px-7 py-3.5 flex flex-wrap items-start gap-3"
       style={{ opacity: pending ? 0.6 : 1 }}
     >
       <Group label="Cuenta">

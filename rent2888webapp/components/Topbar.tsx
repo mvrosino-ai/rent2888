@@ -8,8 +8,8 @@ export async function Topbar() {
   const displayName = session?.user?.fullName || session?.user?.email || null;
 
   return (
-    <div className="no-print sticky top-0 z-50 h-[52px] bg-navy text-white flex items-center justify-between px-7">
-      <div className="flex items-center gap-6">
+    <div className="no-print sticky top-0 z-50 h-[52px] bg-navy text-white flex items-center justify-between px-3 sm:px-7 gap-2">
+      <div className="flex items-center gap-3 sm:gap-6 min-w-0">
         <Link href="/" className="font-serif text-[19px] select-none">
           Rent<span className="text-brand-red">2888</span>
         </Link>
@@ -24,11 +24,11 @@ export async function Topbar() {
           </nav>
         )}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {displayName && (
-          <div className="flex items-center gap-2 text-xs">
+          <div className="hidden sm:flex items-center gap-2 text-xs min-w-0">
             <span className="hidden sm:inline text-white/50">Sesión:</span>
-            <span className="font-medium max-w-[180px] truncate" title={displayName}>
+            <span className="font-medium max-w-[110px] sm:max-w-[180px] truncate" title={displayName}>
               {displayName}
             </span>
             {role === "ADMIN" && (
