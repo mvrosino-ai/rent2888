@@ -10,7 +10,7 @@ async function setPasswordAction(
   formData: FormData
 ): Promise<{ error: string } | undefined> {
   "use server";
-  const email = String(formData.get("email") || "").trim();
+  const email = String(formData.get("email") || "").replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g, "");
   const password = String(formData.get("password") || "");
   const confirm = String(formData.get("confirm") || "");
 

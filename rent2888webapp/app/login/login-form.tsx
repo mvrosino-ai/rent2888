@@ -1,6 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+
+// Quita espacios y caracteres invisibles (ancho cero, BOM, espacio duro) que
+// suelen colarse al copiar/pegar o autocompletar el email y rompen el login.
+function cleanEmail(value: string): string {
+  return value.replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g, "");
+}
 
 export function LoginForm({
   action,
@@ -11,9 +17,10 @@ export function LoginForm({
   ) => Promise<{ error: string } | undefined>;
 }) {
   const [state, formAction, pending] = useActionState(action, undefined);
+  const [email, setEmail] = useState("");
 
   return (
-    <form action={formAction} className="space-y-4">
+    <form action={formAction} noValidate className="space-y-4">
       <div>
         <label className="block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink2 mb-1.5">
           Email
@@ -23,6 +30,8 @@ export function LoginForm({
           type="email"
           required
           autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(cleanEmail(e.target.value))}
           className="w-full px-3.5 py-2.5 border border-line rounded-lg text-[13px] bg-bg focus:outline-none focus:border-brand-gold"
           placeholder="tu@email.com"
         />

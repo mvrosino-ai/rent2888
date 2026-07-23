@@ -9,7 +9,8 @@ async function loginAction(
   formData: FormData
 ): Promise<{ error: string } | undefined> {
   "use server";
-  const email = String(formData.get("email") || "").trim();
+  // Quita espacios y caracteres invisibles que rompen la búsqueda del email.
+  const email = String(formData.get("email") || "").replace(/[\s\u00A0\u200B-\u200D\uFEFF]/g, "");
   const password = String(formData.get("password") || "");
   if (!email) return { error: "Ingresá tu email" };
 
