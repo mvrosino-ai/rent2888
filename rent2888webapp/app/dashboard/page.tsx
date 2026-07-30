@@ -45,9 +45,21 @@ export default async function DashboardPage({
       propParam && propietarios.includes(propParam) ? propParam : propietarios[0];
 
     // Períodos donde este propietario tiene datos
-    const periodos = [
+    const periodosData = [
       ...new Set(data.liqRows.filter((r) => r.propietario === prop).map((r) => r.mesano)),
     ].sort(sp);
+
+    // El propietario solo puede ver hasta 2 meses adelante del mes en curso
+    // (se liquida a mes vencido). Ej: en julio ve hasta septiembre.
+    const now = new Date();
+    let cm = now.getMonth() + 1 + 2;
+    let cy = now.getFullYear();
+    while (cm > 12) {
+      cm -= 12;
+      cy += 1;
+    }
+    const cutoff = `${cm}/${cy}`;
+    const periodos = periodosData.filter((p) => sp(p, cutoff) <= 0);
 
     if (!periodos.length) {
       // Igual mostramos el selector de propietario (si hay varios) para poder cambiar.
