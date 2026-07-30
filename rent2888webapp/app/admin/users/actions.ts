@@ -29,11 +29,16 @@ export async function createUserAction(
     const email = String(formData.get("email") || "").trim();
     const fullName = String(formData.get("fullName") || "").trim() || null;
     const role = formData.get("role") === "ADMIN" ? "ADMIN" : "OWNER";
-    const propietarioName = String(formData.get("propietarioName") || "").trim() || null;
+    // Puede venir más de un propietario (holdings / dueños con varios deptos).
+    const propietarioNames = [
+      ...new Set(
+        formData.getAll("propietarioName").map((v) => String(v).trim()).filter(Boolean)
+      ),
+    ];
 
     if (!email) return { error: "El email es obligatorio" };
-    if (role === "OWNER" && !propietarioName)
-      return { error: "Un usuario propietario debe estar vinculado a un propietario del sheet" };
+    if (role === "OWNER" && propietarioNames.length === 0)
+      return { error: "Un usuario propietario debe estar vinculado al menos a un propietario del sheet" };
 
     // Se crea SIN contraseña: el usuario la define él mismo en su primer ingreso.
     await createUser({
@@ -41,7 +46,7 @@ export async function createUserAction(
       fullName,
       passwordHash: null,
       role,
-      propietarioName: role === "OWNER" ? propietarioName : null,
+      propietarioNames: role === "OWNER" ? propietarioNames : [],
     });
     revalidatePath("/admin/users");
     return { ok: `Usuario ${email} creado. Definirá su contraseña al ingresar por primera vez.` };
@@ -81,8 +86,12 @@ export async function resetPasswordAction(
 export async function updatePropietarioAction(formData: FormData): Promise<void> {
   await requireAdmin();
   const id = String(formData.get("id"));
-  const propietarioName = String(formData.get("propietarioName") || "").trim() || null;
-  await updateUserPropietario(id, propietarioName);
+  const propietarioNames = [
+    ...new Set(
+      formData.getAll("propietarioName").map((v) => String(v).trim()).filter(Boolean)
+    ),
+  ];
+  await updateUserPropietario(id, propietarioNames);
   revalidatePath("/admin/users");
 }
 

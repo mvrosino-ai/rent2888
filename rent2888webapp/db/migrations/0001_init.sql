@@ -9,8 +9,12 @@ CREATE TABLE users (
   password_hash     TEXT,
   role              user_role NOT NULL,
   -- Debe coincidir EXACTAMENTE con el valor de la columna "Propietario" del Google Sheet.
-  -- Requerido cuando role = 'OWNER'; NULL para ADMIN.
-  propietario_name  TEXT,
+  -- Requerido cuando role = 'OWNER'; NULL para ADMIN. Se mantiene como el primero
+  -- de propietario_names por compatibilidad.
+  propietario_name   TEXT,
+  -- Lista de propietarios del sheet vinculados a la cuenta (holdings o dueños con
+  -- varios deptos). El usuario puede cambiar entre reportes en el dashboard.
+  propietario_names  TEXT[],
   active            BOOLEAN NOT NULL DEFAULT TRUE,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
 );

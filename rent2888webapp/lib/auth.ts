@@ -26,11 +26,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const ok = await bcrypt.compare(password, user.password_hash);
         if (!ok) return null;
 
+        // Lista de propietarios: usa la columna array; cae al valor único por
+        // compatibilidad con cuentas creadas antes de esta migración.
+        const propietarios =
+          user.propietario_names && user.propietario_names.length
+            ? user.propietario_names
+            : user.propietario_name
+              ? [user.propietario_name]
+              : [];
+
         return {
           id: user.id,
           email: user.email,
           role: user.role,
-          propietarioName: user.propietario_name,
+          propietarios,
           fullName: user.full_name,
         };
       },
