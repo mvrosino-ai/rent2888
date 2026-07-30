@@ -45,9 +45,34 @@ export default async function DashboardPage({
       propParam && propietarios.includes(propParam) ? propParam : propietarios[0];
 
     // Períodos donde este propietario tiene datos
-    const periodos = [
+    const periodosData = [
       ...new Set(data.liqRows.filter((r) => r.propietario === prop).map((r) => r.mesano)),
     ].sort(sp);
+
+    // Tope hacia adelante para el propietario (se liquida a mes vencido).
+    // El límite se corre el día 20 de cada mes:
+    //   - antes del 20: hasta el mes siguiente     (ej. 10/ago -> ve hasta septiembre)
+    //   - desde el 20:  hasta dos meses adelante    (ej. 25/ago -> ve hasta octubre)
+    // Se usa la fecha de Argentina para que el corte del día 20 sea correcto.
+    const arNow = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/Argentina/Buenos_Aires",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+    }).formatToParts(new Date());
+    const arDay = Number(arNow.find((p) => p.type === "day")!.value);
+    const arMonth = Number(arNow.find((p) => p.type === "month")!.value);
+    const arYear = Number(arNow.find((p) => p.type === "year")!.value);
+
+    const monthsAhead = arDay >= 20 ? 2 : 1;
+    let cm = arMonth + monthsAhead;
+    let cy = arYear;
+    while (cm > 12) {
+      cm -= 12;
+      cy += 1;
+    }
+    const cutoff = `${cm}/${cy}`;
+    const periodos = periodosData.filter((p) => sp(p, cutoff) <= 0);
 
     if (!periodos.length) {
       // Igual mostramos el selector de propietario (si hay varios) para poder cambiar.
