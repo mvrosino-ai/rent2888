@@ -163,6 +163,60 @@ export function PeriodFilter({
   );
 }
 
+export function OwnerFilters({
+  propietarios,
+  prop,
+  periodos,
+  per,
+}: {
+  propietarios: string[];
+  prop: string;
+  periodos: { value: string; label: string }[];
+  per: string;
+}) {
+  const { navigate, pending } = useNav();
+  const periodosDesc = [...periodos].reverse();
+  const varios = propietarios.length > 1;
+  return (
+    <>
+    <LoadingOverlay show={pending} />
+    <div
+      className="no-print bg-card border-b border-line px-3 sm:px-7 py-3.5 flex flex-wrap items-start gap-3"
+      style={{ opacity: pending ? 0.6 : 1 }}
+    >
+      {varios && (
+        <Group label="Propietario">
+          <select
+            className={selCls}
+            value={prop}
+            onChange={(e) => navigate({ prop: e.target.value })}
+          >
+            {propietarios.map((p) => (
+              <option key={p} value={p}>
+                {p}
+              </option>
+            ))}
+          </select>
+        </Group>
+      )}
+      <Group label="Período">
+        <select
+          className={selCls}
+          value={per}
+          onChange={(e) => navigate({ prop, per: e.target.value })}
+        >
+          {periodosDesc.map((p) => (
+            <option key={p.value} value={p.value}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </Group>
+    </div>
+    </>
+  );
+}
+
 export function CuentaFilter({
   cuentas,
   cuenta,

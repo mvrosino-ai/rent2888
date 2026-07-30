@@ -124,7 +124,22 @@ export default async function UsersPage() {
                           {u.role === "ADMIN" ? "ADMIN" : "PROPIETARIO"}
                         </span>
                       </td>
-                      <td className="py-2.5 pr-4">{u.propietario_name || "—"}</td>
+                      <td className="py-2.5 pr-4">
+                        {u.propietario_names && u.propietario_names.length ? (
+                          <div className="flex flex-wrap gap-1">
+                            {u.propietario_names.map((p) => (
+                              <span
+                                key={p}
+                                className="text-[11px] px-1.5 py-0.5 rounded bg-[#ECEDF5] text-navy"
+                              >
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          u.propietario_name || "—"
+                        )}
+                      </td>
                       <td className="py-2.5 pr-4">
                         <form action={toggleActiveAction} className="inline">
                           <input type="hidden" name="id" value={u.id} />

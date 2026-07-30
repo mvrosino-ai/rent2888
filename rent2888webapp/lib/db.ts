@@ -9,6 +9,10 @@ export interface DbUser {
   password_hash: string | null;
   role: UserRole;
   propietario_name: string | null;
+  // Lista de propietarios del sheet vinculados a la cuenta (holdings o dueños
+  // con más de un depto). propietario_name se mantiene como el primero por
+  // compatibilidad hacia atrás.
+  propietario_names: string[] | null;
   active: boolean;
   created_at: string;
 }
@@ -33,7 +37,10 @@ function ensureMigrated(): Promise<void> {
     migrationPromise = db()
       .query(
         `ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT;
-         ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;`
+         ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+         ALTER TABLE users ADD COLUMN IF NOT EXISTS propietario_names TEXT[];
+         UPDATE users SET propietario_names = ARRAY[propietario_name]
+           WHERE propietario_names IS NULL AND propietario_name IS NOT NULL;`
       )
       .then(() => undefined)
       .catch((e) => {
@@ -55,7 +62,7 @@ async function q<T extends QueryResultRow = QueryResultRow>(
 
 export async function findUserByEmail(email: string): Promise<DbUser | null> {
   const { rows } = await q<DbUser>(
-    `SELECT id, email, full_name, password_hash, role, propietario_name, active, created_at
+    `SELECT id, email, full_name, password_hash, role, propietario_name, propietario_names, active, created_at
      FROM users WHERE lower(email) = lower($1) LIMIT 1`,
     [email]
   );
@@ -64,7 +71,7 @@ export async function findUserByEmail(email: string): Promise<DbUser | null> {
 
 export async function listUsers(): Promise<DbUser[]> {
   const { rows } = await q<DbUser>(
-    `SELECT id, email, full_name, password_hash, role, propietario_name, active, created_at
+    `SELECT id, email, full_name, password_hash, role, propietario_name, propietario_names, active, created_at
      FROM users ORDER BY created_at`
   );
   return rows;
@@ -75,12 +82,13 @@ export async function createUser(u: {
   fullName: string | null;
   passwordHash: string | null;
   role: UserRole;
-  propietarioName: string | null;
+  propietarioNames: string[];
 }): Promise<void> {
+  const names = u.propietarioNames;
   await q(
-    `INSERT INTO users (email, full_name, password_hash, role, propietario_name)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [u.email, u.fullName, u.passwordHash, u.role, u.propietarioName]
+    `INSERT INTO users (email, full_name, password_hash, role, propietario_name, propietario_names)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [u.email, u.fullName, u.passwordHash, u.role, names[0] ?? null, names.length ? names : null]
   );
 }
 
@@ -105,9 +113,12 @@ export async function setInitialPassword(email: string, passwordHash: string): P
 
 export async function updateUserPropietario(
   id: string,
-  propietarioName: string | null
+  propietarioNames: string[]
 ): Promise<void> {
-  await q(`UPDATE users SET propietario_name = $2 WHERE id = $1`, [id, propietarioName]);
+  await q(
+    `UPDATE users SET propietario_name = $2, propietario_names = $3 WHERE id = $1`,
+    [id, propietarioNames[0] ?? null, propietarioNames.length ? propietarioNames : null]
+  );
 }
 
 export async function deleteUser(id: string): Promise<void> {
