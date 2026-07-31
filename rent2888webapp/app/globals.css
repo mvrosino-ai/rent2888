@@ -94,6 +94,9 @@ body {
 .r2-tbl-inner td{padding:10px 20px;border-bottom:0.5px solid #f4f6fa;color:var(--navy);vertical-align:middle;font-size:13px}
 .r2-tbl-inner tr:last-child td{border-bottom:none}
 .r2-tbl-inner td:last-child{text-align:right;font-weight:600}
+/* La columna Monto de la tabla interna recupera su margen derecho (si no,
+   .r2-tbl td.r le fuerza padding-right:0 y queda pegada al borde). */
+.r2-tbl-inner td.r,.r2-tbl-inner th.r{padding-right:20px}
 .r2-plat{font-size:11px;color:#8a95a8;margin-top:1px}
 .r2-late{font-size:10px;background:#FEF9C3;color:#854D0E;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
 .r2-etbl{width:100%;border-collapse:collapse;font-size:13px}
