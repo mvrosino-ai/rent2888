@@ -185,6 +185,12 @@ export function buildMailTargets(csv: string, data: SheetData, commissionPct: nu
     const deptos = [...new Set(rows.map((r) => r.depto).filter(Boolean))];
     const mainProp = resolveMainProp(propietario, deptos, data, per);
 
+    // Moneda: la fuente de verdad es el Sheet principal (propMap), la misma que
+    // define la liquidación. La col F de la planilla de mails está vacía en
+    // muchas filas, así que solo se usa como respaldo. Así el desglose/filtro
+    // USD vs ARS nunca queda mal clasificado por una celda F vacía.
+    const moneda = (mainProp && data.propMap[mainProp]?.moneda) || first.moneda || "$";
+
     // Extraer gastos extra desde la liquidación del propietario en el período.
     const extras: ExtraExpense[] = [];
     if (mainProp) {
@@ -205,7 +211,7 @@ export function buildMailTargets(csv: string, data: SheetData, commissionPct: nu
       mail: first.mail,
       asunto: first.asunto,
       nombre: first.nombre,
-      moneda: first.moneda,
+      moneda,
       deptos,
       mainProp,
       extras,
