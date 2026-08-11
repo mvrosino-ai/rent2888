@@ -3,6 +3,7 @@ import { getSheetData } from "@/lib/sheetData";
 import {
   computeLiquidacion,
   getPeriodos,
+  getDefaultPeriodo,
   getPropietariosActivos,
 } from "@/lib/liquidacion";
 import { getCommissionPct } from "@/lib/db";
@@ -61,7 +62,7 @@ async function AdminBody({
 
     const propietarios = getPropietariosActivos(data, moneda);
     const periodos = getPeriodos(data);
-    const per = sp.per && periodos.includes(sp.per) ? sp.per : periodos[periodos.length - 1] || "";
+    const per = sp.per && periodos.includes(sp.per) ? sp.per : getDefaultPeriodo(periodos);
     const prop = sp.prop && propietarios.includes(sp.prop) ? sp.prop : "";
 
     filters = (

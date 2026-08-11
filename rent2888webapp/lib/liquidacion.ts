@@ -51,6 +51,22 @@ export function getPeriodos(data: SheetData): string[] {
   return [...new Set(data.liqRows.map((r) => r.mesano).filter(Boolean))].sort(sp);
 }
 
+/**
+ * Período por defecto: el mes en curso si existe en la lista; si no, el último
+ * mes disponible que no sea futuro; y como último recurso, el más reciente.
+ * Evita abrir en un mes adelantado (ej. Agosto 2027) teniendo cargados meses
+ * futuros para consulta.
+ */
+export function getDefaultPeriodo(periodos: string[]): string {
+  if (periodos.length === 0) return "";
+  const now = new Date();
+  const actual = `${now.getMonth() + 1}/${now.getFullYear()}`;
+  if (periodos.includes(actual)) return actual;
+  const noFuturos = periodos.filter((p) => sp(p, actual) <= 0);
+  if (noFuturos.length > 0) return noFuturos[noFuturos.length - 1];
+  return periodos[periodos.length - 1];
+}
+
 /** Propietarios activos filtrados por moneda (para el dropdown del admin). */
 export function getPropietariosActivos(data: SheetData, moneda: string): string[] {
   return Object.entries(data.propMap)
