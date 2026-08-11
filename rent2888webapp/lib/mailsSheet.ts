@@ -55,6 +55,7 @@ export interface MailsSheetResult {
   per: string; // "7/2026"
   mesNombre: string; // "Julio"
   targets: MailTarget[];
+  rowCount: number; // filas de datos leídas de la planilla (para detectar filtros)
 }
 
 function norm(s: string): string {
@@ -171,19 +172,29 @@ export function buildMailTargets(csv: string, data: SheetData, commissionPct: nu
   const { per, mesNombre } = periodo;
 
   // Agrupar por propietario (un propietario puede tener varios deptos/filas).
-  const byProp = new Map<string, MailRowRaw[]>();
+  // Se agrupa por nombre normalizado (sin acentos ni diferencias de mayúsculas
+  // o espacios) para no partir en dos a un mismo dueño escrito distinto en
+  // filas diferentes. Se conserva el primer nombre visible como etiqueta.
+  const byProp = new Map<string, { label: string; rows: MailRowRaw[] }>();
   for (const r of raws) {
     if (!r.propietario) continue;
-    const key = r.propietario;
-    if (!byProp.has(key)) byProp.set(key, []);
-    byProp.get(key)!.push(r);
+    const key = norm(r.propietario);
+    if (!key) continue;
+    if (!byProp.has(key)) byProp.set(key, { label: r.propietario, rows: [] });
+    byProp.get(key)!.rows.push(r);
   }
 
   const targets: MailTarget[] = [];
-  for (const [propietario, rows] of byProp) {
+  for (const { label: propietario, rows } of byProp.values()) {
     const first = rows.find((r) => r.mail) || rows[0];
     const deptos = [...new Set(rows.map((r) => r.depto).filter(Boolean))];
     const mainProp = resolveMainProp(propietario, deptos, data, per);
+
+    // Moneda: la fuente de verdad es el Sheet principal (propMap), la misma que
+    // define la liquidación. La col F de la planilla de mails está vacía en
+    // muchas filas, así que solo se usa como respaldo. Así el desglose/filtro
+    // USD vs ARS nunca queda mal clasificado por una celda F vacía.
+    const moneda = (mainProp && data.propMap[mainProp]?.moneda) || first.moneda || "$";
 
     // Extraer gastos extra desde la liquidación del propietario en el período.
     const extras: ExtraExpense[] = [];
@@ -205,7 +216,7 @@ export function buildMailTargets(csv: string, data: SheetData, commissionPct: nu
       mail: first.mail,
       asunto: first.asunto,
       nombre: first.nombre,
-      moneda: first.moneda,
+      moneda,
       deptos,
       mainProp,
       extras,
@@ -213,7 +224,7 @@ export function buildMailTargets(csv: string, data: SheetData, commissionPct: nu
   }
 
   targets.sort((a, b) => a.propietario.localeCompare(b.propietario, "es"));
-  return { per, mesNombre, targets };
+  return { per, mesNombre, targets, rowCount: raws.length };
 }
 
 /** API pública: descarga la planilla y arma los targets. */
