@@ -43,6 +43,9 @@ body {
   .r2-page {
     border-radius: 0 !important;
     border: none !important;
+    /* En pantalla usa overflow:hidden para el borde redondeado; al imprimir eso
+       recorta el contenido que pasa a la 2ª hoja física → dejarlo visible. */
+    overflow: visible !important;
     page-break-after: always;
   }
   .r2-page:last-child {
@@ -51,6 +54,56 @@ body {
   .print-exact {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+
+  /* ── Cortes de página prolijos ──
+     Si una tabla no entra en la hoja, continúa en la siguiente SIN partir
+     filas ni dejar encabezados/títulos huérfanos. */
+
+  /* Nunca partir una fila entre dos hojas. */
+  .r2-tbl tr,
+  .r2-etbl tr,
+  .r2-tbl-inner tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Repetir el encabezado de la tabla al continuar en la hoja siguiente. */
+  .r2-tbl thead,
+  .r2-etbl thead,
+  .r2-tbl-inner thead {
+    display: table-header-group;
+  }
+
+  /* Mantener enteros los bloques que no deben quebrarse. */
+  .r2-liq,
+  .r2-depto-block,
+  .r2-stats,
+  .r2-header,
+  .r2-namebar,
+  .r2-footer,
+  .r2-chart-box,
+  .r2-p2hdr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* No dejar el título de sección solo al pie de una hoja. */
+  .r2-stitle {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Los bloques de depto usan overflow:hidden en pantalla; al imprimir eso
+     recortaría un bloque largo que deba continuar en otra hoja. */
+  .r2-depto-block {
+    overflow: visible !important;
+  }
+
+  /* Evitar líneas viudas/huérfanas en textos. */
+  .r2-page {
+    orphans: 3;
+    widows: 3;
   }
 }
 

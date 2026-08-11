@@ -30,7 +30,6 @@ export function BarChart({
   const n = data.length,
     cur = n - 1;
   const maxV = Math.max(...data, 1);
-  const minV = Math.min(...data);
   const slot = cW / n;
   const bW = Math.max(6, slot * 0.65);
   const steps = 4;
@@ -64,10 +63,12 @@ export function BarChart({
     );
   }
 
+  // Tamaño de fuente de las etiquetas de valor: se achica cuando hay muchas
+  // barras para que TODAS entren sin encimarse.
+  const valFont = n > 16 ? 8 : n > 12 ? 9 : 10;
+
   data.forEach((v, i) => {
     const isCur = i === cur;
-    const isMax = v === maxV;
-    const isMin = v === minV;
     const bH = Math.max(3, (v / maxV) * cH);
     const x = pL + i * slot + (slot - bW) / 2;
     const y = pT + cH - bH;
@@ -83,22 +84,21 @@ export function BarChart({
         rx="2"
       />
     );
-    if (isCur || isMax || isMin) {
-      els.push(
-        <text
-          key={`v${i}`}
-          x={(x + bW / 2).toFixed(1)}
-          y={(y - 5).toFixed(1)}
-          textAnchor="middle"
-          fontSize="11"
-          fontWeight={isCur ? "700" : "500"}
-          fill={isCur ? activeColor : "#8a95a8"}
-          fontFamily="var(--font-dm-sans),sans-serif"
-        >
-          {fmtVal(v)}
-        </text>
-      );
-    }
+    // Etiqueta de valor en TODAS las barras.
+    els.push(
+      <text
+        key={`v${i}`}
+        x={(x + bW / 2).toFixed(1)}
+        y={(y - 4).toFixed(1)}
+        textAnchor="middle"
+        fontSize={isCur ? valFont + 1 : valFont}
+        fontWeight={isCur ? "700" : "500"}
+        fill={isCur ? activeColor : "#8a95a8"}
+        fontFamily="var(--font-dm-sans),sans-serif"
+      >
+        {fmtVal(v)}
+      </text>
+    );
     if (i % 3 === 0 || isCur) {
       els.push(
         <text
