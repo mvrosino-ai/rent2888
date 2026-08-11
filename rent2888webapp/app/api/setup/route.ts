@@ -40,6 +40,32 @@ CREATE TABLE IF NOT EXISTS settings (
 
 INSERT INTO settings (id, commission_pct) VALUES (TRUE, 0.20)
 ON CONFLICT (id) DO NOTHING;
+
+-- Mails de liquidación (en sync con db/migrations/0002_mails.sql)
+CREATE TABLE IF NOT EXISTS mail_liquidacion (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  periodo TEXT NOT NULL,
+  propietario TEXT NOT NULL,
+  mail TEXT NOT NULL DEFAULT '',
+  asunto TEXT NOT NULL DEFAULT '',
+  nombre TEXT NOT NULL DEFAULT '',
+  moneda TEXT NOT NULL DEFAULT '$',
+  deptos TEXT[] NOT NULL DEFAULT '{}',
+  compras TEXT[] NOT NULL DEFAULT '{}',
+  arreglos TEXT[] NOT NULL DEFAULT '{}',
+  comentarios TEXT[] NOT NULL DEFAULT '{}',
+  nota_libre TEXT,
+  especial BOOLEAN NOT NULL DEFAULT FALSE,
+  edited BOOLEAN NOT NULL DEFAULT FALSE,
+  sent BOOLEAN NOT NULL DEFAULT FALSE,
+  sent_at TIMESTAMPTZ,
+  matched BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS mail_liq_periodo_prop_uq
+  ON mail_liquidacion (periodo, propietario) WHERE especial = FALSE;
+CREATE INDEX IF NOT EXISTS mail_liq_periodo_idx ON mail_liquidacion (periodo);
 `;
 
 export async function GET(req: NextRequest) {
