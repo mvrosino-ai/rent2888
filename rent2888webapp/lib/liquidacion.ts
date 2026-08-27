@@ -96,7 +96,23 @@ export function computeLiquidacion(
   const { liqRows: dataRows, propMap, edificioMap, propToEdif, sharedBuildingMap: sbMap } = data;
 
   const mon = propMap[prop]?.moneda || "$";
-  const directRows = dataRows.filter((r) => r.propietario === prop && r.mesano === per);
+
+  // Un depto individual se considera inactivo cuando en la hoja de propietarios
+  // (columna Estado) TODAS sus entradas para este propietario están inactivas
+  // (Estado = "Inactivo" o cantidad 0). En ese caso NO debe liquidarse.
+  // Si el depto no figura para este propietario en esa hoja, no se oculta
+  // (falta de información → se mantiene el comportamiento anterior).
+  const isDeptoInactivo = (depto: string): boolean => {
+    const entries = edificioMap[depto];
+    if (!entries) return false;
+    const propEntries = entries.filter((e) => e.prop === prop);
+    if (propEntries.length === 0) return false;
+    return !propEntries.some((e) => e.activo);
+  };
+
+  const directRows = dataRows.filter(
+    (r) => r.propietario === prop && r.mesano === per && !isDeptoInactivo(r.depto)
+  );
   const sharedBuildings = new Set(Object.keys(sbMap));
 
   // ── Egresos de edificios compartidos ──
