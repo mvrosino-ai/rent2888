@@ -110,6 +110,15 @@ function parsePropSheet(csv: string) {
   const propToEdif: Record<string, PropEdifEntry[]> = {};
   const edificioNames = new Set<string>();
 
+  // El estado activo/inactivo de un propietario se decide ÚNICAMENTE por el
+  // Estado de sus deptos individuales (Tabla A, columna E). Los edificios
+  // compartidos (Tabla B) son solo para división de pagos y NO deben influir
+  // en si el prop se muestra o se liquida. Se registran estos conjuntos para
+  // finalizar propMap.activo al terminar el parseo.
+  const propHasTablaA = new Set<string>(); // aparece en Tabla A (tenga o no activo)
+  const propActiveTablaA = new Set<string>(); // tiene al menos un depto activo en Tabla A
+  const propHasTablaB = new Set<string>(); // aparece en Tabla B (edificio compartido)
+
   const lines = csv.split("\n").filter((l) => l.trim());
   if (lines.length < 2) return { propMap, edificioMap, propToEdif, edificioNames };
 
@@ -140,15 +149,15 @@ function parsePropSheet(csv: string) {
       edificioNames.add(deptoA);
       if (!edificioMap[deptoA]) edificioMap[deptoA] = [];
       edificioMap[deptoA].push({ prop: propA, cantidad: cantA, moneda: monA, activo: activoA });
+      propHasTablaA.add(propA);
       if (activoA) {
+        propActiveTablaA.add(propA);
         if (!propToEdif[propA]) propToEdif[propA] = [];
         propToEdif[propA].push({ edificio: deptoA, cantidad: cantA, esIndividual: true });
       }
-      if (!propMap[propA]) propMap[propA] = { moneda: monA, activo: activoA };
-      else if (activoA) {
-        propMap[propA].activo = true;
-        propMap[propA].moneda = monA;
-      }
+      // La moneda se toma preferentemente de una entrada activa.
+      if (!propMap[propA]) propMap[propA] = { moneda: monA, activo: false };
+      if (activoA) propMap[propA].moneda = monA;
     }
 
     // Tabla B (cols 5-8): edificios compartidos (sin columna estado)
@@ -170,15 +179,26 @@ function parsePropSheet(csv: string) {
       edificioNames.add(edifB);
       if (!edificioMap[edifB]) edificioMap[edifB] = [];
       edificioMap[edifB].push({ prop: propB, cantidad: cantB, moneda: monB, activo: activoB });
+      propHasTablaB.add(propB);
       if (activoB) {
         if (!propToEdif[propB]) propToEdif[propB] = [];
         propToEdif[propB].push({ edificio: edifB, cantidad: cantB, esCompartido: true });
       }
-      if (!propMap[propB]) propMap[propB] = { moneda: monB, activo: activoB };
-      else if (activoB) {
-        propMap[propB].activo = true;
-      }
+      // La Tabla B NO define el estado activo del prop (solo división de pagos).
+      // Solo se usa para completar la moneda si el prop no vino de la Tabla A.
+      if (!propMap[propB]) propMap[propB] = { moneda: monB, activo: false };
     }
+  }
+
+  // ── Finalizar estado activo por propietario ──
+  // Regla: activo = tiene algún depto activo en la Tabla A. Si el prop NO
+  // aparece en la Tabla A (solo existe como miembro de un edificio compartido),
+  // se considera activo por presencia en Tabla B, para no ocultarlo. Pero si
+  // tiene deptos en la Tabla A y TODOS están inactivos, queda inactivo aunque
+  // participe de un edificio compartido (caso IT436 / Carlos Schapira).
+  for (const p of Object.keys(propMap)) {
+    propMap[p].activo =
+      propActiveTablaA.has(p) || (!propHasTablaA.has(p) && propHasTablaB.has(p));
   }
 
   return { propMap, edificioMap, propToEdif, edificioNames };
