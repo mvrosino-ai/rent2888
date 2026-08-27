@@ -111,13 +111,22 @@ function parsePropSheet(csv: string) {
   const edificioNames = new Set<string>();
 
   // El estado activo/inactivo de un propietario se decide ÚNICAMENTE por el
-  // Estado de sus deptos individuales (Tabla A, columna E). Los edificios
-  // compartidos (Tabla B) son solo para división de pagos y NO deben influir
-  // en si el prop se muestra o se liquida. Se registran estos conjuntos para
-  // finalizar propMap.activo al terminar el parseo.
-  const propHasTablaA = new Set<string>(); // aparece en Tabla A (tenga o no activo)
-  const propActiveTablaA = new Set<string>(); // tiene al menos un depto activo en Tabla A
+  // Estado de sus deptos INDIVIDUALES (Tabla A, columna E). Los edificios
+  // compartidos (Tabla B, y las filas de Tabla A cuyo "depto" es en realidad
+  // un edificio compartido) son solo para división de pagos y NO deben influir
+  // en si el prop se muestra o se liquida.
+  //
+  // Caso real: Carlos Shapira tiene en la Tabla A el edificio compartido
+  // "Italiano" en Activo (es el receptor del informe consolidado) y su depto
+  // individual "IT436" en Inactivo. Debe quedar OCULTO porque su único depto
+  // individual está inactivo; la fila del edificio compartido no lo reactiva.
+  //
+  // Como los nombres de edificios compartidos (Tabla B) pueden aparecer en
+  // líneas posteriores a la fila de Tabla A que los referencia, se clasifica
+  // TODO al final del parseo.
   const propHasTablaB = new Set<string>(); // aparece en Tabla B (edificio compartido)
+  const sharedEdifNames = new Set<string>(); // nombres de edificios compartidos (Tabla B col F)
+  const tablaARows: { prop: string; depto: string; active: boolean }[] = [];
 
   const lines = csv.split("\n").filter((l) => l.trim());
   if (lines.length < 2) return { propMap, edificioMap, propToEdif, edificioNames };
@@ -149,9 +158,8 @@ function parsePropSheet(csv: string) {
       edificioNames.add(deptoA);
       if (!edificioMap[deptoA]) edificioMap[deptoA] = [];
       edificioMap[deptoA].push({ prop: propA, cantidad: cantA, moneda: monA, activo: activoA });
-      propHasTablaA.add(propA);
+      tablaARows.push({ prop: propA, depto: deptoA, active: activoA });
       if (activoA) {
-        propActiveTablaA.add(propA);
         if (!propToEdif[propA]) propToEdif[propA] = [];
         propToEdif[propA].push({ edificio: deptoA, cantidad: cantA, esIndividual: true });
       }
@@ -177,6 +185,7 @@ function parsePropSheet(csv: string) {
       !edifBlow.includes("propietario")
     ) {
       edificioNames.add(edifB);
+      sharedEdifNames.add(edifB);
       if (!edificioMap[edifB]) edificioMap[edifB] = [];
       edificioMap[edifB].push({ prop: propB, cantidad: cantB, moneda: monB, activo: activoB });
       propHasTablaB.add(propB);
@@ -191,14 +200,28 @@ function parsePropSheet(csv: string) {
   }
 
   // ── Finalizar estado activo por propietario ──
-  // Regla: activo = tiene algún depto activo en la Tabla A. Si el prop NO
-  // aparece en la Tabla A (solo existe como miembro de un edificio compartido),
-  // se considera activo por presencia en Tabla B, para no ocultarlo. Pero si
-  // tiene deptos en la Tabla A y TODOS están inactivos, queda inactivo aunque
-  // participe de un edificio compartido (caso IT436 / Carlos Schapira).
+  // Se separan las filas de Tabla A entre deptos INDIVIDUALES (el "depto" no es
+  // un edificio compartido) y filas de edificio compartido (el "depto" coincide
+  // con un edificio de la Tabla B).
+  const propHasIndividual = new Set<string>(); // tiene ≥1 depto individual (activo o no)
+  const propActiveIndividual = new Set<string>(); // tiene ≥1 depto individual ACTIVO
+  for (const { prop, depto, active } of tablaARows) {
+    if (sharedEdifNames.has(depto)) continue; // fila de edificio compartido → no cuenta
+    propHasIndividual.add(prop);
+    if (active) propActiveIndividual.add(prop);
+  }
+
+  // Regla de visibilidad/liquidación:
+  //  - Si el prop tiene deptos individuales: activo ⇔ al menos uno está Activo.
+  //    (Carlos Shapira: IT436 Inactivo y sólo el edificio compartido Italiano
+  //     Activo → queda INACTIVO y no aparece en el desplegable.)
+  //  - Si el prop NO tiene ningún depto individual (sólo participa de edificios
+  //    compartidos): se mantiene visible por presencia en Tabla B, para no
+  //    ocultar a quienes únicamente reciben informes de edificios compartidos.
   for (const p of Object.keys(propMap)) {
-    propMap[p].activo =
-      propActiveTablaA.has(p) || (!propHasTablaA.has(p) && propHasTablaB.has(p));
+    propMap[p].activo = propHasIndividual.has(p)
+      ? propActiveIndividual.has(p)
+      : propHasTablaB.has(p);
   }
 
   return { propMap, edificioMap, propToEdif, edificioNames };
