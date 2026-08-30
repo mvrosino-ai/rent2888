@@ -76,6 +76,10 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
 .msList label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--txt)}
 .msList label:hover{background:var(--panel)}
 .msList input{accent-color:var(--red);margin:0;width:auto}
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border)}
+.tabBtn{background:none;border:none;color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;padding:10px 4px;margin-right:18px;cursor:pointer;border-bottom:2px solid transparent}
+.tabBtn:hover{color:var(--txt)}
+.tabBtn.on{color:var(--txt);border-bottom-color:var(--red)}
 #cfgBox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;align-items:center;justify-content:center}
 #cfgBox .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:380px}
 #cfgBox h3{margin-bottom:14px}
@@ -112,38 +116,47 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
   <div id="status">Cargando datos del Sheet…</div>
 
   <div id="content" style="display:none">
-    <div class="filters">
-      <div class="f">
-        <label>Cuentas visibles</label>
-        <div class="ms" id="msCuentas">
-          <button class="msBtn" onclick="toggleMsPanel()"></button>
-          <div class="msPanel">
-            <input type="text" placeholder="Buscar cuenta…" oninput="filterMsList(this.value)">
-            <div class="msActions">
-              <button onclick="setAllCuentas(true)">Todas</button>
-              <button onclick="setAllCuentas(false)">Ninguna</button>
+    <div class="tabs">
+      <button class="tabBtn on" data-t="con" onclick="setTab('con')">📊 Consolidado</button>
+      <button class="tabBtn" data-t="mov" onclick="setTab('mov')">📋 Movimientos por cuenta</button>
+    </div>
+
+    <div id="pane-con" class="tabPane">
+      <div class="filters">
+        <div class="f">
+          <label>Cuentas visibles</label>
+          <div class="ms" id="msCuentas">
+            <button class="msBtn" onclick="toggleMsPanel()"></button>
+            <div class="msPanel">
+              <input type="text" placeholder="Buscar cuenta…" oninput="filterMsList(this.value)">
+              <div class="msActions">
+                <button onclick="setAllCuentas(true)">Todas</button>
+                <button onclick="setAllCuentas(false)">Ninguna</button>
+              </div>
+              <div class="msList" id="msList"></div>
             </div>
-            <div class="msList" id="msList"></div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div id="viewResumen">
       <div class="kpis" id="kTop"></div>
-      <div class="tblCard" id="cardResumen">
+      <div class="tblCard">
         <div class="tblHead"><h3>Saldo por cuenta</h3><button class="hbtn" onclick="expCSV('resumen')">⬇ CSV</button></div>
         <div class="tblWrap" id="tResumen"></div>
-        <div class="note">Saldo = Ingresos + Egresos, sumando todos los movimientos de esa cuenta desde que hay datos en el Sheet. Cada movimiento suma solo a la moneda en la que está cargado (sin convertir). La columna Egresos ya trae el signo (negativo = salió plata, positivo = entró). Hacé click en una cuenta para ver el detalle.</div>
+        <div class="note">Saldo = Ingresos + Egresos de esa cuenta, cada uno en su propia moneda (sin convertir). Si una cuenta solo movió pesos, no se muestra fila en dólares, y viceversa. Hacé click en una cuenta para ver sus movimientos.</div>
       </div>
     </div>
 
-    <div id="viewDetalle" style="display:none">
-      <button class="hbtn" style="margin-bottom:14px" onclick="volverResumen()">← Volver al resumen</button>
-      <div class="kpis" id="kTopDet"></div>
+    <div id="pane-mov" class="tabPane" style="display:none">
+      <div class="filters">
+        <div class="f">
+          <label>Cuenta</label>
+          <select id="selMov" onchange="renderMov()"></select>
+        </div>
+      </div>
+      <div class="kpis" id="kMov"></div>
       <div class="tblCard">
-        <div class="tblHead"><h3 id="tDetalleTit">Detalle</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
-        <div class="tblWrap" id="tDetalle"></div>
+        <div class="tblHead"><h3 id="tMovTit">Movimientos</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
+        <div class="tblWrap" id="tMov"></div>
       </div>
     </div>
   </div>
@@ -304,8 +317,12 @@ async function loadData(){
       const comA = isUSD ? 0 : com;
       const comU = isUSD ? com : 0;
 
+      const concepto = g(r,'Concepto Egresos') || (egrRaw!==0 ? (g(r,'Concepto Ingresos')||'') : (g(r,'Concepto Ingresos')||''));
+      const detalleTxt = g(r,'Detalle');
+
       ROWS.push({
         fecha: g(r,'Fecha'), dep: g(r,'Departamento'), hue: g(r,'Huésped'),
+        concepto, detalleTxt,
         donde: donde || '(sin cuenta)',
         moneda: isUSD?'USD':'ARS',
         ing, ingA, ingU, egrOrig: egrRaw, egrA, egrU, com, comA, comU,
@@ -368,7 +385,7 @@ function setAllCuentas(visible){
 function toggleMsPanel(){ document.getElementById('msCuentas').classList.toggle('open'); }
 document.addEventListener('click',e=>{ if(!e.target.closest('.ms')) document.querySelectorAll('.ms.open').forEach(m=>m.classList.remove('open')); });
 
-const sortState = { resumen:{key:'saldoA',asc:false}, detalle:{key:'fecha',asc:false} };
+const sortState = { resumen:{key:'saldo',asc:false}, detalle:{key:'fecha',asc:false} };
 function cmp(a,b,key,asc){
   let x=a[key], y=b[key];
   if(key==='fecha'){ const fa=parseFecha(x),fb=parseFecha(y); x=fa?fa.y*10000+fa.m*100+fa.d:0; y=fb?fb.y*10000+fb.m*100+fb.d:0; }
@@ -382,23 +399,26 @@ function sortTable(view,key){
 }
 
 let lastFiltered = {resumen:[], detalle:[]};
-let viewAccount = null; // null = resumen; string = cuenta en detalle
+let currentTab = 'con';
+
+function setTab(t){
+  currentTab = t;
+  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  document.getElementById('pane-con').style.display = t==='con' ? 'block':'none';
+  document.getElementById('pane-mov').style.display = t==='mov' ? 'block':'none';
+  render();
+}
+function irACuenta(donde){
+  setTab('mov');
+  document.getElementById('selMov').value = donde;
+  renderMov();
+}
 
 function render(){
   if(!ROWS.length) return;
-  if(!viewAccount){
-    document.getElementById('viewResumen').style.display='block';
-    document.getElementById('viewDetalle').style.display='none';
-    renderTopTodas();
-    renderResumen();
-  } else {
-    document.getElementById('viewResumen').style.display='none';
-    document.getElementById('viewDetalle').style.display='block';
-    renderTopCuenta(viewAccount);
-    renderDetalle(viewAccount);
-  }
+  if(currentTab==='con'){ renderTopTodas(); renderResumen(); }
+  else { buildSelMov(); renderMov(); }
 }
-function volverResumen(){ viewAccount = null; render(); }
 
 function renderTopTodas(){
   let totA=0,totU=0;
@@ -409,94 +429,92 @@ function renderTopTodas(){
     <div class="kpi"><div class="t">Cuentas visibles</div><div class="v">${cuentasVisibles().length} <span style="font-size:13px;color:var(--muted)">/ ${Object.keys(CUENTAS).length}</span></div></div>`;
 }
 
+// Una fila por cuenta y por moneda REALMENTE usada (nada de filas en 0 en la moneda
+// que esa cuenta nunca tocó). La gran mayoría de las cuentas van a tener 1 sola fila.
+function filasResumen(){
+  const out = [];
+  cuentasVisibles().forEach(donde=>{
+    const c = CUENTAS[donde];
+    const hayARS = c.rows.some(r=>r.moneda==='ARS');
+    const hayUSD = c.rows.some(r=>r.moneda==='USD');
+    if(hayARS) out.push({donde, moneda:'$', simbolo:'$', ing:c.ingA, egr:c.egrA, saldo:c.ingA+c.egrA, n:c.rows.filter(r=>r.moneda==='ARS').length});
+    if(hayUSD) out.push({donde, moneda:'u$s', simbolo:'u$s', ing:c.ingU, egr:c.egrU, saldo:c.ingU+c.egrU, n:c.rows.filter(r=>r.moneda==='USD').length});
+  });
+  return out;
+}
+
 function renderResumen(){
   const s = sortState.resumen;
-  let rows = cuentasVisibles().map(donde=>{ const c=CUENTAS[donde]; return {
-    donde, ingA:c.ingA, egrA:c.egrA, saldoA:c.ingA+c.egrA,
-    ingU:c.ingU, egrU:c.egrU, saldoU:c.ingU+c.egrU, n:c.rows.length
-  }; });
+  let rows = filasResumen();
   rows = [...rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
   lastFiltered.resumen = rows;
-  const totA = rows.reduce((a,r)=>a+r.saldoA,0), totU = rows.reduce((a,r)=>a+r.saldoU,0);
   document.getElementById('tResumen').innerHTML = `<table>
     <thead><tr>
       <th onclick="sortTable('resumen','donde')">Cuenta</th>
-      <th class="num" onclick="sortTable('resumen','ingA')">Ingresos $</th>
-      <th class="num" onclick="sortTable('resumen','egrA')">Egresos $</th>
-      <th class="num" onclick="sortTable('resumen','saldoA')">Saldo $</th>
-      <th class="num" onclick="sortTable('resumen','ingU')">Ingresos u$s</th>
-      <th class="num" onclick="sortTable('resumen','egrU')">Egresos u$s</th>
-      <th class="num" onclick="sortTable('resumen','saldoU')">Saldo u$s</th>
+      <th onclick="sortTable('resumen','moneda')">Moneda</th>
+      <th class="num" onclick="sortTable('resumen','ing')">Ingresos</th>
+      <th class="num" onclick="sortTable('resumen','egr')">Egresos</th>
+      <th class="num" onclick="sortTable('resumen','saldo')">Saldo</th>
       <th class="num" onclick="sortTable('resumen','n')">Mov.</th>
     </tr></thead>
-    <tbody>${rows.map(r=>`<tr class="clickable" onclick="verCuenta('${r.donde.replace(/'/g,"\\'")}')">
+    <tbody>${rows.map(r=>`<tr class="clickable" onclick="irACuenta('${r.donde.replace(/'/g,"\\'")}')">
       <td><b>${r.donde}</b></td>
-      <td class="num">${fmt(r.ingA)}</td>
-      <td class="num">${fmt(r.egrA)}</td>
-      <td class="num ${r.saldoA<0?'negv':'pos'}"><b>${fmt(r.saldoA)}</b></td>
-      <td class="num">${fmt(r.ingU)}</td>
-      <td class="num">${fmt(r.egrU)}</td>
-      <td class="num ${r.saldoU<0?'negv':'pos'}"><b>${fmt(r.saldoU)}</b></td>
+      <td><span class="pill">${r.moneda}</span></td>
+      <td class="num">${r.simbolo} ${fmt(r.ing)}</td>
+      <td class="num">${r.simbolo} ${fmt(r.egr)}</td>
+      <td class="num ${r.saldo<0?'negv':'pos'}"><b>${r.simbolo} ${fmt(r.saldo)}</b></td>
       <td class="num">${r.n}</td>
     </tr>`).join('')}</tbody>
-    <tfoot><tr><td>TOTAL</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingA,0))}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrA,0))}</td>
-      <td class="num">${fmt(totA)}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingU,0))}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrU,0))}</td>
-      <td class="num">${fmt(totU)}</td>
-      <td class="num">${rows.reduce((a,r)=>a+r.n,0)}</td>
-    </tr></tfoot>
   </table>`;
 }
-function verCuenta(donde){
-  viewAccount = donde;
-  render();
+
+function buildSelMov(){
+  const sel = document.getElementById('selMov');
+  const prev = sel.value;
+  const cuentas = cuentasVisibles().sort((a,b)=>a.localeCompare(b,'es'));
+  sel.innerHTML = cuentas.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
+  sel.value = cuentas.includes(prev) ? prev : (cuentas[0]||'');
 }
 
-function renderTopCuenta(donde){
+function renderMov(){
+  const donde = document.getElementById('selMov').value;
+  if(!donde){ document.getElementById('kMov').innerHTML=''; document.getElementById('tMov').innerHTML=''; return; }
   const c = CUENTAS[donde];
-  const saldoA = c.ingA + c.egrA, saldoU = c.ingU + c.egrU;
-  document.getElementById('kTopDet').innerHTML = `
-    <div class="kpi"><div class="t">${donde}</div><div class="v" style="font-size:16px;color:var(--muted)">Saldo de esta cuenta</div></div>
-    <div class="kpi"><div class="t">Saldo $</div><div class="v ${saldoA<0?'negv':'pos'}">$ ${fmt(saldoA)}</div><div class="s">Ingresos $ ${fmt(c.ingA)} + Egresos $ ${fmt(c.egrA)}</div></div>
-    <div class="kpi"><div class="t">Saldo u$s</div><div class="v gold">u$s ${fmt(saldoU)}</div><div class="s">Ingresos u$s ${fmt(c.ingU)} + Egresos u$s ${fmt(c.egrU)}</div></div>
-    <div class="kpi"><div class="t">Movimientos</div><div class="v">${c.rows.length}</div></div>`;
-}
+  const hayARS = c.rows.some(r=>r.moneda==='ARS');
+  const hayUSD = c.rows.some(r=>r.moneda==='USD');
 
-function renderDetalle(donde){
-  const c = CUENTAS[donde];
+  const kpis = [];
+  if(hayARS){ const saldo=c.ingA+c.egrA; kpis.push(`<div class="kpi"><div class="t">Saldo $</div><div class="v ${saldo<0?'negv':'pos'}">$ ${fmt(saldo)}</div><div class="s">Ingresos $ ${fmt(c.ingA)} + Egresos $ ${fmt(c.egrA)}</div></div>`); }
+  if(hayUSD){ const saldo=c.ingU+c.egrU; kpis.push(`<div class="kpi"><div class="t">Saldo u$s</div><div class="v gold">u$s ${fmt(saldo)}</div><div class="s">Ingresos u$s ${fmt(c.ingU)} + Egresos u$s ${fmt(c.egrU)}</div></div>`); }
+  kpis.push(`<div class="kpi"><div class="t">Movimientos</div><div class="v">${c.rows.length}</div></div>`);
+  document.getElementById('kMov').innerHTML = kpis.join('');
+
   const s = sortState.detalle;
   const rows = [...c.rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
   lastFiltered.detalle = rows;
-  document.getElementById('tDetalleTit').textContent = `Detalle de movimientos — ${donde} (${rows.length})`;
-  document.getElementById('tDetalle').innerHTML = `<table>
-    <thead><tr>
-      <th onclick="sortTable('detalle','fecha')">Fecha</th>
-      <th onclick="sortTable('detalle','hue')">Huésped</th>
-      <th onclick="sortTable('detalle','dep')">Departamento</th>
-      <th class="num" onclick="sortTable('detalle','ingA')">Ingresos $</th>
-      <th class="num" onclick="sortTable('detalle','comA')">Comisión BK $</th>
-      <th class="num" onclick="sortTable('detalle','egrA')">Egresos $</th>
-      <th class="num" onclick="sortTable('detalle','ingU')">Ingresos u$s</th>
-      <th class="num" onclick="sortTable('detalle','egrU')">Egresos u$s</th>
-    </tr></thead>
-    <tbody>${rows.map(r=>`<tr>
-      <td>${r.fecha||'—'}</td><td>${r.hue||''}</td><td>${r.dep||''}</td>
-      <td class="num">${r.ingA?fmt(r.ingA):''}</td>
-      <td class="num">${r.comA?fmt(r.comA):''}</td>
-      <td class="num ${r.egrA<0?'negv':r.egrA>0?'pos':''}">${r.egrA?fmt(r.egrA):''}</td>
-      <td class="num">${r.ingU?fmt(r.ingU):''}</td>
-      <td class="num ${r.egrU<0?'negv':r.egrU>0?'pos':''}">${r.egrU?fmt(r.egrU):''}</td>
-    </tr>`).join('')}</tbody>
-    <tfoot><tr><td colspan="3">TOTAL (${rows.length})</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingA,0))}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.comA,0))}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrA,0))}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingU,0))}</td>
-      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrU,0))}</td>
-    </tr></tfoot>
+  document.getElementById('tMovTit').textContent = `Movimientos — ${donde} (${rows.length})`;
+
+  // columnas dinámicas: si la cuenta solo movió pesos, no aparece ninguna columna en
+  // dólares (y viceversa); si movió las dos monedas, aparecen ambos bloques.
+  let headCols = '<th onclick="sortTable(\'detalle\',\'fecha\')">Fecha</th><th onclick="sortTable(\'detalle\',\'concepto\')">Concepto</th><th onclick="sortTable(\'detalle\',\'dep\')">Departamento</th><th onclick="sortTable(\'detalle\',\'hue\')">Huésped / Detalle</th>';
+  if(hayARS) headCols += '<th class="num" onclick="sortTable(\'detalle\',\'ingA\')">Ingresos $</th><th class="num" onclick="sortTable(\'detalle\',\'comA\')">Comisión BK $</th><th class="num" onclick="sortTable(\'detalle\',\'egrA\')">Egresos $</th>';
+  if(hayUSD) headCols += '<th class="num" onclick="sortTable(\'detalle\',\'ingU\')">Ingresos u$s</th><th class="num" onclick="sortTable(\'detalle\',\'comU\')">Comisión BK u$s</th><th class="num" onclick="sortTable(\'detalle\',\'egrU\')">Egresos u$s</th>';
+
+  const bodyRows = rows.map(r=>{
+    let tds = `<td>${r.fecha||'—'}</td><td>${r.concepto?`<span class="pill">${r.concepto}</span>`:''}</td><td>${r.dep||''}</td><td>${r.hue||r.detalleTxt||''}</td>`;
+    if(hayARS) tds += `<td class="num">${r.ingA?fmt(r.ingA):''}</td><td class="num">${r.comA?fmt(r.comA):''}</td><td class="num ${r.egrA<0?'negv':r.egrA>0?'pos':''}">${r.egrA?fmt(r.egrA):''}</td>`;
+    if(hayUSD) tds += `<td class="num">${r.ingU?fmt(r.ingU):''}</td><td class="num">${r.comU?fmt(r.comU):''}</td><td class="num ${r.egrU<0?'negv':r.egrU>0?'pos':''}">${r.egrU?fmt(r.egrU):''}</td>`;
+    return `<tr>${tds}</tr>`;
+  }).join('');
+
+  let footCols = `<td colspan="4">TOTAL (${rows.length})</td>`;
+  if(hayARS) footCols += `<td class="num">${fmt(rows.reduce((a,r)=>a+r.ingA,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.comA,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.egrA,0))}</td>`;
+  if(hayUSD) footCols += `<td class="num">${fmt(rows.reduce((a,r)=>a+r.ingU,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.comU,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.egrU,0))}</td>`;
+
+  document.getElementById('tMov').innerHTML = `<table>
+    <thead><tr>${headCols}</tr></thead>
+    <tbody>${bodyRows}</tbody>
+    <tfoot><tr>${footCols}</tr></tfoot>
   </table>`;
 }
 
@@ -504,13 +522,13 @@ function renderDetalle(donde){
 function expCSV(view){
   let head, lines, name;
   if(view==='resumen'){
-    head = ['Cuenta','Ingresos $','Egresos $','Saldo $','Ingresos u$s','Egresos u$s','Saldo u$s','Movimientos'];
-    lines = lastFiltered.resumen.map(r=>[r.donde,r.ingA.toFixed(2),r.egrA.toFixed(2),r.saldoA.toFixed(2),r.ingU.toFixed(2),r.egrU.toFixed(2),r.saldoU.toFixed(2),r.n]);
+    head = ['Cuenta','Moneda','Ingresos','Egresos','Saldo','Movimientos'];
+    lines = lastFiltered.resumen.map(r=>[r.donde,r.moneda,r.ing.toFixed(2),r.egr.toFixed(2),r.saldo.toFixed(2),r.n]);
     name = 'saldo-cuentas-resumen.csv';
   } else {
-    const donde = viewAccount;
-    head = ['Fecha','Huésped','Departamento','Ingresos $','Comisión BK $','Egresos $','Ingresos u$s','Egresos u$s'];
-    lines = lastFiltered.detalle.map(r=>[r.fecha,r.hue,r.dep,r.ingA.toFixed(2),r.comA.toFixed(2),r.egrA.toFixed(2),r.ingU.toFixed(2),r.egrU.toFixed(2)]);
+    const donde = document.getElementById('selMov').value;
+    head = ['Fecha','Concepto','Departamento','Huésped/Detalle','Ingresos $','Comisión BK $','Egresos $','Ingresos u$s','Comisión BK u$s','Egresos u$s'];
+    lines = lastFiltered.detalle.map(r=>[r.fecha,r.concepto,r.dep,r.hue||r.detalleTxt,r.ingA.toFixed(2),r.comA.toFixed(2),r.egrA.toFixed(2),r.ingU.toFixed(2),r.comU.toFixed(2),r.egrU.toFixed(2)]);
     name = 'saldo-cuenta-'+(donde||'todas').replace(/[^a-z0-9]+/gi,'-')+'.csv';
   }
   const csv = [head, ...lines].map(row=>row.map(v=>{
