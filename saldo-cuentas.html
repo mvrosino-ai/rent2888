@@ -63,6 +63,19 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
 .pos{color:var(--green)} .negv{color:var(--neg)}
 .note{color:var(--muted);font-size:12px;line-height:1.6;padding:14px 18px;border-top:1px solid var(--border)}
 .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--muted)}
+.ms{position:relative;min-width:220px}
+.ms .msBtn{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--txt);border-radius:9px;padding:10px 12px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:left;display:flex;justify-content:space-between;gap:8px}
+.ms .msBtn:after{content:"▾";color:var(--muted)}
+.ms .msPanel{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:60;background:var(--panel2);border:1px solid var(--border);border-radius:10px;min-width:260px;max-height:340px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.ms.open .msPanel{display:block}
+.msPanel input{width:calc(100% - 16px);margin:8px;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-family:inherit;font-size:13px}
+.msActions{display:flex;gap:6px;padding:0 8px 6px}
+.msActions button{flex:1;background:var(--panel);border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px;cursor:pointer;font-size:11px;font-family:inherit}
+.msActions button:hover{color:var(--txt);border-color:var(--muted)}
+.msList{max-height:220px;overflow-y:auto;padding:0 4px 6px}
+.msList label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--txt)}
+.msList label:hover{background:var(--panel)}
+.msList input{accent-color:var(--red);margin:0;width:auto}
 #cfgBox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;align-items:center;justify-content:center}
 #cfgBox .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:380px}
 #cfgBox h3{margin-bottom:14px}
@@ -101,22 +114,37 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
   <div id="content" style="display:none">
     <div class="filters">
       <div class="f">
-        <label>Cuenta (Donde $?)</label>
-        <select id="selCuenta" onchange="render()"></select>
+        <label>Cuentas visibles</label>
+        <div class="ms" id="msCuentas">
+          <button class="msBtn" onclick="toggleMsPanel()"></button>
+          <div class="msPanel">
+            <input type="text" placeholder="Buscar cuenta…" oninput="filterMsList(this.value)">
+            <div class="msActions">
+              <button onclick="setAllCuentas(true)">Todas</button>
+              <button onclick="setAllCuentas(false)">Ninguna</button>
+            </div>
+            <div class="msList" id="msList"></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="kpis" id="kTop"></div>
-
-    <div class="tblCard" id="cardResumen">
-      <div class="tblHead"><h3>Saldo por cuenta</h3><button class="hbtn" onclick="expCSV('resumen')">⬇ CSV</button></div>
-      <div class="tblWrap" id="tResumen"></div>
-      <div class="note">Saldo = Ingresos + Egresos, sumando todos los movimientos de esa cuenta desde que hay datos en el Sheet. La columna Egresos ya trae el signo (negativo = salió plata de la cuenta, positivo = entró). Hacé click en una cuenta para ver el detalle de sus movimientos.</div>
+    <div id="viewResumen">
+      <div class="kpis" id="kTop"></div>
+      <div class="tblCard" id="cardResumen">
+        <div class="tblHead"><h3>Saldo por cuenta</h3><button class="hbtn" onclick="expCSV('resumen')">⬇ CSV</button></div>
+        <div class="tblWrap" id="tResumen"></div>
+        <div class="note">Saldo = Ingresos + Egresos, sumando todos los movimientos de esa cuenta desde que hay datos en el Sheet. Cada movimiento suma solo a la moneda en la que está cargado (sin convertir). La columna Egresos ya trae el signo (negativo = salió plata, positivo = entró). Hacé click en una cuenta para ver el detalle.</div>
+      </div>
     </div>
 
-    <div class="tblCard" id="cardDetalle" style="display:none">
-      <div class="tblHead"><h3 id="tDetalleTit">Detalle</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
-      <div class="tblWrap" id="tDetalle"></div>
+    <div id="viewDetalle" style="display:none">
+      <button class="hbtn" style="margin-bottom:14px" onclick="volverResumen()">← Volver al resumen</button>
+      <div class="kpis" id="kTopDet"></div>
+      <div class="tblCard">
+        <div class="tblHead"><h3 id="tDetalleTit">Detalle</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
+        <div class="tblWrap" id="tDetalle"></div>
+      </div>
     </div>
   </div>
 </main>
@@ -127,7 +155,6 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
     <h3>Configuración</h3>
     <label>ID del Google Sheet</label><input id="cfgId">
     <label>Pestaña de datos</label><input id="cfgTab">
-    <label>Pestaña Cotización MEP</label><input id="cfgMep">
     <div class="row">
       <button class="cancel" onclick="closeCfg()">Cancelar</button>
       <button class="save" onclick="saveCfg()">Guardar y recargar</button>
@@ -137,24 +164,21 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
 
 <script>
 /* ================= CONFIG ================= */
-const DEF = { id:'1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw', tab:'$$$', mep:'cotizacion MEP', pass:'rent2888' };
+const DEF = { id:'1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw', tab:'$$$', pass:'rent2888' };
 const cfg = {
   get id(){ return localStorage.getItem('r28s_id') || DEF.id },
   get tab(){ return localStorage.getItem('r28s_tab') || DEF.tab },
-  get mep(){ return localStorage.getItem('r28s_mep') || DEF.mep },
   get pass(){ return localStorage.getItem('r28s_pw') || DEF.pass },
 };
 function openCfg(){
   document.getElementById('cfgId').value = cfg.id;
   document.getElementById('cfgTab').value = cfg.tab;
-  document.getElementById('cfgMep').value = cfg.mep;
   document.getElementById('cfgBox').style.display='flex';
 }
 function closeCfg(){ document.getElementById('cfgBox').style.display='none'; }
 function saveCfg(){
   localStorage.setItem('r28s_id', document.getElementById('cfgId').value.trim());
   localStorage.setItem('r28s_tab', document.getElementById('cfgTab').value.trim());
-  localStorage.setItem('r28s_mep', document.getElementById('cfgMep').value.trim());
   closeCfg(); loadData();
 }
 /* ================= LOGIN ================= */
@@ -224,14 +248,6 @@ function parseFecha(s){
   return { d:+m[1], m:+m[2], y };
 }
 function serial(f){ return f ? f.y*10000+f.m*100+f.d : 0; }
-let MEP = [];
-function mepRate(f){
-  if(!MEP.length) return 0;
-  const s = serial(f);
-  let best = MEP[0];
-  for(let i=0;i<MEP.length;i++){ if(MEP[i].s<=s) best=MEP[i]; else break; }
-  return best.rate;
-}
 
 /* ================= DATA ================= */
 let ROWS = [];       // todas las filas con "Donde $?" cargado
@@ -250,22 +266,9 @@ async function loadData(){
   }
   try{
     const base = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:csv&t=${Date.now()}&sheet=`;
-    const [res, resM] = await Promise.all([
-      fetch(base+encodeURIComponent(cfg.tab)),
-      fetch(base+encodeURIComponent(cfg.mep))
-    ]);
+    const res = await fetch(base+encodeURIComponent(cfg.tab));
     if(!res.ok) throw new Error('HTTP '+res.status+' — no se pudo leer la pestaña "'+cfg.tab+'"');
     const raw = parseCSV(await res.text());
-
-    MEP = [];
-    if(resM.ok){
-      const rawM = parseCSV(await resM.text());
-      for(const r of rawM){
-        const f = parseFecha(r[0]||''); const rate = pn(r[1]);
-        if(f && rate>100 && rate<1000000) MEP.push({s:serial(f), rate});
-      }
-      MEP.sort((a,b)=>a.s-b.s);
-    }
     if(raw.length<2) throw new Error('La pestaña "'+cfg.tab+'" está vacía');
 
     let hi = 0;
@@ -290,22 +293,16 @@ async function loadData(){
 
       const monedaRaw = g(r,'Moneda').toUpperCase();
       const isUSD = monedaRaw.includes('U');
-      const fIngreso = parseFecha(g(r,'Fecha de ingreso'));
-      const fRef = fIngreso || parseFecha(g(r,'Fecha'));
-      const rate = mepRate(fRef);
 
-      const agU = pn(g(r,'Ingresos $ a u$'));
-      const ajA = pn(g(r,'Ingresos u$ a $'));
-      const ingU = isUSD ? ing : (agU || (rate ? ing/rate : 0));
-      const ingA = isUSD ? (ajA || (rate ? ing*rate : 0)) : ing;
-
-      const sgnE = egrRaw < 0 ? -1 : 1;
-      const egrUx = pn(g(r,'Egresos $ a u$')), egrAx = pn(g(r,'Egresos u$ a $'));
-      const egrU = Math.abs(egrUx || (isUSD ? egrRaw : (rate ? egrRaw/rate : 0))) * sgnE;
-      const egrA = Math.abs(egrAx || (!isUSD ? egrRaw : (rate ? egrRaw*rate : 0))) * sgnE;
-
-      const comU = isUSD ? com : (rate ? com/rate : 0);
-      const comA = isUSD ? (rate ? com*rate : 0) : com;
+      // SIN conversión de moneda: cada movimiento suma solo a la columna de su
+      // propia moneda (col L). Nada de dolarizar/pesificar vía MEP acá — eso
+      // generaba un saldo "fantasma" en la moneda que la cuenta nunca usó.
+      const ingA = isUSD ? 0 : ing;
+      const ingU = isUSD ? ing : 0;
+      const egrA = isUSD ? 0 : egrRaw;
+      const egrU = isUSD ? egrRaw : 0;
+      const comA = isUSD ? 0 : com;
+      const comU = isUSD ? com : 0;
 
       ROWS.push({
         fecha: g(r,'Fecha'), dep: g(r,'Departamento'), hue: g(r,'Huésped'),
@@ -335,15 +332,41 @@ async function loadData(){
   loading = false;
 }
 
-/* ================= UI ================= */
+/* ================= FILTRO DE CUENTAS (persistente) ================= */
+// se guardan las OCULTAS, no las visibles: así una cuenta nueva en el Sheet
+// aparece sola, sin que Maria tenga que ir a tildarla a mano cada vez.
+let hidden = new Set(JSON.parse(localStorage.getItem('r28s_hidden')||'[]'));
+function saveHidden(){ localStorage.setItem('r28s_hidden', JSON.stringify([...hidden])); }
+function cuentasVisibles(){ return Object.keys(CUENTAS).filter(c=>!hidden.has(c)); }
+
 function buildSelector(){
-  const sel = document.getElementById('selCuenta');
-  const prev = sel.value;
-  const cuentas = Object.keys(CUENTAS).sort((a,b)=>a.localeCompare(b,'es'));
-  sel.innerHTML = '<option value="">— Todas las cuentas (resumen) —</option>' +
-    cuentas.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
-  sel.value = cuentas.includes(prev) ? prev : '';
+  document.getElementById('msBtnLabel') || null; // noop guard
+  renderMsList('');
+  updateMsBtn();
 }
+function updateMsBtn(){
+  const total = Object.keys(CUENTAS).length, vis = cuentasVisibles().length;
+  document.querySelector('#msCuentas .msBtn').textContent = `${vis}/${total} cuentas`;
+}
+function renderMsList(filterTxt){
+  const cuentas = Object.keys(CUENTAS).sort((a,b)=>a.localeCompare(b,'es'));
+  const f = filterTxt.trim().toLowerCase();
+  document.getElementById('msList').innerHTML = cuentas
+    .filter(c=>!f || c.toLowerCase().includes(f))
+    .map(c=>`<label><input type="checkbox" ${hidden.has(c)?'':'checked'} onchange="toggleCuenta('${c.replace(/'/g,"\\'")}',this.checked)">${c} <span style="color:var(--muted);margin-left:auto">(${CUENTAS[c].rows.length})</span></label>`)
+    .join('');
+}
+function filterMsList(v){ renderMsList(v); }
+function toggleCuenta(donde, visible){
+  if(visible) hidden.delete(donde); else hidden.add(donde);
+  saveHidden(); updateMsBtn(); render();
+}
+function setAllCuentas(visible){
+  if(visible) hidden = new Set(); else hidden = new Set(Object.keys(CUENTAS));
+  saveHidden(); renderMsList(''); updateMsBtn(); render();
+}
+function toggleMsPanel(){ document.getElementById('msCuentas').classList.toggle('open'); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.ms')) document.querySelectorAll('.ms.open').forEach(m=>m.classList.remove('open')); });
 
 const sortState = { resumen:{key:'saldoA',asc:false}, detalle:{key:'fecha',asc:false} };
 function cmp(a,b,key,asc){
@@ -359,36 +382,39 @@ function sortTable(view,key){
 }
 
 let lastFiltered = {resumen:[], detalle:[]};
+let viewAccount = null; // null = resumen; string = cuenta en detalle
 
 function render(){
   if(!ROWS.length) return;
-  const cuenta = document.getElementById('selCuenta').value;
-  document.getElementById('cardDetalle').style.display = cuenta ? 'block' : 'none';
-
-  if(!cuenta){
+  if(!viewAccount){
+    document.getElementById('viewResumen').style.display='block';
+    document.getElementById('viewDetalle').style.display='none';
     renderTopTodas();
     renderResumen();
   } else {
-    renderTopCuenta(cuenta);
-    renderDetalle(cuenta);
+    document.getElementById('viewResumen').style.display='none';
+    document.getElementById('viewDetalle').style.display='block';
+    renderTopCuenta(viewAccount);
+    renderDetalle(viewAccount);
   }
 }
+function volverResumen(){ viewAccount = null; render(); }
 
 function renderTopTodas(){
   let totA=0,totU=0;
-  Object.values(CUENTAS).forEach(c=>{ totA+=c.ingA+c.egrA; totU+=c.ingU+c.egrU; });
+  cuentasVisibles().forEach(donde=>{ const c=CUENTAS[donde]; totA+=c.ingA+c.egrA; totU+=c.ingU+c.egrU; });
   document.getElementById('kTop').innerHTML = `
     <div class="kpi"><div class="t">Saldo total $</div><div class="v ${totA<0?'negv':'pos'}">$ ${fmt(totA)}</div></div>
     <div class="kpi"><div class="t">Saldo total u$s</div><div class="v gold">u$s ${fmt(totU)}</div></div>
-    <div class="kpi"><div class="t">Cuentas</div><div class="v">${Object.keys(CUENTAS).length}</div></div>`;
+    <div class="kpi"><div class="t">Cuentas visibles</div><div class="v">${cuentasVisibles().length} <span style="font-size:13px;color:var(--muted)">/ ${Object.keys(CUENTAS).length}</span></div></div>`;
 }
 
 function renderResumen(){
   const s = sortState.resumen;
-  let rows = Object.entries(CUENTAS).map(([donde,c])=>({
+  let rows = cuentasVisibles().map(donde=>{ const c=CUENTAS[donde]; return {
     donde, ingA:c.ingA, egrA:c.egrA, saldoA:c.ingA+c.egrA,
     ingU:c.ingU, egrU:c.egrU, saldoU:c.ingU+c.egrU, n:c.rows.length
-  }));
+  }; });
   rows = [...rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
   lastFiltered.resumen = rows;
   const totA = rows.reduce((a,r)=>a+r.saldoA,0), totU = rows.reduce((a,r)=>a+r.saldoU,0);
@@ -425,14 +451,15 @@ function renderResumen(){
   </table>`;
 }
 function verCuenta(donde){
-  document.getElementById('selCuenta').value = donde;
+  viewAccount = donde;
   render();
 }
 
 function renderTopCuenta(donde){
   const c = CUENTAS[donde];
   const saldoA = c.ingA + c.egrA, saldoU = c.ingU + c.egrU;
-  document.getElementById('kTop').innerHTML = `
+  document.getElementById('kTopDet').innerHTML = `
+    <div class="kpi"><div class="t">${donde}</div><div class="v" style="font-size:16px;color:var(--muted)">Saldo de esta cuenta</div></div>
     <div class="kpi"><div class="t">Saldo $</div><div class="v ${saldoA<0?'negv':'pos'}">$ ${fmt(saldoA)}</div><div class="s">Ingresos $ ${fmt(c.ingA)} + Egresos $ ${fmt(c.egrA)}</div></div>
     <div class="kpi"><div class="t">Saldo u$s</div><div class="v gold">u$s ${fmt(saldoU)}</div><div class="s">Ingresos u$s ${fmt(c.ingU)} + Egresos u$s ${fmt(c.egrU)}</div></div>
     <div class="kpi"><div class="t">Movimientos</div><div class="v">${c.rows.length}</div></div>`;
@@ -481,7 +508,7 @@ function expCSV(view){
     lines = lastFiltered.resumen.map(r=>[r.donde,r.ingA.toFixed(2),r.egrA.toFixed(2),r.saldoA.toFixed(2),r.ingU.toFixed(2),r.egrU.toFixed(2),r.saldoU.toFixed(2),r.n]);
     name = 'saldo-cuentas-resumen.csv';
   } else {
-    const donde = document.getElementById('selCuenta').value;
+    const donde = viewAccount;
     head = ['Fecha','Huésped','Departamento','Ingresos $','Comisión BK $','Egresos $','Ingresos u$s','Egresos u$s'];
     lines = lastFiltered.detalle.map(r=>[r.fecha,r.hue,r.dep,r.ingA.toFixed(2),r.comA.toFixed(2),r.egrA.toFixed(2),r.ingU.toFixed(2),r.egrU.toFixed(2)]);
     name = 'saldo-cuenta-'+(donde||'todas').replace(/[^a-z0-9]+/gi,'-')+'.csv';
