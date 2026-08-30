@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rent2888 · Saldo de Cuentas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#CC1414; --red-dark:#8f0e0e; --gold:#d4af37;
+  --bg:#0c0e13; --panel:#151924; --panel2:#1c2130; --border:#262d3f;
+  --txt:#e8eaf0; --muted:#8a93a8; --green:#2ecc71; --neg:#ff5c5c;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+/* ---------- LOGIN ---------- */
+#login{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center}
+#login .box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;text-align:center}
+#login h1{font-size:24px;font-weight:800;margin-bottom:4px}
+#login h1 span{color:var(--red)}
+#login p{color:var(--muted);margin-bottom:22px;font-size:13px}
+#login input{width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-size:15px;text-align:center;letter-spacing:2px}
+#login button{width:100%;margin-top:14px;padding:12px;border:none;border-radius:10px;background:var(--red);color:#fff;font-weight:700;font-size:15px;cursor:pointer}
+#login button:hover{background:var(--red-dark)}
+#loginErr{color:var(--neg);font-size:12px;margin-top:10px;display:none}
+/* ---------- LAYOUT ---------- */
+#app{display:none}
+header{position:sticky;top:0;z-index:50;background:rgba(12,14,19,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);padding:0 22px;display:flex;align-items:center;gap:14px;height:60px}
+.logo{font-weight:800;font-size:18px;flex:0 0 auto}
+.logo span{color:var(--red)}
+.sub{color:var(--muted);font-size:12.5px;flex:1}
+.hbtn{background:var(--panel2);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap}
+.hbtn:hover{border-color:var(--red)}
+main{padding:22px;max-width:1200px;margin:0 auto}
+#status{color:var(--muted);padding:40px 0;text-align:center}
+/* ---------- FILTERS ---------- */
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
+.f label{display:block;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.f select{min-width:240px;background:var(--panel);border:1px solid var(--border);color:var(--txt);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.f select:focus{outline:none;border-color:var(--red)}
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+.kpi .t{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.kpi .v{font-size:26px;font-weight:800;margin-top:6px}
+.kpi .v.pos{color:var(--green)} .kpi .v.negv{color:var(--neg)} .kpi .v.gold{color:var(--gold)}
+.kpi .s{font-size:11px;color:var(--muted);margin-top:4px}
+/* ---------- TABLE ---------- */
+.tblCard{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:18px}
+.tblHead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+.tblHead h3{font-size:14px;font-weight:700}
+.tblWrap{overflow-x:auto;max-height:560px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:10px 14px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;cursor:pointer;white-space:nowrap;z-index:2}
+th:hover{color:var(--txt)}
+td{padding:10px 14px;border-top:1px solid var(--border);white-space:nowrap}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+th.num{text-align:right}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+tbody tr.clickable{cursor:pointer}
+tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--panel2)}
+.pos{color:var(--green)} .negv{color:var(--neg)}
+.note{color:var(--muted);font-size:12px;line-height:1.6;padding:14px 18px;border-top:1px solid var(--border)}
+.pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--muted)}
+#cfgBox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;align-items:center;justify-content:center}
+#cfgBox .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:380px}
+#cfgBox h3{margin-bottom:14px}
+#cfgBox label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;font-weight:700}
+#cfgBox input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-family:inherit}
+#cfgBox .row{display:flex;gap:8px;margin-top:16px}
+#cfgBox button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit}
+#cfgBox .save{background:var(--red);color:#fff}
+#cfgBox .cancel{background:var(--panel2);color:var(--txt)}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="box">
+    <h1>RENT<span>2888</span></h1>
+    <p>Saldo de cuentas — acceso restringido</p>
+    <input type="password" id="pw" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Entrar</button>
+    <div id="loginErr">Contraseña incorrecta</div>
+  </div>
+</div>
+
+<div id="app">
+<header>
+  <div class="logo">RENT<span>2888</span></div>
+  <div class="sub">Saldo de cuentas</div>
+  <span id="upd" class="pill"></span>
+  <button class="hbtn" onclick="loadData()">↻ Actualizar</button>
+  <button class="hbtn" onclick="openCfg()">⚙</button>
+</header>
+
+<main>
+  <div id="status">Cargando datos del Sheet…</div>
+
+  <div id="content" style="display:none">
+    <div class="filters">
+      <div class="f">
+        <label>Cuenta (Donde $?)</label>
+        <select id="selCuenta" onchange="render()"></select>
+      </div>
+    </div>
+
+    <div class="kpis" id="kTop"></div>
+
+    <div class="tblCard" id="cardResumen">
+      <div class="tblHead"><h3>Saldo por cuenta</h3><button class="hbtn" onclick="expCSV('resumen')">⬇ CSV</button></div>
+      <div class="tblWrap" id="tResumen"></div>
+      <div class="note">Saldo = Ingresos + Egresos, sumando todos los movimientos de esa cuenta desde que hay datos en el Sheet. La columna Egresos ya trae el signo (negativo = salió plata de la cuenta, positivo = entró). Hacé click en una cuenta para ver el detalle de sus movimientos.</div>
+    </div>
+
+    <div class="tblCard" id="cardDetalle" style="display:none">
+      <div class="tblHead"><h3 id="tDetalleTit">Detalle</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
+      <div class="tblWrap" id="tDetalle"></div>
+    </div>
+  </div>
+</main>
+</div>
+
+<div id="cfgBox">
+  <div class="box">
+    <h3>Configuración</h3>
+    <label>ID del Google Sheet</label><input id="cfgId">
+    <label>Pestaña de datos</label><input id="cfgTab">
+    <label>Pestaña Cotización MEP</label><input id="cfgMep">
+    <div class="row">
+      <button class="cancel" onclick="closeCfg()">Cancelar</button>
+      <button class="save" onclick="saveCfg()">Guardar y recargar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const DEF = { id:'1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw', tab:'$$$', mep:'cotizacion MEP', pass:'rent2888' };
+const cfg = {
+  get id(){ return localStorage.getItem('r28s_id') || DEF.id },
+  get tab(){ return localStorage.getItem('r28s_tab') || DEF.tab },
+  get mep(){ return localStorage.getItem('r28s_mep') || DEF.mep },
+  get pass(){ return localStorage.getItem('r28s_pw') || DEF.pass },
+};
+function openCfg(){
+  document.getElementById('cfgId').value = cfg.id;
+  document.getElementById('cfgTab').value = cfg.tab;
+  document.getElementById('cfgMep').value = cfg.mep;
+  document.getElementById('cfgBox').style.display='flex';
+}
+function closeCfg(){ document.getElementById('cfgBox').style.display='none'; }
+function saveCfg(){
+  localStorage.setItem('r28s_id', document.getElementById('cfgId').value.trim());
+  localStorage.setItem('r28s_tab', document.getElementById('cfgTab').value.trim());
+  localStorage.setItem('r28s_mep', document.getElementById('cfgMep').value.trim());
+  closeCfg(); loadData();
+}
+/* ================= LOGIN ================= */
+function doLogin(){
+  if(document.getElementById('pw').value === cfg.pass){
+    sessionStorage.setItem('r28s_auth','1'); showApp();
+  } else { document.getElementById('loginErr').style.display='block'; }
+}
+function showApp(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadData();
+  startAutoRefresh();
+}
+const AUTO_MS = 5*60*1000;
+let autoTimer=null, lastLoad=0;
+function startAutoRefresh(){
+  if(autoTimer) clearInterval(autoTimer);
+  autoTimer = setInterval(()=>{ if(!document.hidden) loadData(); }, AUTO_MS);
+  document.addEventListener('visibilitychange', ()=>{
+    if(!document.hidden && Date.now()-lastLoad > 60000) loadData();
+  });
+}
+if(sessionStorage.getItem('r28s_auth')==='1'){ window.addEventListener('DOMContentLoaded',showApp); }
+else { window.addEventListener('DOMContentLoaded',()=>document.getElementById('pw').focus()); }
+
+/* ================= HELPERS (idénticos al dashboard principal, para no desviar números) ================= */
+function pn(v){
+  if(v==null) return 0;
+  let s = String(v).trim();
+  if(!s || s==='#N/A' || s==='#REF!' || s==='#DIV/0!' || s==='FALSE' || s==='TRUE') return 0;
+  s = s.replace(/[^0-9.,\-]/g,'');
+  if(!s) return 0;
+  if(s.includes(',') && s.includes('.')){
+    if(s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g,'').replace(',','.');
+    else s = s.replace(/,/g,'');
+  } else if(s.includes(',')){ s = s.replace(',','.'); }
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+function fmt(n){
+  const neg = n<0; n = Math.abs(n);
+  const s = n.toLocaleString('es-AR',{minimumFractionDigits:0, maximumFractionDigits:0});
+  return (neg && s!=='0' ? '-' : '') + s;
+}
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){
+      if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; }
+      else cell+=c;
+    } else {
+      if(c==='"') q=true;
+      else if(c===','){ row.push(cell); cell=''; }
+      else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
+      else if(c!=='\r') cell+=c;
+    }
+  }
+  if(cell!=='' || row.length){ row.push(cell); rows.push(row); }
+  return rows;
+}
+function parseFecha(s){
+  const m = String(s).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if(!m) return null;
+  let y = +m[3]; if(y<100) y += 2000;
+  return { d:+m[1], m:+m[2], y };
+}
+function serial(f){ return f ? f.y*10000+f.m*100+f.d : 0; }
+let MEP = [];
+function mepRate(f){
+  if(!MEP.length) return 0;
+  const s = serial(f);
+  let best = MEP[0];
+  for(let i=0;i<MEP.length;i++){ if(MEP[i].s<=s) best=MEP[i]; else break; }
+  return best.rate;
+}
+
+/* ================= DATA ================= */
+let ROWS = [];       // todas las filas con "Donde $?" cargado
+let CUENTAS = {};     // nombre de cuenta -> {ingA,ingU,egrA,egrU,comA,comU,rows:[]}
+let loading = false;
+
+async function loadData(){
+  if(loading) return;
+  loading = true;
+  const st = document.getElementById('status');
+  if(!ROWS.length){
+    st.style.display='block'; st.textContent='Cargando datos del Sheet…';
+    document.getElementById('content').style.display='none';
+  } else {
+    document.getElementById('upd').textContent = '⏳ Actualizando…';
+  }
+  try{
+    const base = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:csv&t=${Date.now()}&sheet=`;
+    const [res, resM] = await Promise.all([
+      fetch(base+encodeURIComponent(cfg.tab)),
+      fetch(base+encodeURIComponent(cfg.mep))
+    ]);
+    if(!res.ok) throw new Error('HTTP '+res.status+' — no se pudo leer la pestaña "'+cfg.tab+'"');
+    const raw = parseCSV(await res.text());
+
+    MEP = [];
+    if(resM.ok){
+      const rawM = parseCSV(await resM.text());
+      for(const r of rawM){
+        const f = parseFecha(r[0]||''); const rate = pn(r[1]);
+        if(f && rate>100 && rate<1000000) MEP.push({s:serial(f), rate});
+      }
+      MEP.sort((a,b)=>a.s-b.s);
+    }
+    if(raw.length<2) throw new Error('La pestaña "'+cfg.tab+'" está vacía');
+
+    let hi = 0;
+    for(let i=0;i<Math.min(5,raw.length);i++){
+      const c = raw[i].map(x=>String(x).trim());
+      if(c.includes('mes/ano') && c.includes('Departamento')){ hi=i; break; }
+    }
+    const H = raw[hi].map(h=>String(h).trim());
+    const ix = {}; H.forEach((h,i)=>{ if(!(h in ix)) ix[h]=i; });
+    const g = (r,name)=> (ix[name]!=null && r[ix[name]]!=null) ? String(r[ix[name]]).trim() : '';
+
+    ROWS = [];
+    for(let i=hi+1;i<raw.length;i++){
+      const r = raw[i];
+      if(!r || r.every(c=>!String(c).trim())) continue;
+
+      const donde = g(r,'Donde $?');
+      const ing  = pn(g(r,'Ingresos carga'));
+      const egrRaw = pn(g(r,'Egresos'));
+      const com = pn(g(r,'Comision BK'));
+      if(!donde && ing===0 && egrRaw===0 && com===0) continue; // fila sin nada relevante para cuentas
+
+      const monedaRaw = g(r,'Moneda').toUpperCase();
+      const isUSD = monedaRaw.includes('U');
+      const fIngreso = parseFecha(g(r,'Fecha de ingreso'));
+      const fRef = fIngreso || parseFecha(g(r,'Fecha'));
+      const rate = mepRate(fRef);
+
+      const agU = pn(g(r,'Ingresos $ a u$'));
+      const ajA = pn(g(r,'Ingresos u$ a $'));
+      const ingU = isUSD ? ing : (agU || (rate ? ing/rate : 0));
+      const ingA = isUSD ? (ajA || (rate ? ing*rate : 0)) : ing;
+
+      const sgnE = egrRaw < 0 ? -1 : 1;
+      const egrUx = pn(g(r,'Egresos $ a u$')), egrAx = pn(g(r,'Egresos u$ a $'));
+      const egrU = Math.abs(egrUx || (isUSD ? egrRaw : (rate ? egrRaw/rate : 0))) * sgnE;
+      const egrA = Math.abs(egrAx || (!isUSD ? egrRaw : (rate ? egrRaw*rate : 0))) * sgnE;
+
+      const comU = isUSD ? com : (rate ? com/rate : 0);
+      const comA = isUSD ? (rate ? com*rate : 0) : com;
+
+      ROWS.push({
+        fecha: g(r,'Fecha'), dep: g(r,'Departamento'), hue: g(r,'Huésped'),
+        donde: donde || '(sin cuenta)',
+        moneda: isUSD?'USD':'ARS',
+        ing, ingA, ingU, egrOrig: egrRaw, egrA, egrU, com, comA, comU,
+      });
+    }
+
+    CUENTAS = {};
+    for(const r of ROWS){
+      const c = CUENTAS[r.donde] = CUENTAS[r.donde] || {ingA:0,ingU:0,egrA:0,egrU:0,comA:0,comU:0,rows:[]};
+      c.ingA += r.ingA; c.ingU += r.ingU; c.egrA += r.egrA; c.egrU += r.egrU;
+      c.comA += r.comA; c.comU += r.comU; c.rows.push(r);
+    }
+
+    document.getElementById('upd').textContent = ROWS.length+' movimientos · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    st.style.display='none';
+    document.getElementById('content').style.display='block';
+    buildSelector();
+    render();
+  }catch(e){
+    st.style.display='block';
+    st.textContent = '⚠ '+e.message;
+  }
+  lastLoad = Date.now();
+  loading = false;
+}
+
+/* ================= UI ================= */
+function buildSelector(){
+  const sel = document.getElementById('selCuenta');
+  const prev = sel.value;
+  const cuentas = Object.keys(CUENTAS).sort((a,b)=>a.localeCompare(b,'es'));
+  sel.innerHTML = '<option value="">— Todas las cuentas (resumen) —</option>' +
+    cuentas.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
+  sel.value = cuentas.includes(prev) ? prev : '';
+}
+
+const sortState = { resumen:{key:'saldoA',asc:false}, detalle:{key:'fecha',asc:false} };
+function cmp(a,b,key,asc){
+  let x=a[key], y=b[key];
+  if(key==='fecha'){ const fa=parseFecha(x),fb=parseFecha(y); x=fa?fa.y*10000+fa.m*100+fa.d:0; y=fb?fb.y*10000+fb.m*100+fb.d:0; }
+  if(typeof x==='string'){ x=x.toLowerCase(); y=String(y).toLowerCase(); }
+  return (x<y?-1:x>y?1:0)*(asc?1:-1);
+}
+function sortTable(view,key){
+  const s = sortState[view];
+  if(s.key===key) s.asc=!s.asc; else { s.key=key; s.asc=false; }
+  render();
+}
+
+let lastFiltered = {resumen:[], detalle:[]};
+
+function render(){
+  if(!ROWS.length) return;
+  const cuenta = document.getElementById('selCuenta').value;
+  document.getElementById('cardDetalle').style.display = cuenta ? 'block' : 'none';
+
+  if(!cuenta){
+    renderTopTodas();
+    renderResumen();
+  } else {
+    renderTopCuenta(cuenta);
+    renderDetalle(cuenta);
+  }
+}
+
+function renderTopTodas(){
+  let totA=0,totU=0;
+  Object.values(CUENTAS).forEach(c=>{ totA+=c.ingA+c.egrA; totU+=c.ingU+c.egrU; });
+  document.getElementById('kTop').innerHTML = `
+    <div class="kpi"><div class="t">Saldo total $</div><div class="v ${totA<0?'negv':'pos'}">$ ${fmt(totA)}</div></div>
+    <div class="kpi"><div class="t">Saldo total u$s</div><div class="v gold">u$s ${fmt(totU)}</div></div>
+    <div class="kpi"><div class="t">Cuentas</div><div class="v">${Object.keys(CUENTAS).length}</div></div>`;
+}
+
+function renderResumen(){
+  const s = sortState.resumen;
+  let rows = Object.entries(CUENTAS).map(([donde,c])=>({
+    donde, ingA:c.ingA, egrA:c.egrA, saldoA:c.ingA+c.egrA,
+    ingU:c.ingU, egrU:c.egrU, saldoU:c.ingU+c.egrU, n:c.rows.length
+  }));
+  rows = [...rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
+  lastFiltered.resumen = rows;
+  const totA = rows.reduce((a,r)=>a+r.saldoA,0), totU = rows.reduce((a,r)=>a+r.saldoU,0);
+  document.getElementById('tResumen').innerHTML = `<table>
+    <thead><tr>
+      <th onclick="sortTable('resumen','donde')">Cuenta</th>
+      <th class="num" onclick="sortTable('resumen','ingA')">Ingresos $</th>
+      <th class="num" onclick="sortTable('resumen','egrA')">Egresos $</th>
+      <th class="num" onclick="sortTable('resumen','saldoA')">Saldo $</th>
+      <th class="num" onclick="sortTable('resumen','ingU')">Ingresos u$s</th>
+      <th class="num" onclick="sortTable('resumen','egrU')">Egresos u$s</th>
+      <th class="num" onclick="sortTable('resumen','saldoU')">Saldo u$s</th>
+      <th class="num" onclick="sortTable('resumen','n')">Mov.</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>`<tr class="clickable" onclick="verCuenta('${r.donde.replace(/'/g,"\\'")}')">
+      <td><b>${r.donde}</b></td>
+      <td class="num">${fmt(r.ingA)}</td>
+      <td class="num">${fmt(r.egrA)}</td>
+      <td class="num ${r.saldoA<0?'negv':'pos'}"><b>${fmt(r.saldoA)}</b></td>
+      <td class="num">${fmt(r.ingU)}</td>
+      <td class="num">${fmt(r.egrU)}</td>
+      <td class="num ${r.saldoU<0?'negv':'pos'}"><b>${fmt(r.saldoU)}</b></td>
+      <td class="num">${r.n}</td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr><td>TOTAL</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingA,0))}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrA,0))}</td>
+      <td class="num">${fmt(totA)}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingU,0))}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrU,0))}</td>
+      <td class="num">${fmt(totU)}</td>
+      <td class="num">${rows.reduce((a,r)=>a+r.n,0)}</td>
+    </tr></tfoot>
+  </table>`;
+}
+function verCuenta(donde){
+  document.getElementById('selCuenta').value = donde;
+  render();
+}
+
+function renderTopCuenta(donde){
+  const c = CUENTAS[donde];
+  const saldoA = c.ingA + c.egrA, saldoU = c.ingU + c.egrU;
+  document.getElementById('kTop').innerHTML = `
+    <div class="kpi"><div class="t">Saldo $</div><div class="v ${saldoA<0?'negv':'pos'}">$ ${fmt(saldoA)}</div><div class="s">Ingresos $ ${fmt(c.ingA)} + Egresos $ ${fmt(c.egrA)}</div></div>
+    <div class="kpi"><div class="t">Saldo u$s</div><div class="v gold">u$s ${fmt(saldoU)}</div><div class="s">Ingresos u$s ${fmt(c.ingU)} + Egresos u$s ${fmt(c.egrU)}</div></div>
+    <div class="kpi"><div class="t">Movimientos</div><div class="v">${c.rows.length}</div></div>`;
+}
+
+function renderDetalle(donde){
+  const c = CUENTAS[donde];
+  const s = sortState.detalle;
+  const rows = [...c.rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
+  lastFiltered.detalle = rows;
+  document.getElementById('tDetalleTit').textContent = `Detalle de movimientos — ${donde} (${rows.length})`;
+  document.getElementById('tDetalle').innerHTML = `<table>
+    <thead><tr>
+      <th onclick="sortTable('detalle','fecha')">Fecha</th>
+      <th onclick="sortTable('detalle','hue')">Huésped</th>
+      <th onclick="sortTable('detalle','dep')">Departamento</th>
+      <th class="num" onclick="sortTable('detalle','ingA')">Ingresos $</th>
+      <th class="num" onclick="sortTable('detalle','comA')">Comisión BK $</th>
+      <th class="num" onclick="sortTable('detalle','egrA')">Egresos $</th>
+      <th class="num" onclick="sortTable('detalle','ingU')">Ingresos u$s</th>
+      <th class="num" onclick="sortTable('detalle','egrU')">Egresos u$s</th>
+    </tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td>${r.fecha||'—'}</td><td>${r.hue||''}</td><td>${r.dep||''}</td>
+      <td class="num">${r.ingA?fmt(r.ingA):''}</td>
+      <td class="num">${r.comA?fmt(r.comA):''}</td>
+      <td class="num ${r.egrA<0?'negv':r.egrA>0?'pos':''}">${r.egrA?fmt(r.egrA):''}</td>
+      <td class="num">${r.ingU?fmt(r.ingU):''}</td>
+      <td class="num ${r.egrU<0?'negv':r.egrU>0?'pos':''}">${r.egrU?fmt(r.egrU):''}</td>
+    </tr>`).join('')}</tbody>
+    <tfoot><tr><td colspan="3">TOTAL (${rows.length})</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingA,0))}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.comA,0))}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrA,0))}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.ingU,0))}</td>
+      <td class="num">${fmt(rows.reduce((a,r)=>a+r.egrU,0))}</td>
+    </tr></tfoot>
+  </table>`;
+}
+
+/* ================= CSV EXPORT ================= */
+function expCSV(view){
+  let head, lines, name;
+  if(view==='resumen'){
+    head = ['Cuenta','Ingresos $','Egresos $','Saldo $','Ingresos u$s','Egresos u$s','Saldo u$s','Movimientos'];
+    lines = lastFiltered.resumen.map(r=>[r.donde,r.ingA.toFixed(2),r.egrA.toFixed(2),r.saldoA.toFixed(2),r.ingU.toFixed(2),r.egrU.toFixed(2),r.saldoU.toFixed(2),r.n]);
+    name = 'saldo-cuentas-resumen.csv';
+  } else {
+    const donde = document.getElementById('selCuenta').value;
+    head = ['Fecha','Huésped','Departamento','Ingresos $','Comisión BK $','Egresos $','Ingresos u$s','Egresos u$s'];
+    lines = lastFiltered.detalle.map(r=>[r.fecha,r.hue,r.dep,r.ingA.toFixed(2),r.comA.toFixed(2),r.egrA.toFixed(2),r.ingU.toFixed(2),r.egrU.toFixed(2)]);
+    name = 'saldo-cuenta-'+(donde||'todas').replace(/[^a-z0-9]+/gi,'-')+'.csv';
+  }
+  const csv = [head, ...lines].map(row=>row.map(v=>{
+    v = String(v==null?'':v);
+    return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
+  }).join(',')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download=name; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
