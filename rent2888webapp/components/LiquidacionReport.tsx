@@ -43,7 +43,7 @@ export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
   const multiDepto = deptos.length > 1;
 
   return (
-    <div className="r2-wrap">
+    <div className="r2-wrap" data-pdf-filename={`${monLabel} - ${prop}`}>
       {/* ── PÁGINA 1 ── */}
       <div className="r2-page">
         <div className="r2-header print-exact">

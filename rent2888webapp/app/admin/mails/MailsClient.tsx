@@ -368,9 +368,11 @@ function MailCard({
     });
   };
 
-  const mailtoHref = `mailto:${encodeURIComponent(m.mail)}?subject=${encodeURIComponent(
-    m.asunto
-  )}&body=${encodeURIComponent(buildMailBody(m))}`;
+  const gmailHref = `https://mail.google.com/mail/?view=cm&fs=1&authuser=${encodeURIComponent(
+    "consultas.rent2888@gmail.com"
+  )}&to=${encodeURIComponent(m.mail)}&su=${encodeURIComponent(m.asunto)}&body=${encodeURIComponent(
+    buildMailBody(m)
+  )}`;
 
   const save = () =>
     onMutate(() =>
@@ -572,10 +574,12 @@ function MailCard({
           </div>
           {m.mail && (
             <a
-              href={mailtoHref}
+              href={gmailHref}
+              target="_blank"
+              rel="noopener noreferrer"
               className="text-[12px] font-semibold px-3 py-1.5 rounded-md border border-line text-ink2 hover:bg-card transition"
             >
-              Abrir en mail
+              Abrir en Gmail
             </a>
           )}
         </div>
