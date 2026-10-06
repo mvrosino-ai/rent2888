@@ -19,7 +19,13 @@ function fmtEgreso(n: number, mon: string): { text: string; cls: "g" | "r" } {
   return { text: (suma ? "+" : "−") + fmt(Math.abs(n), mon), cls: suma ? "g" : "r" };
 }
 
-export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
+export function LiquidacionReport({
+  liq,
+  chartVersion = 1,
+}: {
+  liq: Liquidacion;
+  chartVersion?: 1 | 2;
+}) {
   const {
     prop,
     mon,
@@ -268,11 +274,11 @@ export function LiquidacionReport({ liq }: { liq: Liquidacion }) {
         <div className="r2-charts">
           <div className="r2-chart-box">
             <div className="r2-chart-title">Noches por mes</div>
-            <BarChart data={hist.noches} labels={hist.labels} kind="noches" />
+            <BarChart data={hist.noches} labels={hist.labels} kind="noches" version={chartVersion} />
           </div>
           <div className="r2-chart-box">
             <div className="r2-chart-title">Monto liquidado por mes</div>
-            <BarChart data={hist.dinero} labels={hist.labels} kind="monto" />
+            <BarChart data={hist.dinero} labels={hist.labels} kind="monto" version={chartVersion} />
           </div>
         </div>
         <div className="r2-footer print-exact">
