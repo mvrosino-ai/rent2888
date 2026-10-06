@@ -11,11 +11,13 @@ export function BarChart({
   labels,
   kind,
   activeColor = "#e8543a",
+  version = 1,
 }: {
   data: number[];
   labels: string[];
   kind: "noches" | "monto";
   activeColor?: string;
+  version?: 1 | 2;
 }) {
   const fmtVal = kind === "noches" ? (v: number) => v + "n" : fmtMonto;
 
@@ -84,22 +86,40 @@ export function BarChart({
         rx="2"
       />
     );
-    // Etiqueta de valor en TODAS las barras.
+    // V2: monto dentro de cada barra y nombre del mes dentro, vertical.
+    // V1 conserva el formato actual para poder seguir descargando reportes.
     els.push(
       <text
         key={`v${i}`}
         x={(x + bW / 2).toFixed(1)}
-        y={(y - 4).toFixed(1)}
+        y={version === 2 ? (y + Math.min(bH - 5, 16)).toFixed(1) : (y - 4).toFixed(1)}
         textAnchor="middle"
-        fontSize={isCur ? valFont + 1 : valFont}
+        fontSize={version === 2 ? Math.max(7, valFont - 1) : isCur ? valFont + 1 : valFont}
         fontWeight={isCur ? "700" : "500"}
-        fill={isCur ? activeColor : "#8a95a8"}
+        fill={version === 2 ? "#ffffff" : isCur ? activeColor : "#8a95a8"}
         fontFamily="var(--font-dm-sans),sans-serif"
       >
         {fmtVal(v)}
       </text>
     );
-    if (i % 3 === 0 || isCur) {
+    if (version === 2) {
+      els.push(
+        <text
+          key={`l${i}`}
+          x={(x + bW / 2).toFixed(1)}
+          y={(pT + cH - 4).toFixed(1)}
+          textAnchor="middle"
+          fontSize="8"
+          fontWeight={isCur ? "700" : "500"}
+          fill="#ffffff"
+          fontFamily="var(--font-dm-sans),sans-serif"
+          transform={`rotate(-90 ${(x + bW / 2).toFixed(1)} ${(pT + cH - 4).toFixed(1)})`}
+        >
+          {labels[i]}
+        </text>
+      );
+    }
+    if (version !== 2 && (i % 3 === 0 || isCur)) {
       els.push(
         <text
           key={`l${i}`}

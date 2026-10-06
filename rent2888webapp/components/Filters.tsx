@@ -58,12 +58,14 @@ export function AdminFilters({
   moneda,
   prop,
   per,
+  chartVersion,
 }: {
   propietarios: string[];
   periodos: { value: string; label: string }[];
   moneda: string;
   prop: string;
   per: string;
+  chartVersion: 1 | 2;
 }) {
   const { navigate, pending } = useNav();
   // Meses del más nuevo al más viejo: el seleccionado por defecto (el más
@@ -85,7 +87,7 @@ export function AdminFilters({
                 ? "bg-navy border-navy text-white"
                 : "bg-bg border-line text-ink2"
             }`}
-            onClick={() => navigate({ moneda: "u$", prop: "", per })}
+            onClick={() => navigate({ moneda: "u$", prop: "", per, v: String(chartVersion) })}
           >
             💵 USD
           </button>
@@ -95,7 +97,7 @@ export function AdminFilters({
                 ? "bg-brand-green border-brand-green text-white"
                 : "bg-bg border-line text-ink2"
             }`}
-            onClick={() => navigate({ moneda: "$", prop: "", per })}
+            onClick={() => navigate({ moneda: "$", prop: "", per, v: String(chartVersion) })}
           >
             🇦🇷 Pesos
           </button>
@@ -105,7 +107,7 @@ export function AdminFilters({
         <select
           className={selCls}
           value={prop}
-          onChange={(e) => navigate({ moneda, prop: e.target.value, per })}
+          onChange={(e) => navigate({ moneda, prop: e.target.value, per, v: String(chartVersion) })}
         >
           <option value="">Seleccionar...</option>
           {propietarios.map((p) => (
@@ -119,7 +121,7 @@ export function AdminFilters({
         <select
           className={selCls}
           value={per}
-          onChange={(e) => navigate({ moneda, prop, per: e.target.value })}
+          onChange={(e) => navigate({ moneda, prop, per: e.target.value, v: String(chartVersion) })}
         >
           <option value="">Seleccionar...</option>
           {periodosDesc.map((p) => (
@@ -128,6 +130,25 @@ export function AdminFilters({
             </option>
           ))}
         </select>
+      </Group>
+      <Group label="Versión del reporte">
+        <div className="flex gap-1">
+          {[1, 2].map((v) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={chartVersion === v}
+              onClick={() => navigate({ moneda, prop, per, v: String(v) })}
+              className={`text-xs font-semibold px-3.5 py-2 rounded-md border transition ${
+                chartVersion === v
+                  ? "bg-navy border-navy text-white"
+                  : "bg-bg border-line text-ink2 hover:border-navy"
+              }`}
+            >
+              V{v}
+            </button>
+          ))}
+        </div>
       </Group>
       <div className="ml-auto self-end">
         <RefreshButton />

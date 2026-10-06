@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ moneda?: string; prop?: string; per?: string }>;
+  searchParams: Promise<{ moneda?: string; prop?: string; per?: string; v?: string }>;
 }) {
   const sp = await searchParams;
   return (
@@ -47,9 +47,10 @@ function AdminSkeleton() {
 async function AdminBody({
   sp,
 }: {
-  sp: { moneda?: string; prop?: string; per?: string };
+  sp: { moneda?: string; prop?: string; per?: string; v?: string };
 }) {
   const moneda = sp.moneda === "$" ? "$" : "u$";
+  const chartVersion: 1 | 2 = sp.v === "2" ? 2 : 1;
 
   let error: string | null = null;
   let filters: React.ReactNode = null;
@@ -72,12 +73,13 @@ async function AdminBody({
         moneda={moneda}
         prop={prop}
         per={per}
+        chartVersion={chartVersion}
       />
     );
 
     if (prop && per) {
       const liq = computeLiquidacion(data, prop, per, comPct);
-      content = <LiquidacionReport liq={liq} />;
+      content = <LiquidacionReport liq={liq} chartVersion={chartVersion} />;
     }
   } catch (e) {
     error = e instanceof Error ? e.message : "Error al cargar los datos";
