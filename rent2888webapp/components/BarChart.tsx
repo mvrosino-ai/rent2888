@@ -96,7 +96,7 @@ export function BarChart({
         textAnchor="middle"
         fontSize={version === 2 ? Math.max(7, valFont - 1) : isCur ? valFont + 1 : valFont}
         fontWeight={isCur ? "700" : "500"}
-        fill={version === 2 ? "#ffffff" : isCur ? activeColor : "#8a95a8"}
+        fill={version === 2 ? (isCur ? "#ffffff" : "#26315f") : isCur ? activeColor : "#8a95a8"}
         fontFamily="var(--font-dm-sans),sans-serif"
       >
         {fmtVal(v)}
@@ -109,9 +109,9 @@ export function BarChart({
           x={(x + bW / 2).toFixed(1)}
           y={(pT + cH - 4).toFixed(1)}
           textAnchor="middle"
-          fontSize="8"
-          fontWeight={isCur ? "700" : "500"}
-          fill="#ffffff"
+          fontSize="9"
+          fontWeight={isCur ? "700" : "600"}
+          fill={isCur ? "#ffffff" : "#26315f"}
           fontFamily="var(--font-dm-sans),sans-serif"
           transform={`rotate(-90 ${(x + bW / 2).toFixed(1)} ${(pT + cH - 4).toFixed(1)})`}
         >
