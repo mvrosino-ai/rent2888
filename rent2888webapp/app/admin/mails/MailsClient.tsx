@@ -11,7 +11,7 @@ import {
   type GenerateResult,
   type MutationResult,
 } from "./actions";
-import { buildMailBody, greetingOf, type MailResult } from "@/lib/mailTypes";
+import { buildMailBody, buildMailHtml, greetingOf, type MailResult } from "@/lib/mailTypes";
 
 type Filter = "all" | "pend" | "env" | "nov" | "sin" | "usd" | "ars" | "esp";
 
@@ -347,6 +347,7 @@ function MailCard({
   onMutate: (fn: () => Promise<MutationResult>) => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [copyError, setCopyError] = useState(false);
   const [editing, setEditing] = useState(false);
 
   // Borradores de edición
@@ -361,11 +362,25 @@ function MailCard({
 
   const toLines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
 
-  const copy = () => {
-    navigator.clipboard.writeText(buildMailBody(m)).then(() => {
+  const copy = async () => {
+    try {
+      setCopyError(false);
+      if (typeof ClipboardItem !== "undefined" && navigator.clipboard.write) {
+        const html = buildMailHtml(m);
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "text/html": new Blob([html], { type: "text/html" }),
+            "text/plain": new Blob([buildMailBody(m)], { type: "text/plain" }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(buildMailBody(m));
+      }
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    });
+    } catch {
+      setCopyError(true);
+    }
   };
 
   const gmailHref = `https://mail.google.com/mail/?view=cm&fs=1&authuser=${encodeURIComponent(
@@ -405,8 +420,9 @@ function MailCard({
                   copied ? "bg-brand-green text-white" : "bg-brand-red text-white hover:opacity-85"
                 }`}
               >
-                {copied ? "✓ Copiado" : "Copiar"}
+                {copied ? "✓ Copiado con formato" : "Copiar con formato"}
               </button>
+              {copyError && <span className="text-[11px] text-red-200">No se pudo copiar</span>}
               <button
                 onClick={() => setEditing(true)}
                 className="text-[12px] font-semibold px-3 py-1.5 rounded-md bg-white/10 text-white hover:bg-white/20 transition"

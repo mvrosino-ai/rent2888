@@ -34,6 +34,49 @@ export function greetingOf(m: Pick<MailResult, "nombre" | "propietario">): strin
  * - Mail normal: template estándar; solo incluye las secciones con ítems, y
  *   agrega la nota libre (si existe) antes del cierre.
  */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function htmlLines(value: string): string {
+  return escapeHtml(value).replace(/\n/g, "<br>");
+}
+
+/** Arma una versión HTML para pegar en Gmail conservando títulos y negritas. */
+export function buildMailHtml(m: MailResult): string {
+  if (m.especial) {
+    return `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6">${htmlLines(
+      (m.notaLibre || "").trim()
+    )}</div>`;
+  }
+
+  const blocks = [
+    `<p>${htmlLines(greetingOf(m))}</p>`,
+    `<p>Les hacemos entrega del informe detallado correspondiente al mes de <strong>${escapeHtml(
+      m.mesNombre
+    )}</strong>. Como es habitual, en los próximos días les estaremos enviando el dinero de la liquidación.</p>`,
+  ];
+  const section = (title: string, items: string[]) => {
+    if (!items.length) return;
+    blocks.push(
+      `<p><strong>${escapeHtml(title)}</strong><br>${items
+        .map((item) => `• ${htmlLines(item)}`)
+        .join("<br>")}</p>`
+    );
+  };
+  section("🛒 Compras Realizadas durante el mes", m.compras);
+  section("🔧 Arreglos Realizados en el mes", m.arreglos);
+  section("📝 Comentarios del mes", m.comentarios);
+  if ((m.notaLibre || "").trim()) blocks.push(`<p>${htmlLines(m.notaLibre.trim())}</p>`);
+  blocks.push(`<p>Muchas gracias por seguir confiando en nuestra gestión.<br>¡Saludos!</p>`);
+  return `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6">${blocks.join("")}</div>`;
+}
+
 export function buildMailBody(m: MailResult): string {
   if (m.especial) {
     return (m.notaLibre || "").trim();
