@@ -92,28 +92,30 @@ export function BarChart({
       <text
         key={`v${i}`}
         x={(x + bW / 2).toFixed(1)}
-        y={version === 2 ? (y + Math.min(bH - 5, 16)).toFixed(1) : (y - 4).toFixed(1)}
+        y={version === 2 ? (y + Math.min(bH - 4, 15)).toFixed(1) : (y - 4).toFixed(1)}
         textAnchor="middle"
-        fontSize={version === 2 ? Math.max(7, valFont - 1) : isCur ? valFont + 1 : valFont}
+        fontSize={version === 2 ? Math.max(9, valFont) : isCur ? valFont + 1 : valFont}
         fontWeight={isCur ? "700" : "500"}
         fill={version === 2 ? (isCur ? "#ffffff" : "#26315f") : isCur ? activeColor : "#8a95a8"}
         fontFamily="var(--font-dm-sans),sans-serif"
+        transform={version === 2 ? `rotate(-90 ${(x + bW / 2).toFixed(1)} ${(y + Math.min(bH - 4, 15)).toFixed(1)})` : undefined}
       >
         {fmtVal(v)}
       </text>
     );
     if (version === 2) {
+      const monthY = y + bH / 2;
       els.push(
         <text
           key={`l${i}`}
           x={(x + bW / 2).toFixed(1)}
-          y={(pT + cH - 4).toFixed(1)}
+          y={monthY.toFixed(1)}
           textAnchor="middle"
-          fontSize="9"
+          fontSize="10"
           fontWeight={isCur ? "700" : "600"}
           fill={isCur ? "#ffffff" : "#26315f"}
           fontFamily="var(--font-dm-sans),sans-serif"
-          transform={`rotate(-90 ${(x + bW / 2).toFixed(1)} ${(pT + cH - 4).toFixed(1)})`}
+          transform={`rotate(-90 ${(x + bW / 2).toFixed(1)} ${monthY.toFixed(1)})`}
         >
           {labels[i]}
         </text>
