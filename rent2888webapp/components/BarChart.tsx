@@ -84,7 +84,11 @@ export function BarChart({
         height={bH.toFixed(1)}
         fill={fill}
         rx="2"
-      />
+        role="img"
+        aria-label={`${labels[i]}: ${kind === "monto" ? new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(v) : `${v} noches`}`}
+      >
+        <title>{`${labels[i]}: ${kind === "monto" ? new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(v) : `${v} noches`}`}</title>
+      </rect>
     );
     // V2: monto dentro de cada barra y nombre del mes dentro, vertical.
     // V1 conserva el formato actual para poder seguir descargando reportes.
