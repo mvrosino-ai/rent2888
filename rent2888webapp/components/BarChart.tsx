@@ -1,4 +1,8 @@
+"use client";
+
 // Port fiel de drawSVG() de index.html — misma matemática, salida JSX en vez de innerHTML.
+
+import { useState } from "react";
 
 function fmtMonto(v: number): string {
   if (v >= 1000000) return (v / 1000000).toFixed(1) + "M";
@@ -19,7 +23,12 @@ export function BarChart({
   activeColor?: string;
   version?: 1 | 2;
 }) {
+  const [activeBar, setActiveBar] = useState<number | null>(null);
   const fmtVal = kind === "noches" ? (v: number) => v + "n" : fmtMonto;
+  const fmtFullVal = (v: number) =>
+    kind === "monto"
+      ? new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(v)
+      : `${v} noches`;
 
   const W = 600,
     H = 260,
@@ -125,6 +134,21 @@ export function BarChart({
         </text>
       );
     }
+    els.push(
+      <rect
+        key={`hit${i}`}
+        x={(x - 2).toFixed(1)}
+        y={pT}
+        width={(bW + 4).toFixed(1)}
+        height={cH}
+        fill="transparent"
+        style={{ cursor: "pointer" }}
+        onMouseEnter={() => setActiveBar(i)}
+        onMouseLeave={() => setActiveBar(null)}
+        onClick={() => setActiveBar((current) => (current === i ? null : i))}
+        aria-label={`Ver detalle de ${labels[i]}`}
+      />
+    );
     if (version !== 2 && (i % 3 === 0 || isCur)) {
       els.push(
         <text
@@ -142,6 +166,27 @@ export function BarChart({
       );
     }
   });
+
+  if (activeBar !== null) {
+    const i = activeBar;
+    const v = data[i];
+    const x = pL + i * slot + (slot - bW) / 2;
+    const y = pT + cH - Math.max(3, (v / maxV) * cH);
+    const tooltipW = kind === "monto" ? 116 : 92;
+    const tooltipX = Math.min(Math.max(pL, x + bW / 2 - tooltipW / 2), W - pR - tooltipW);
+    const tooltipY = Math.max(2, y - 28);
+    els.push(
+      <g key="tooltip" pointerEvents="none">
+        <rect x={tooltipX} y={tooltipY} width={tooltipW} height="23" rx="4" fill="#202a58" />
+        <text x={tooltipX + tooltipW / 2} y={tooltipY + 9} textAnchor="middle" fontSize="8" fontWeight="600" fill="#ffffff" fontFamily="var(--font-dm-sans),sans-serif">
+          {labels[i]}
+        </text>
+        <text x={tooltipX + tooltipW / 2} y={tooltipY + 18} textAnchor="middle" fontSize="9" fontWeight="700" fill="#ffffff" fontFamily="var(--font-dm-sans),sans-serif">
+          {fmtFullVal(v)}
+        </text>
+      </g>
+    );
+  }
 
   return (
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
