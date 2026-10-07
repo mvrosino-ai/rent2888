@@ -24,7 +24,7 @@ export function LiquidacionReport({
   chartVersion = 1,
 }: {
   liq: Liquidacion;
-  chartVersion?: 1 | 2;
+  chartVersion?: 1 | 2 | 3;
 }) {
   const {
     prop,
