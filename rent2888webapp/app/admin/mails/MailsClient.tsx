@@ -359,8 +359,41 @@ function MailCard({
   const [comentarios, setComentarios] = useState(m.comentarios.join("\n"));
   const [nota, setNota] = useState(m.notaLibre);
   const [cuerpo, setCuerpo] = useState(m.notaLibre); // para especiales
+  const [aiInput, setAiInput] = useState("");
+  const [aiPending, setAiPending] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   const toLines = (s: string) => s.split("\n").map((x) => x.trim()).filter(Boolean);
+
+  const improveAndIntegrate = async () => {
+    if (!aiInput.trim()) return;
+    setAiPending(true);
+    setAiError(null);
+    try {
+      const response = await fetch("/api/admin/mails/enrich", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          additional: aiInput,
+          compras: toLines(compras),
+          arreglos: toLines(arreglos),
+          comentarios: toLines(comentarios),
+          notaLibre: nota,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "No se pudo mejorar el contenido.");
+      if (result.section === "compras") setCompras((value) => `${value}${value.trim() ? "\\n" : ""}${result.text}`);
+      if (result.section === "arreglos") setArreglos((value) => `${value}${value.trim() ? "\\n" : ""}${result.text}`);
+      if (result.section === "comentarios") setComentarios((value) => `${value}${value.trim() ? "\\n" : ""}${result.text}`);
+      if (result.section === "notaLibre") setNota((value) => `${value}${value.trim() ? "\\n\\n" : ""}${result.text}`);
+      setAiInput("");
+    } catch (error) {
+      setAiError(error instanceof Error ? error.message : "No se pudo mejorar el contenido.");
+    } finally {
+      setAiPending(false);
+    }
+  };
 
   const copy = async () => {
     try {
@@ -549,6 +582,27 @@ function MailCard({
               className="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-bg focus:outline-none focus:border-brand-gold"
             />
           </Field>
+          <div className="rounded-lg border border-brand-gold/40 bg-brand-gold-bg p-3 flex flex-col gap-2">
+            <label className="text-[12px] font-semibold text-ink">Agregar contenido y mejorarlo con IA</label>
+            <textarea
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              rows={3}
+              placeholder="Escribí la idea tal como la tenés. La IA la va a redactar y ubicar en compras, arreglos, comentarios o nota libre."
+              className="w-full px-3 py-2 border border-line rounded-lg text-[13px] bg-bg focus:outline-none focus:border-brand-gold"
+            />
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={improveAndIntegrate}
+                disabled={aiPending || !aiInput.trim()}
+                className="self-start text-[12px] font-semibold px-3 py-1.5 rounded-md bg-navy text-white disabled:opacity-50"
+              >
+                {aiPending ? "Mejorando…" : "Mejorar e integrar"}
+              </button>
+              {aiError && <span className="text-[11px] text-brand-red">{aiError}</span>}
+            </div>
+          </div>
         </div>
       )}
 
