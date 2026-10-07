@@ -65,7 +65,7 @@ export function AdminFilters({
   moneda: string;
   prop: string;
   per: string;
-  chartVersion: 1 | 2;
+  chartVersion: 1 | 2 | 3;
 }) {
   const { navigate, pending } = useNav();
   // Meses del más nuevo al más viejo: el seleccionado por defecto (el más
@@ -133,7 +133,7 @@ export function AdminFilters({
       </Group>
       <Group label="Versión del reporte">
         <div className="flex gap-1">
-          {[1, 2].map((v) => (
+          {[1, 2, 3].map((v) => (
             <button
               key={v}
               type="button"

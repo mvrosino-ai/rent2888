@@ -21,7 +21,7 @@ export function BarChart({
   labels: string[];
   kind: "noches" | "monto";
   activeColor?: string;
-  version?: 1 | 2;
+  version?: 1 | 2 | 3;
 }) {
   const [activeBar, setActiveBar] = useState<number | null>(null);
   const fmtVal = kind === "noches" ? (v: number) => v + "n" : fmtMonto;
@@ -189,9 +189,10 @@ export function BarChart({
   }
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
-      {els}
-      <rect x={pL} y={H - 14} width="10" height="10" fill={activeColor} rx="1" />
+    <div className={version === 3 ? "space-y-2" : undefined}>
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet">
+        {els}
+        <rect x={pL} y={H - 14} width="10" height="10" fill={activeColor} rx="1" />
       <text
         x={pL + 14}
         y={H - 5}
@@ -210,7 +211,18 @@ export function BarChart({
         fontFamily="var(--font-dm-sans),sans-serif"
       >
         Meses anteriores
-      </text>
-    </svg>
+        </text>
+      </svg>
+      {version === 3 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-1 px-8 text-[10px] text-ink2 print:text-[9px]">
+          {labels.map((label, i) => (
+            <div key={`${label}-${i}`} className="flex items-center justify-between gap-2 border-b border-line/60 py-0.5">
+              <span className="font-medium text-ink">{label}</span>
+              <span className="font-semibold tabular-nums">{fmtFullVal(data[i])}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }

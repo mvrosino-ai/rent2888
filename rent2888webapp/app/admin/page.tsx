@@ -50,7 +50,7 @@ async function AdminBody({
   sp: { moneda?: string; prop?: string; per?: string; v?: string };
 }) {
   const moneda = sp.moneda === "$" ? "$" : "u$";
-  const chartVersion: 1 | 2 = sp.v === "2" ? 2 : 1;
+  const chartVersion: 1 | 2 | 3 = sp.v === "3" ? 3 : sp.v === "2" ? 2 : 1;
 
   let error: string | null = null;
   let filters: React.ReactNode = null;
