@@ -310,10 +310,17 @@ function parseMainSheet(csv: string, propMap: Record<string, PropInfo>) {
 
     // ── Vista liquidación (condiciones de index.html) ──
     {
-      const edif = (c[COL.edificio] || "").trim();
-      const skip = (!prop && !edif) || (prop === "#N/A" && !edif);
+        const edif = (c[COL.edificio] || "").trim();
+        const egrRaw =
+          (COL.egr_ars >= 0 ? pn(c[COL.egr_ars]) : 0) ||
+          (COL.egr_usd >= 0 ? pn(c[COL.egr_usd]) : 0);
+        const reporteProp =
+          edif.toLocaleLowerCase("es-AR") === "costa rica" && egrRaw !== 0
+            ? "Fedeglin"
+            : prop;
+        const skip = (!reporteProp && !edif) || (reporteProp === "#N/A" && !edif);
       if (!skip) {
-        const moneda = rawMoneda || propMap[prop]?.moneda || "$";
+        const moneda = rawMoneda || propMap[reporteProp]?.moneda || "$";
         const isUSD = moneda === "u$";
         // Pesos: col AJ (Ingresos u$ a $) si tiene valor, sino col Y (TOTAL)
         const ing = isUSD
@@ -326,7 +333,7 @@ function parseMainSheet(csv: string, propMap: Record<string, PropInfo>) {
           liqRows.push({
             edificio: edif,
             depto: (c[COL.depto] || "").trim(),
-            propietario: prop,
+            propietario: reporteProp,
             moneda,
             plataforma: (c[COL.plataforma] || "").trim(),
             conceptoIngreso: concIngr,
