@@ -79,6 +79,8 @@ main{padding:22px;max-width:1240px;margin:0 auto}
 .aviLin{font-size:13px;padding:4px 0 4px 14px;color:var(--txt);line-height:1.5}
 .aviLin span{color:var(--muted)}
 .aviLin.info{color:var(--muted)}
+.ocu{background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:1px 7px;font-size:10.5px;cursor:pointer;margin-left:6px;font-family:inherit}
+.ocu:hover{color:var(--green);border-color:var(--green)}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .chip{font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;border:1px solid var(--border);color:var(--muted)}
 .chip.r{color:var(--neg);border-color:rgba(255,92,92,.4)} .chip.g{color:var(--gold);border-color:rgba(212,175,55,.4)}
@@ -692,6 +694,7 @@ function calcular(){
   AVISOS = armarAvisos();
 }
 
+const TOL = 100;   // menos de $100 = centavos que el Sheet no carga
 const hoyF = (()=>{ const t=new Date(); return {y:t.getFullYear(), m:t.getMonth()+1, d:t.getDate()}; })();
 function DESDE(){
   const p = LS('r28s_per','60');
@@ -713,8 +716,8 @@ function armarAvisos(){
     Object.entries(CRUCE).forEach(([alias, x])=>{
       if(!x.existe) sinMapa.push(`<b>${esc(alias)}</b> <span>· ${x.tarjetas.length} tarjetas en el período; ${x.cuenta?'en el Sheet no hay filas con la cuenta "'+esc(x.cuenta)+'"':'no sé a qué cuenta del Sheet corresponde'}</span>`);
       if(x.cambio!=null){
-        if(Math.abs(x.difHoy) < 1){ if(Math.abs(x.dif0) >= 1) arrastre.push(`<b>${esc(x.cuenta)}</b> — ✓ hoy Sheet y Trello coinciden (al ${fstr(x.pri.fecha)} había una diferencia de $ ${fmt(x.dif0)} que ya se corrigió)`); }
-        else if(Math.abs(x.cambio) >= 1) difSaldo.push(`<b>${esc(x.cuenta)}</b> — al ${fstr(x.pri.fecha)} la diferencia Sheet−Trello era $ ${fmt(x.dif0)}, hoy es $ ${fmt(x.difHoy)} → <b class="negv">se descuadraron $ ${fmt(x.cambio)} en el período</b>`);
+        if(Math.abs(x.difHoy) < TOL){ if(Math.abs(x.dif0) >= TOL) arrastre.push(`<b>${esc(x.cuenta)}</b> — ✓ hoy Sheet y Trello coinciden (al ${fstr(x.pri.fecha)} había una diferencia de $ ${fmt(x.dif0)} que ya se corrigió)`); }
+        else if(Math.abs(x.cambio) >= TOL) difSaldo.push(`<b>${esc(x.cuenta)}</b> — al ${fstr(x.pri.fecha)} la diferencia Sheet−Trello era $ ${fmt(x.dif0)}, hoy es $ ${fmt(x.difHoy)} → <b class="negv">se descuadraron $ ${fmt(x.cambio)} en el período</b>`);
         else if(Math.abs(x.difHoy) >= 1) arrastre.push(`<b>${esc(x.cuenta)}</b> — Sheet y Trello difieren en $ ${fmt(x.difHoy)}, pero esa diferencia ya estaba al ${fstr(x.pri.fecha)} y no cambió`);
       }
       x.tarjetas.forEach(t=>{
@@ -753,8 +756,7 @@ function armarAvisos(){
   }
 
   /* --- Sheet, solo movimientos del período --- */
-  add('oro','variante','Nombre de cuenta escrito distinto en "Donde $?" (las sumé juntas)',
-    Object.entries(VARIANTES).map(([v,x])=>`"${esc(v)}" → <b>${esc(x.a)}</b> <span>· ${x.n} ${x.n===1?'fila':'filas'}</span>`));
+  // los nombres que difieren solo en mayúsculas o espacios se suman juntos y no se avisan
   const parec = Object.entries(CUENTAS).filter(([c,x])=>c!=='(sin cuenta)' && !esCaja(c) && x.nPer && parecida(c))
     .map(([c,x])=>`<b>${esc(c)}</b> <span>· ${x.nPer} movimientos — ¿no será "${esc(parecida(c))}"?</span>`);
   add('oro','parecida','Cuentas con un nombre parecido a una cuenta de caja', parec);
@@ -873,15 +875,21 @@ function renderFuentes(){
     (TRELLO_ERR ? f('Trello','err',TRELLO_ERR) : TRELLO ? f('Trello · '+nT+' tarjetas','ok','') : f('Trello','off','')) +
     (LIMP_ERR ? f('Limpiezas','err',LIMP_ERR) : LIMP ? f('Limpiezas · '+LIMP.length+' semanas','ok','') : f('Limpiezas','off',''));
 }
+let OCULTOS = new Set(); try{ OCULTOS = new Set(JSON.parse(localStorage.getItem('r28s_ocultos')||'[]')); }catch(e){}
+const claveAviso = s => { const x=String(s).replace(/<[^>]*>/g,'').replace(/\s+/g,' ').trim(); let h=0; for(let i=0;i<x.length;i++) h=(h*31+x.charCodeAt(i))|0; return 'a'+h; };
+function ocultarAviso(k){ OCULTOS.add(k); LSset('r28s_ocultos', JSON.stringify([...OCULTOS])); calcular(); render(); }
+function mostrarOcultos(){ OCULTOS = new Set(); LSset('r28s_ocultos','[]'); calcular(); render(); }
 function bloqueAvisos(A, id, filtro){
-  const grupos = [...A.rojo.map(g=>({...g,n:'r'})), ...A.oro.map(g=>({...g,n:'g'})), ...A.info.map(g=>({...g,n:'i'}))].filter(filtro||(()=>true));
+  let nOcultos = 0;
+  const limpia = g => { const it = g.items.filter(x=>{ if(OCULTOS.has(claveAviso(x))){ nOcultos++; return false; } return true; }); return {...g, items: it}; };
+  const grupos = [...A.rojo.map(g=>({...limpia(g),n:'r'})), ...A.oro.map(g=>({...limpia(g),n:'g'})), ...A.info.map(g=>({...limpia(g),n:'i'}))].filter(g=>g.items.length).filter(filtro||(()=>true));
   const nR = grupos.filter(g=>g.n==='r').reduce((a,g)=>a+g.items.length,0);
   const nG = grupos.filter(g=>g.n==='g').reduce((a,g)=>a+g.items.length,0);
-  if(!nR && !nG && !grupos.length) return `<div class="avi ok"><div class="debTop"><div><div class="debTit">Cosas para revisar</div><div class="debVal">Ninguna <small>todo cruza</small></div></div></div></div>`;
+  if(!nR && !nG && !grupos.length) return `<div class="avi ok"><div class="debTop"><div><div class="debTit">Cosas para revisar</div><div class="debVal">Ninguna <small>todo cruza${nOcultos?' · '+nOcultos+' revisados ocultos (<a href="#" onclick="mostrarOcultos();return false">mostrar</a>)':''}</small></div></div></div></div>`;
   const CORTE = 15;
   const det = grupos.map(g=>`
     <div class="aviTit ${g.n==='r'?'r':g.n==='i'?'info':''}">${esc(g.titulo)} (${g.items.length})</div>
-    ${g.items.slice(0,CORTE).map(x=>`<div class="aviLin ${g.n==='i'?'info':''}">• ${x}</div>`).join('')}
+    ${g.items.slice(0,CORTE).map(x=>`<div class="aviLin ${g.n==='i'?'info':''}">• ${x} <button class="ocu" title="Ya lo revisé: no mostrar más" onclick="event.stopPropagation();ocultarAviso('${claveAviso(x)}')">✓ revisado</button></div>`).join('')}
     ${g.items.length>CORTE?`<div class="aviLin"><span>…y ${g.items.length-CORTE} más</span></div>`:''}
     ${g.nota?`<div class="aviLin"><span>${esc(g.nota)}</span></div>`:''}`).join('');
   const chips = grupos.filter(g=>g.n!=='i').map(g=>`<span class="chip ${g.n}">${g.items.length} · ${esc(g.titulo.split(/[:(]/)[0].trim())}</span>`).join('');
@@ -892,7 +900,7 @@ function bloqueAvisos(A, id, filtro){
       <button class="debVer">Ver el detalle ▾</button>
     </div>
     <div class="chips">${chips}</div>
-    <div class="debDet">${det}</div>
+    <div class="debDet">${det}${nOcultos?`<div class="aviLin"><span>${nOcultos} ${nOcultos===1?'aviso oculto':'avisos ocultos'} porque los marcaste como revisados · <a href="#" onclick="mostrarOcultos();return false">volver a mostrarlos</a></span></div>`:''}</div>
   </div>`;
 }
 
@@ -919,7 +927,7 @@ function renderRes(){
   const totA = filas.filter(r=>!r.usd).reduce((a,r)=>a+r.sheet,0);
   const totU = filas.filter(r=>r.usd).reduce((a,r)=>a+r.sheet,0);
   const conT = filas.filter(r=>r.cambio!=null);
-  const okT = conT.filter(r=>Math.abs(r.cambio)<1||Math.abs(r.dif)<1).length;
+  const okT = conT.filter(r=>Math.abs(r.cambio)<TOL||Math.abs(r.dif)<TOL).length;
   const per = LS('r28s_per','60'), todas = LS('r28s_todas','0')==='1';
   const op = (v,t)=>`<option value="${v}" ${per===v?'selected':''}>${t}</option>`;
   document.getElementById('kRes').innerHTML = `
@@ -942,8 +950,8 @@ function renderRes(){
       <td class="num ${r.sheet<0?'negv':''}"><b>${sim(r.usd)} ${fmt(r.sheet)}</b></td>
       <td>${r.tarjeta?`<span class="muted">${fstr(r.tarjeta.fecha)}</span>`:'<span class="muted">—</span>'}</td>
       <td class="num">${r.trello==null?'<span class="muted">—</span>':sim(r.usd)+' '+fmt(r.trello)}</td>
-      <td class="num">${r.dif==null?'':Math.abs(r.dif)<1?'<span class="st ok">✓ igual</span>':`<span class="muted">${sim(r.usd)} ${fmt(r.dif)}</span>`}</td>
-      <td class="num">${r.cambio==null?'':(Math.abs(r.cambio)<1||Math.abs(r.dif)<1)?'<span class="st ok">✓ ok</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.cambio)}</span>`}</td>
+      <td class="num">${r.dif==null?'':Math.abs(r.dif)<TOL?'<span class="st ok">✓ igual</span>':`<span class="muted">${sim(r.usd)} ${fmt(r.dif)}</span>`}</td>
+      <td class="num">${r.cambio==null?'':(Math.abs(r.cambio)<TOL||Math.abs(r.dif)<TOL)?'<span class="st ok">✓ ok</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.cambio)}</span>`}</td>
       <td class="num">${r.sinCruzar==null?'':r.sinCruzar?`<span class="st g">${r.sinCruzar}</span>`:'<span class="st ok">0</span>'}</td>
       <td class="num">${r.n}</td></tr>`).join('')}</tbody>
   </table>`;
@@ -973,8 +981,8 @@ function renderCta(){
   const k = [];
   if(x.hayA) k.push(`<div class="kpi"><div class="t">Saldo $ en el Sheet</div><div class="v ${x.saldoA<0?'negv':'pos'}">$ ${fmt(x.saldoA)}</div></div>`);
   if(x.hayU) k.push(`<div class="kpi"><div class="t">Saldo u$s en el Sheet</div><div class="v gold">u$s ${fmt(x.saldoU)}</div></div>`);
-  if(ult){ const d=x.saldoA-ult.tot; k.push(`<div class="kpi"><div class="t">Trello · ${fstr(ult.fecha)}</div><div class="v">$ ${fmt(ult.tot)}</div><div class="s">${Math.abs(d)<1?'<span class="pos">✓ igual al Sheet</span>':'diferencia $ '+fmt(d)} · <a href="#" onclick="irATrello('${esc(alias)}');return false">ver tarjetas</a></div></div>`); }
-  if(cr && cr.cambio!=null) k.push(`<div class="kpi"><div class="t">Descuadre nuevo en el período</div><div class="v ${(Math.abs(cr.cambio)<1||Math.abs(cr.difHoy)<1)?'pos':'negv'}">${(Math.abs(cr.cambio)<1||Math.abs(cr.difHoy)<1)?'✓ ninguno':'$ '+fmt(cr.cambio)}</div><div class="s">diferencia al ${fstr(cr.pri.fecha)}: $ ${fmt(cr.dif0)} · hoy: $ ${fmt(cr.difHoy)}</div></div>`);
+  if(ult){ const d=x.saldoA-ult.tot; k.push(`<div class="kpi"><div class="t">Trello · ${fstr(ult.fecha)}</div><div class="v">$ ${fmt(ult.tot)}</div><div class="s">${Math.abs(d)<TOL?'<span class="pos">✓ igual al Sheet</span>':'diferencia $ '+fmt(d)} · <a href="#" onclick="irATrello('${esc(alias)}');return false">ver tarjetas</a></div></div>`); }
+  if(cr && cr.cambio!=null) k.push(`<div class="kpi"><div class="t">Descuadre nuevo en el período</div><div class="v ${(Math.abs(cr.cambio)<TOL||Math.abs(cr.difHoy)<TOL)?'pos':'negv'}">${(Math.abs(cr.cambio)<TOL||Math.abs(cr.difHoy)<TOL)?'✓ ninguno':'$ '+fmt(cr.cambio)}</div><div class="s">diferencia al ${fstr(cr.pri.fecha)}: $ ${fmt(cr.dif0)} · hoy: $ ${fmt(cr.difHoy)}</div></div>`);
   if(cr) k.push(`<div class="kpi"><div class="t">Movimientos cruzados</div><div class="v">${cr.emparejadas}</div><div class="s">${cr.faltanEnSheet.length} solo en Trello · ${cr.faltanEnTrello.length} solo en Sheet</div></div>`);
   document.getElementById('kCta').innerHTML = k.join('');
   document.getElementById('aviCta').innerHTML = cr ? bloqueAvisos(AVISOS,'aviBoxCta', g=>g.items.some(i=>i.includes(esc(c))||cr.tarjetas.some(t=>i.includes(esc(t.nombre))))) : '';
