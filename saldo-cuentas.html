@@ -447,7 +447,8 @@ function pagosLimpieza(porCuenta, internas){
 const DEF = {
   id:'1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw', tab:'$$$', pass:'rent2888',
   tlist:'64d92b32e944128a8f27e659',
-  map:{ vero:'Vero Rent', kari:'Karina', karina:'Karina', nico:'Mp Nico', tamara:'Tamara', tamy:'Tamara', cadete:'Cadete' },
+  map:{ vero:'Vero Rent', kari:'Karina', karina:'Karina', nico:'Mp Nico', tamara:'Tamara', tamy:'Tamara', cadete:'Cadete', efectivo:'Efectivo', usd:'USD', dana:'Mp Dana', brico:'Mp Brico' },
+  lurl:'https://v0-cleaning-management-app.vercel.app', ltok:'r28-EqnkK_2fk4I1liifElie-AJT96iXuXnR',
   oficiales:['Mp Nico','Mp Dana','Mp Brico','Tamara','Efectivo','USD','Karina','Vero Rent','Cadete'],
   margen:5,
 };
@@ -456,8 +457,8 @@ const LSset = (k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
 const cfg = {
   get id(){ return LS('r28s_id',DEF.id) }, get tab(){ return LS('r28s_tab',DEF.tab) }, get pass(){ return LS('r28s_pw',DEF.pass) },
   get tkey(){ return LS('r28s_tkey','') }, get ttok(){ return LS('r28s_ttok','') }, get tlist(){ return LS('r28s_tlist',DEF.tlist) },
-  get lurl(){ return LS('r28s_lurl','').replace(/\/+$/,'') }, get ltok(){ return LS('r28s_ltok','') },
-  get map(){ try{ return JSON.parse(LS('r28s_map','')) }catch(e){ return DEF.map } },
+  get lurl(){ return (LS('r28s_lurl','')||DEF.lurl).replace(/\/+$/,'') }, get ltok(){ return LS('r28s_ltok','')||DEF.ltok },
+  get map(){ try{ return {...DEF.map, ...JSON.parse(LS('r28s_map','')||'{}')} }catch(e){ return DEF.map } },
   get oficiales(){ const v=LS('r28s_ofi',''); return v ? v.split('\n').map(s=>s.trim()).filter(Boolean) : DEF.oficiales },
   get margen(){ const v=+LS('r28s_mg',DEF.margen); return isFinite(v)?v:DEF.margen },
 };
@@ -633,47 +634,70 @@ function cuentaSheet(alias){
 }
 function calcular(){
   CUENTAS = {}; VARIANTES = {};
-  // mismo nombre escrito distinto ("Vero rent ", "vero Rent") → una sola cuenta, con aviso
   const canon = {};
   cfg.oficiales.forEach(o=>canon[norm(o)] = o);
+  Object.values(cfg.map).forEach(o=>{ if(!canon[norm(o)]) canon[norm(o)] = o; });
   ROWS.forEach(r=>{
     if(r.donde==='(sin cuenta)') return;
     const k = norm(r.donde);
     if(!canon[k]) canon[k] = r.donde.trim();
-    if(r.donde !== canon[k]){ const v = VARIANTES[r.donde] = VARIANTES[r.donde]||{a:canon[k], n:0}; v.n++; }
-    r.donde = canon[k];
+    if(r.donde !== canon[k]){ r.dondeOrig = r.donde; r.donde = canon[k]; }
   });
   ROWS.forEach(r=>{
-    const c = CUENTAS[r.donde] = CUENTAS[r.donde] || {rows:[], saldoA:0, saldoU:0, hayA:false, hayU:false};
+    const c = CUENTAS[r.donde] = CUENTAS[r.donde] || {rows:[], saldoA:0, saldoU:0, hayA:false, hayU:false, perA:0, nPer:0};
     c.rows.push(r);
     if(r.usd){ c.saldoU += r.monto; c.hayU=true; } else { c.saldoA += r.monto; c.hayA=true; }
+    if(enPer(r) && !r.usd){ c.perA += r.monto; c.nPer++; }
+    if(r.dondeOrig && enPer(r)){ const v = VARIANTES[r.dondeOrig] = VARIANTES[r.dondeOrig]||{a:r.donde, n:0}; v.n++; }
   });
   CRUCE = {};
   if(TRELLO){
-    Object.entries(TRELLO).forEach(([alias, tarjetas])=>{
+    Object.entries(TRELLO).forEach(([alias, todas])=>{
+      // tarjetas del período + la inmediatamente anterior (solo para controlar la cadena)
+      const tarjetas = todas.filter(t=>t.fecha && ser(t.fecha) >= ser(DESDE()));
+      if(!tarjetas.length) return;
       const cta = cuentaSheet(alias);
-      const filas = cta && CUENTAS[cta] ? CUENTAS[cta].rows : [];
-      CRUCE[alias] = { cuenta: cta, existe: !!(cta && CUENTAS[cta]), tarjetas, ...cruzar(tarjetas, filas, cfg.margen) };
+      const existe = !!(cta && CUENTAS[cta]);
+      const filas = existe ? CUENTAS[cta].rows.filter(r=>r.fecha && ser(r.fecha) >= ser(sumarDias(DESDE(), -cfg.margen))) : [];
+      const x = { cuenta: cta, existe, tarjetas, ...cruzar(tarjetas, filas, cfg.margen) };
+      // saldo: diferencia al arrancar el período contra diferencia hoy
+      const pri = tarjetas.find(t=>t.ini!=null), ult = [...tarjetas].reverse().find(t=>t.tot!=null);
+      if(existe && pri && ult){
+        const antes = CUENTAS[cta].rows.filter(r=>!r.usd && !(r.fecha && ser(r.fecha) >= ser(pri.fecha))).reduce((a,r)=>a+r.monto,0);
+        x.dif0 = antes - pri.ini;
+        x.difHoy = CUENTAS[cta].saldoA - ult.tot;
+        x.cambio = x.difHoy - x.dif0;
+        x.pri = pri; x.ult = ult;
+      }
+      CRUCE[alias] = x;
     });
   }
   AVISOS = armarAvisos();
 }
 
 const hoyF = (()=>{ const t=new Date(); return {y:t.getFullYear(), m:t.getMonth()+1, d:t.getDate()}; })();
+function DESDE(){
+  const p = LS('r28s_per','60');
+  if(p==='mes') return {y:hoyF.y, m:hoyF.m, d:1};
+  if(p==='mes2'){ const m = hoyF.m===1 ? {y:hoyF.y-1,m:12} : {y:hoyF.y,m:hoyF.m-1}; return {...m, d:1}; }
+  if(p==='todo') return {y:2000, m:1, d:1};
+  return sumarDias(hoyF, -(+p||60));
+}
+const enPer = r => r.fecha && ser(r.fecha) >= ser(DESDE());
+function setPer(v){ LSset('r28s_per', v); calcular(); buildSelects(); render(); }
+function esCaja(c){ const n=norm(c); return cfg.oficiales.some(o=>norm(o)===n) || Object.values(cfg.map).some(o=>norm(o)===n); }
 
 function armarAvisos(){
   const A = { rojo:[], oro:[], info:[] };
   const add = (nivel, clave, titulo, items, nota) => { if(items.length) A[nivel].push({clave, titulo, items, nota}); };
 
-  /* --- Trello vs Sheet --- */
   if(TRELLO){
-    const difSaldo=[], noCierra=[], cadena=[], signo=[], faltaS=[], faltaT=[], sinMapa=[], numMal=[], sinSigno=[], noVerif=[];
+    const difSaldo=[], arrastre=[], noCierra=[], cadena=[], signo=[], faltaS=[], faltaT=[], sinMapa=[], numMal=[], sinSigno=[], noVerif=[];
     Object.entries(CRUCE).forEach(([alias, x])=>{
-      const ult = [...x.tarjetas].reverse().find(t=>t.tot!=null);
-      if(!x.existe){ sinMapa.push(`<b>${esc(alias)}</b> <span>· ${x.tarjetas.length} tarjetas; ${x.cuenta?'en el Sheet no hay ninguna fila con la cuenta "'+esc(x.cuenta)+'"':'no sé a qué cuenta del Sheet corresponde (agregalo en ⚙ → Cuentas)'}</span>`); }
-      else if(ult){
-        const sS = CUENTAS[x.cuenta].saldoA, d = sS - ult.tot;
-        if(Math.abs(d) >= 1) difSaldo.push(`<b>${esc(x.cuenta)}</b> — Sheet $ ${fmt(sS)} · Trello $ ${fmt(ult.tot)} <span>(${lnk(ult)})</span> → <b class="negv">diferencia $ ${fmt(d)}</b>`);
+      if(!x.existe) sinMapa.push(`<b>${esc(alias)}</b> <span>· ${x.tarjetas.length} tarjetas en el período; ${x.cuenta?'en el Sheet no hay filas con la cuenta "'+esc(x.cuenta)+'"':'no sé a qué cuenta del Sheet corresponde'}</span>`);
+      if(x.cambio!=null){
+        if(Math.abs(x.cambio) >= 1) difSaldo.push(`<b>${esc(x.cuenta)}</b> — al ${fstr(x.pri.fecha)} la diferencia Sheet−Trello era $ ${fmt(x.dif0)}, hoy es $ ${fmt(x.difHoy)} → <b class="negv">se descuadraron $ ${fmt(x.cambio)} en el período</b>`);
+        else if(Math.abs(x.difHoy) >= 1) arrastre.push(`<b>${esc(x.cuenta)}</b> — Sheet y Trello difieren en $ ${fmt(x.difHoy)}, pero esa diferencia ya estaba al ${fstr(x.pri.fecha)} y no cambió`);
       }
       x.tarjetas.forEach(t=>{
         if(t.cierra===false){
@@ -685,13 +709,11 @@ function armarAvisos(){
         if(t.cierraU===false) noCierra.push(`${lnk(t)} (u$s) — Inicial u$s ${fmt(t.iniU)} + movimientos u$s ${fmt(t.sumU)} = u$s ${fmt(t.calcU)}, dice u$s ${fmt(t.totU)}`);
         if(t.cadena==='rota') cadena.push(`${lnk(t)} arranca en <b>$ ${fmt(t.ini)}</b>, pero ${lnk(t.prev)} cerró en <b>$ ${fmt(t.prev.tot)}</b> <span>· se ${t.difCadena>0?'agregaron':'perdieron'} $ ${fmt(Math.abs(t.difCadena))} entre una tarjeta y la otra</span>`);
         if(t.cadena==='signo') signo.push(`${lnk(t)} — Inicial $ ${fmt(t.ini)}, la anterior cerró en $ ${fmt(t.prev.tot)} <span>· el Inicial tiene el signo cambiado${(Math.abs(t.prev.tot + t.sumA - t.tot)<1)?'; con el signo correcto la tarjeta cierra':''}</span>`);
-        t.lineas.forEach(l=>{
-          l.avisos.forEach(a=>{
-            if(a.startsWith('número')) numMal.push(`${lnk(t)} — "${esc(l.texto)}" <span>· ${esc(a)}</span>`);
-            else if(a.startsWith('sin signo')) sinSigno.push(`${lnk(t)} — $ ${fmt(Math.abs(l.monto))} "${esc(l.texto)}" <span>· ${esc(a)}</span>`);
-          });
-        });
-        if(t.labels.some(n=>/no verificad/i.test(n)) && t.fecha && diasEntre(t.fecha, hoyF) > 7)
+        t.lineas.forEach(l=>l.avisos.forEach(a=>{
+          if(a.startsWith('número')) numMal.push(`${lnk(t)} — "${esc(l.texto)}" <span>· ${esc(a)}</span>`);
+          else if(a.startsWith('sin signo')) sinSigno.push(`${lnk(t)} — $ ${fmt(Math.abs(l.monto))} "${esc(l.texto)}" <span>· ${esc(a)}</span>`);
+        }));
+        if(t.labels.some(n=>/no verificad/i.test(n)) && diasEntre(t.fecha, hoyF) > 7)
           noVerif.push(`${lnk(t)} <span>· hace ${diasEntre(t.fecha, hoyF)} días</span>`);
       });
       if(x.existe){
@@ -699,34 +721,32 @@ function armarAvisos(){
         x.faltanEnTrello.forEach(f=>faltaT.push(`<b>${esc(x.cuenta)}</b> · ${esc(f.fechaTxt)} — ${sim(f.usd)} ${fmt(f.monto)} <span>· ${esc([f.concepto,f.dep,f.detalle||f.hue].filter(Boolean).join(' · '))} (fila ${f.filaSheet})</span>`));
       }
     });
-    add('rojo','saldo','El saldo del Sheet no coincide con el Total de la última tarjeta', difSaldo);
+    add('rojo','saldo','La diferencia entre Sheet y Trello cambió en el período', difSaldo);
     add('rojo','cierra','Tarjetas que no cierran (Inicial + movimientos ≠ Total)', noCierra);
     add('rojo','cadena','Cadena rota: el Inicial no es el Total de la tarjeta anterior', cadena);
-    add('rojo','faltaS','Está en Trello pero no lo encuentro en el Sheet', faltaS, 'Busqué en la misma cuenta, mismo monto, entre la fecha de la tarjeta y la siguiente (± '+cfg.margen+' días).');
-    add('rojo','faltaT','Está en el Sheet pero no en ninguna tarjeta de Trello', faltaT, 'Solo miro desde la primera tarjeta abierta de cada cuenta. Los movimientos de los últimos días pueden no estar todavía en Trello.');
+    add('rojo','faltaS','Está en Trello pero no lo encuentro en el Sheet', faltaS, 'Misma cuenta, mismo monto, entre la fecha de la tarjeta y la siguiente (± '+cfg.margen+' días).');
+    add('rojo','faltaT','Está en el Sheet pero no en ninguna tarjeta de Trello', faltaT, 'Los movimientos de los últimos días pueden no estar todavía en Trello.');
     add('oro','signo','Inicial con el signo cambiado', signo);
     add('oro','num','Números mal escritos en Trello', numMal);
     add('oro','sinsig','Líneas de Trello sin + ni −', sinSigno);
     add('oro','noverif','Tarjetas con la etiqueta "CARGA - NO VERIFICADA" hace más de una semana', noVerif);
     add('oro','mapa','Cuentas de Trello que no encuentro en el Sheet', sinMapa);
+    add('info','arrastre','Diferencias que vienen de antes del período (no cambiaron)', arrastre);
   }
 
-  /* --- controles del Sheet solo --- */
-  const ofi = cfg.oficiales.map(norm);
-  const fuera = Object.entries(CUENTAS).filter(([c])=>c!=='(sin cuenta)' && !ofi.includes(norm(c)))
-    .sort((a,b)=>b[1].rows.length-a[1].rows.length)
-    .map(([c,x])=>`<b>${esc(c)}</b> <span>· ${x.rows.length} movimientos${parecida(c)?' — ¿no será "'+esc(parecida(c))+'"?':''}</span>`);
-  add('oro','variante','Mismo nombre de cuenta escrito distinto en "Donde $?" (las sumé juntas)',
+  /* --- Sheet, solo movimientos del período --- */
+  add('oro','variante','Nombre de cuenta escrito distinto en "Donde $?" (las sumé juntas)',
     Object.entries(VARIANTES).map(([v,x])=>`"${esc(v)}" → <b>${esc(x.a)}</b> <span>· ${x.n} ${x.n===1?'fila':'filas'}</span>`));
-  add('oro','fuera','Nombres de cuenta en "Donde $?" que no están en la lista oficial', fuera, 'Si alguno es una cuenta real, agregala a la lista en ⚙.');
-  const sinCta = (CUENTAS['(sin cuenta)']||{rows:[]}).rows.filter(r=>r.monto);
-  add('oro','sincta','Movimientos sin cuenta (col "Donde $?" vacía)', sinCta.map(r=>`${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.dep,r.detalle||r.hue].filter(Boolean).join(' · '))} (fila ${r.filaSheet})</span>`));
-  const sinMon = ROWS.filter(r=>r.monto && !r.monedaRaw && r.donde!=='(sin cuenta)');
-  add('oro','sinmon','Movimientos sin moneda (se tomaron como pesos)', sinMon.map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${fmt(r.monto)} <span>· ${esc(r.concepto||r.dep||'')} (fila ${r.filaSheet})</span>`));
+  const parec = Object.entries(CUENTAS).filter(([c,x])=>c!=='(sin cuenta)' && !esCaja(c) && x.nPer && parecida(c))
+    .map(([c,x])=>`<b>${esc(c)}</b> <span>· ${x.nPer} movimientos — ¿no será "${esc(parecida(c))}"?</span>`);
+  add('oro','parecida','Cuentas con un nombre parecido a una cuenta de caja', parec);
+  const sinCta = ROWS.filter(r=>r.donde==='(sin cuenta)' && enPer(r) && r.egr);
+  add('oro','sincta','Egresos sin cuenta (col "Donde $?" vacía)', sinCta.map(r=>`${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.dep,r.detalle||r.hue].filter(Boolean).join(' · '))} (fila ${r.filaSheet})</span>`));
+  const sinMon = ROWS.filter(r=>r.monto && !r.monedaRaw && esCaja(r.donde) && enPer(r));
+  add('oro','sinmon','Movimientos de caja sin moneda (se tomaron como pesos)', sinMon.map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${fmt(r.monto)} <span>· ${esc(r.concepto||r.dep||'')} (fila ${r.filaSheet})</span>`));
 
-  // transferencias entre cuentas: cada salida tiene que tener su entrada en otra cuenta
   const esTr = r => /transfer|trasfer/i.test(r.cptEgr||r.concepto||'');
-  const trs = ROWS.filter(r=>esTr(r) && r.monto && r.fecha && r.donde!=='(sin cuenta)');
+  const trs = ROWS.filter(r=>esTr(r) && r.monto && enPer(r) && esCaja(r.donde));
   const usadas = new Set(); const huerf = [];
   trs.forEach(r=>{
     if(usadas.has(r.idx)) return;
@@ -734,18 +754,17 @@ function armarAvisos(){
       && Math.abs(o.monto + r.monto) < 1 && Math.abs(diasEntre(r.fecha,o.fecha)) <= cfg.margen);
     if(par){ usadas.add(r.idx); usadas.add(par.idx); } else huerf.push(r);
   });
-  // si casi ninguna transferencia tiene pareja, el Sheet carga un solo lado: no tiene sentido avisar
   if(trs.length && usadas.size/trs.length >= 0.3){
     const nombresInt = cfg.oficiales.map(norm);
     const internas = huerf.filter(r=>nombresInt.some(n=>norm(r.detalle+' '+r.hue+' '+r.concepto).includes(n.replace(/^mp /,''))));
-    add('info','trs','Transferencias entre cuentas sin la contrapartida', internas.slice(-40).map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.detalle||r.hue].filter(Boolean).join(' · '))} — no hay un ${fmt(-r.monto)} en otra cuenta esos días</span>`));
+    add('info','trs','Transferencias entre cuentas de caja sin la contrapartida', internas.map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.detalle||r.hue].filter(Boolean).join(' · '))} — no hay un ${fmt(-r.monto)} en otra cuenta esos días</span>`));
   }
 
-  /* --- limpiezas --- */
   if(LIMP && TRELLO){
     const L = analizarLimpiezas();
-    add('rojo','limp','Pagos a las chicas que no coinciden (app de limpiezas contra Trello)', L.difs, 'Total del período en que hay datos de las dos fuentes.');
+    add('rojo','limp','Pagos a las chicas que no coinciden (app de limpiezas contra Trello)', L.difs, 'Hasta '+fstr(L.hasta)+', la última semana con datos cargados en la app.');
     add('oro','limpN','Transferencias a personas que no aparecen en la app de limpiezas', L.sinApp);
+    if(L.despues.length) add('info','limpD','Transferencias posteriores a lo cargado en la app (todavía no se pueden comparar)', L.despues);
   }
   return A;
 }
@@ -756,33 +775,37 @@ function parecida(c){
 
 /* ================= LIMPIEZAS ================= */
 function analizarLimpiezas(){
-  const pagos = pagosLimpieza(TRELLO, [...cfg.oficiales, ...Object.keys(cfg.map)]);
-  const desde = pagos.reduce((m,p)=> p.fecha && (!m || ser(p.fecha)<ser(m)) ? p.fecha : m, null);
-  const filas = {};   // nombre|mes
+  const desde = DESDE();
+  const todos = pagosLimpieza(TRELLO, [...cfg.oficiales, ...Object.keys(cfg.map)]).filter(p=>p.fecha && ser(p.fecha) >= ser(desde));
+  // hasta dónde está cargada la app: última semana con algún jornal o pago
+  const cargadas = LIMP.filter(x=>x.fin && (x.pago || x.jornales));
+  const hasta = cargadas.reduce((m,x)=> !m || ser(x.fin)>ser(m) ? x.fin : m, null);
+  const lim = hasta ? sumarDias(hasta, 4) : desde;   // un pago suele salir unos días después del cierre
+  const pagos = todos.filter(p=>ser(p.fecha) <= ser(lim));
+  const despues = todos.filter(p=>ser(p.fecha) > ser(lim)).map(p=>`<b>${esc(p.nombre)}</b> — $ ${fmt(p.monto)} <span>· ${lnk(p.tarjeta)}</span>`);
+  const filas = {};
   const key = (n,f)=> n+'|'+f.y+'-'+String(f.m).padStart(2,'0');
   const pri = s => norm(s).split(' ')[0];
   const nombresApp = new Set(LIMP.map(x=>pri(x.empleada)));
   const nombreLindo = {};
   LIMP.forEach(x=>{
-    // una semana se paga unos días después de terminar: arranco 10 días antes de la primera transferencia
-    if(!x.fin || (desde && ser(x.fin) < ser(sumarDias(desde,-10)))) return;
-    const n = pri(x.empleada); nombreLindo[n]=x.empleada;
+    if(!x.fin || ser(x.fin) < ser(sumarDias(desde,-10)) || (hasta && ser(x.fin) > ser(hasta))) return;
+    const n = pri(x.empleada); nombreLindo[n] = nombreLindo[n] || x.empleada;
     const k = key(n,x.fin); const o = filas[k] = filas[k]||{n, f:{y:x.fin.y,m:x.fin.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
-    o.app += x.pago; o.jor += x.jornales; o.gas += x.gastos; o.sem++;
+    o.app += x.pago; o.jor += x.jornales; o.gas += x.gastos; if(x.pago||x.jornales) o.sem++;
   });
   const sinApp = [];
   pagos.forEach(p=>{
-    if(!p.fecha) return;
     if(!nombresApp.has(p.primer)){ sinApp.push(`<b>${esc(p.nombre)}</b> — $ ${fmt(p.monto)} <span>· ${lnk(p.tarjeta)}</span>`); return; }
     const k = key(p.primer,p.fecha); const o = filas[k] = filas[k]||{n:p.primer, f:{y:p.fecha.y,m:p.fecha.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
     o.tr += p.monto; o.trDet.push(p);
   });
-  const lista = Object.values(filas).sort((a,b)=> a.n.localeCompare(b.n) || (a.f.y*100+a.f.m)-(b.f.y*100+b.f.m));
+  const lista = Object.values(filas).filter(o=>o.app||o.tr||o.jor).sort((a,b)=> a.n.localeCompare(b.n) || (a.f.y*100+a.f.m)-(b.f.y*100+b.f.m));
   const tot = {};
   lista.forEach(o=>{ const t=tot[o.n]=tot[o.n]||{app:0,tr:0}; t.app+=o.app; t.tr+=o.tr; });
   const difs = Object.entries(tot).filter(([n,t])=>Math.abs(t.app-t.tr)>=1)
     .map(([n,t])=>`<b>${esc(nombreLindo[n]||n)}</b> — app $ ${fmt(t.app)} · Trello $ ${fmt(t.tr)} → <b class="negv">diferencia $ ${fmt(t.tr-t.app)}</b>`);
-  return {lista, tot, difs, sinApp, nombreLindo, desde};
+  return {lista, tot, difs, sinApp, despues, nombreLindo, desde, hasta};
 }
 
 /* ================= RENDER ================= */
@@ -835,15 +858,17 @@ function filasResumen(){
   const out=[];
   const aliasDe = {};
   Object.entries(CRUCE).forEach(([a,x])=>{ if(x.existe) aliasDe[x.cuenta]=a; });
+  const todas = LS('r28s_todas','0')==='1';
   Object.entries(CUENTAS).sort((a,b)=>a[0].localeCompare(b[0],'es')).forEach(([c,x])=>{
+    if(!todas && (!esCaja(c) || c==='(sin cuenta)')) return;
     const a = aliasDe[c]; const cr = a ? CRUCE[a] : null;
-    const ult = cr ? [...cr.tarjetas].reverse().find(t=>t.tot!=null) : null;
     const ultU = cr ? [...cr.tarjetas].reverse().find(t=>t.totU!=null) : null;
     const sinCruzar = cr ? cr.faltanEnSheet.length + cr.faltanEnTrello.length : null;
-    if(x.hayA || !x.hayU) out.push({cuenta:c, usd:false, sheet:x.saldoA, trello: ult?ult.tot:null, tarjeta:ult, n:x.rows.filter(r=>!r.usd).length, sinCruzar});
-    if(x.hayU) out.push({cuenta:c, usd:true, sheet:x.saldoU, trello: ultU?ultU.totU:null, tarjeta:ultU, n:x.rows.filter(r=>r.usd).length, sinCruzar:null});
+    if(x.hayA || !x.hayU) out.push({cuenta:c, usd:false, sheet:x.saldoA, trello: cr&&cr.ult?cr.ult.tot:null, tarjeta:cr?cr.ult:null,
+      dif: cr&&cr.difHoy!=null?cr.difHoy:null, cambio: cr&&cr.cambio!=null?cr.cambio:null, n:x.nPer, sinCruzar});
+    if(x.hayU) out.push({cuenta:c, usd:true, sheet:x.saldoU, trello: ultU?ultU.totU:null, tarjeta:ultU,
+      dif: ultU?x.saldoU-ultU.totU:null, cambio:null, n:x.rows.filter(r=>r.usd&&enPer(r)).length, sinCruzar:null});
   });
-  out.forEach(r=>{ r.dif = r.trello==null ? null : r.sheet - r.trello; });
   return out;
 }
 let lastRes=[], lastDet=[], lastLim=[];
@@ -851,21 +876,32 @@ function renderRes(){
   const filas = filasResumen(); lastRes = filas;
   const totA = filas.filter(r=>!r.usd).reduce((a,r)=>a+r.sheet,0);
   const totU = filas.filter(r=>r.usd).reduce((a,r)=>a+r.sheet,0);
-  const conT = filas.filter(r=>r.trello!=null);
-  const okT = conT.filter(r=>Math.abs(r.dif)<1).length;
+  const conT = filas.filter(r=>r.cambio!=null);
+  const okT = conT.filter(r=>Math.abs(r.cambio)<1).length;
+  const per = LS('r28s_per','60'), todas = LS('r28s_todas','0')==='1';
+  const op = (v,t)=>`<option value="${v}" ${per===v?'selected':''}>${t}</option>`;
   document.getElementById('kRes').innerHTML = `
-    <div class="kpi"><div class="t">Saldo total $ (Sheet)</div><div class="v ${totA<0?'negv':'pos'}">$ ${fmt(totA)}</div><div class="s">${Object.keys(CUENTAS).length} cuentas</div></div>
-    <div class="kpi"><div class="t">Saldo total u$s (Sheet)</div><div class="v gold">u$s ${fmt(totU)}</div></div>
-    <div class="kpi"><div class="t">Cuentas que cruzan con Trello</div><div class="v ${conT.length&&okT===conT.length?'pos':'negv'}">${TRELLO?okT+' <span style="font-size:14px;color:var(--muted)">/ '+conT.length+'</span>':'—'}</div><div class="s">${TRELLO?'el saldo del Sheet es igual al Total de la última tarjeta':'conectá Trello en ⚙'}</div></div>`;
+    <div class="kpi" style="grid-column:1/-1;display:flex;gap:18px;align-items:center;flex-wrap:wrap;padding:12px 18px">
+      <div class="f"><label>Controlar desde</label><select onchange="setPer(this.value)" style="min-width:200px">
+        ${op('30','Últimos 30 días')}${op('60','Últimos 60 días')}${op('90','Últimos 90 días')}${op('mes','Este mes')}${op('mes2','Mes pasado y este')}${op('todo','Toda la historia')}
+      </select></div>
+      <div class="muted" style="font-size:12px">Desde el ${fstr(DESDE())}. Los avisos miran solo este período; los saldos son siempre el total acumulado.</div>
+      <label style="margin-left:auto;font-size:13px;color:var(--muted);cursor:pointer;display:flex;gap:6px;align-items:center">
+        <input type="checkbox" ${todas?'checked':''} onchange="LSset('r28s_todas',this.checked?'1':'0');buildSelects();render()" style="accent-color:var(--red)"> Ver también las cuentas que no son de caja</label>
+    </div>
+    <div class="kpi"><div class="t">Saldo $ · cuentas ${todas?'todas':'de caja'}</div><div class="v ${totA<0?'negv':'pos'}">$ ${fmt(totA)}</div><div class="s">${filas.filter(r=>!r.usd).length} cuentas</div></div>
+    <div class="kpi"><div class="t">Saldo u$s · cuentas ${todas?'todas':'de caja'}</div><div class="v gold">u$s ${fmt(totU)}</div></div>
+    <div class="kpi"><div class="t">Cuentas sin descuadre nuevo</div><div class="v ${conT.length&&okT===conT.length?'pos':'negv'}">${TRELLO?okT+' <span style="font-size:14px;color:var(--muted)">/ '+conT.length+'</span>':'—'}</div><div class="s">${TRELLO?'la diferencia Sheet−Trello no cambió en el período':'conectá Trello en ⚙'}</div></div>`;
   document.getElementById('aviRes').innerHTML = bloqueAvisos(AVISOS,'aviBoxRes');
   document.getElementById('tRes').innerHTML = `<table>
-    <thead><tr><th>Cuenta</th><th>Moneda</th><th class="num">Saldo Sheet</th><th>Última tarjeta</th><th class="num">Saldo Trello</th><th class="num">Diferencia</th><th class="num">Mov. sin cruzar</th><th class="num">Mov.</th></tr></thead>
+    <thead><tr><th>Cuenta</th><th>Moneda</th><th class="num">Saldo Sheet</th><th>Última tarjeta</th><th class="num">Saldo Trello</th><th class="num">Diferencia hoy</th><th class="num">Cambio en el período</th><th class="num">Sin cruzar</th><th class="num">Mov. período</th></tr></thead>
     <tbody>${filas.map(r=>`<tr class="clickable" onclick="irACuenta('${esc(r.cuenta).replace(/'/g,"\\'")}')">
       <td><b>${esc(r.cuenta)}</b></td><td><span class="pill">${sim(r.usd)}</span></td>
       <td class="num ${r.sheet<0?'negv':''}"><b>${sim(r.usd)} ${fmt(r.sheet)}</b></td>
       <td>${r.tarjeta?`<span class="muted">${fstr(r.tarjeta.fecha)}</span>`:'<span class="muted">—</span>'}</td>
       <td class="num">${r.trello==null?'<span class="muted">—</span>':sim(r.usd)+' '+fmt(r.trello)}</td>
-      <td class="num">${r.dif==null?'':Math.abs(r.dif)<1?'<span class="st ok">✓ cruza</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.dif)}</span>`}</td>
+      <td class="num">${r.dif==null?'':Math.abs(r.dif)<1?'<span class="st ok">✓ igual</span>':`<span class="muted">${sim(r.usd)} ${fmt(r.dif)}</span>`}</td>
+      <td class="num">${r.cambio==null?'':Math.abs(r.cambio)<1?'<span class="st ok">✓ sin cambios</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.cambio)}</span>`}</td>
       <td class="num">${r.sinCruzar==null?'':r.sinCruzar?`<span class="st g">${r.sinCruzar}</span>`:'<span class="st ok">0</span>'}</td>
       <td class="num">${r.n}</td></tr>`).join('')}</tbody>
   </table>`;
@@ -873,11 +909,12 @@ function renderRes(){
 
 function buildSelects(){
   const s1 = document.getElementById('selCta'), p1 = s1.value;
-  const cs = Object.keys(CUENTAS).sort((a,b)=>a.localeCompare(b,'es'));
+  const todas = LS('r28s_todas','0')==='1';
+  const cs = Object.keys(CUENTAS).filter(c=>todas || (esCaja(c) && c!=='(sin cuenta)')).sort((a,b)=>a.localeCompare(b,'es'));
   s1.innerHTML = cs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
   s1.value = cs.includes(p1) ? p1 : (cs.find(c=>Object.values(CRUCE).some(x=>x.cuenta===c)) || cs[0] || '');
   const s2 = document.getElementById('selTre'), p2 = s2.value;
-  const as = TRELLO ? Object.keys(TRELLO).sort() : [];
+  const as = Object.keys(CRUCE).sort();
   s2.innerHTML = as.map(a=>`<option value="${esc(a)}">${esc(a[0].toUpperCase()+a.slice(1))}${CRUCE[a]&&CRUCE[a].existe?' → '+esc(CRUCE[a].cuenta):''}</option>`).join('');
   s2.value = as.includes(p2) ? p2 : (as[0]||'');
 }
@@ -894,7 +931,8 @@ function renderCta(){
   const k = [];
   if(x.hayA) k.push(`<div class="kpi"><div class="t">Saldo $ en el Sheet</div><div class="v ${x.saldoA<0?'negv':'pos'}">$ ${fmt(x.saldoA)}</div></div>`);
   if(x.hayU) k.push(`<div class="kpi"><div class="t">Saldo u$s en el Sheet</div><div class="v gold">u$s ${fmt(x.saldoU)}</div></div>`);
-  if(ult){ const d=x.saldoA-ult.tot; k.push(`<div class="kpi"><div class="t">Trello · ${fstr(ult.fecha)}</div><div class="v">$ ${fmt(ult.tot)}</div><div class="s">${Math.abs(d)<1?'<span class="pos">✓ coincide con el Sheet</span>':'<span class="negv">diferencia $ '+fmt(d)+'</span>'} · <a href="#" onclick="irATrello('${esc(alias)}');return false">ver tarjetas</a></div></div>`); }
+  if(ult){ const d=x.saldoA-ult.tot; k.push(`<div class="kpi"><div class="t">Trello · ${fstr(ult.fecha)}</div><div class="v">$ ${fmt(ult.tot)}</div><div class="s">${Math.abs(d)<1?'<span class="pos">✓ igual al Sheet</span>':'diferencia $ '+fmt(d)} · <a href="#" onclick="irATrello('${esc(alias)}');return false">ver tarjetas</a></div></div>`); }
+  if(cr && cr.cambio!=null) k.push(`<div class="kpi"><div class="t">Descuadre nuevo en el período</div><div class="v ${Math.abs(cr.cambio)<1?'pos':'negv'}">${Math.abs(cr.cambio)<1?'✓ ninguno':'$ '+fmt(cr.cambio)}</div><div class="s">diferencia al ${fstr(cr.pri.fecha)}: $ ${fmt(cr.dif0)} · hoy: $ ${fmt(cr.difHoy)}</div></div>`);
   if(cr) k.push(`<div class="kpi"><div class="t">Movimientos cruzados</div><div class="v">${cr.emparejadas}</div><div class="s">${cr.faltanEnSheet.length} solo en Trello · ${cr.faltanEnTrello.length} solo en Sheet</div></div>`);
   document.getElementById('kCta').innerHTML = k.join('');
   document.getElementById('aviCta').innerHTML = cr ? bloqueAvisos(AVISOS,'aviBoxCta', g=>g.items.some(i=>i.includes(esc(c))||cr.tarjetas.some(t=>i.includes(esc(t.nombre))))) : '';
@@ -913,7 +951,7 @@ function renderCta(){
   rows.forEach(r=>{ acc+=r.monto; const t=Date.UTC(r.fecha.y,r.fecha.m-1,r.fecha.d); if(pts.length && pts[pts.length-1].x===t) pts[pts.length-1].y=acc; else pts.push({x:t,y:acc}); });
   const ptsT = cr ? cr.tarjetas.filter(t=>t.tot!=null && t.next && t.next.fecha).map(t=>({x:Date.UTC(t.next.fecha.y,t.next.fecha.m-1,t.next.fecha.d)-864e5, y:t.tot, n:t.nombre})) : [];
   if(ult) ptsT.push({x:Date.UTC(hoyF.y,hoyF.m-1,hoyF.d), y:ult.tot, n:ult.nombre+' (actual)'});
-  const desde = ptsT.length ? Math.min(...ptsT.map(p=>p.x)) - 20*864e5 : (pts.length? pts[Math.max(0,pts.length-60)].x : 0);
+  const D0 = DESDE(); const desde = Date.UTC(D0.y,D0.m-1,D0.d) - 7*864e5;
   const ptsV = pts.filter(p=>p.x>=desde);
   if(chart) chart.destroy();
   if(window.Chart){
@@ -935,8 +973,8 @@ function renderCta(){
   const enTrello = new Map();
   if(cr) cr.tarjetas.forEach(t=>t.lineas.forEach(l=>{ if(l.match) enTrello.set(l.match.idx, t); }));
   const desdeT = cr && cr.tarjetas.find(t=>t.fecha) ? cr.tarjetas.find(t=>t.fecha).fecha : null;
-  const lista = [...x.rows].sort((a,b)=>ser(b.fecha)-ser(a.fecha) || b.idx-a.idx); lastDet = lista;
-  document.getElementById('tCtaTit').textContent = `Movimientos del Sheet — ${c} (${lista.length})`;
+  const lista = x.rows.filter(enPer).sort((a,b)=>ser(b.fecha)-ser(a.fecha) || b.idx-a.idx); lastDet = lista;
+  document.getElementById('tCtaTit').textContent = `Movimientos del Sheet desde el ${fstr(DESDE())} — ${c} (${lista.length})`;
   document.getElementById('tCta').innerHTML = `<table>
     <thead><tr><th>Fecha</th><th>Concepto</th><th>Departamento</th><th>Huésped / Detalle</th><th class="num">Monto</th>${cr?'<th>En Trello</th>':''}</tr></thead>
     <tbody>${lista.slice(0,600).map(r=>{
@@ -954,7 +992,7 @@ function toggleTar(id){ abiertas.has(id)?abiertas.delete(id):abiertas.add(id); r
 function renderTre(){
   const a = document.getElementById('selTre').value;
   if(!TRELLO){ document.getElementById('tTre').innerHTML = `<div class="note">${TRELLO_ERR?'⚠ '+esc(TRELLO_ERR):'Trello no está conectado. Cargá la API key y el token en ⚙.'}</div>`; return; }
-  const cr = CRUCE[a]; if(!cr) return;
+  const cr = CRUCE[a]; if(!cr){ document.getElementById('tTre').innerHTML='<div class="note">No hay tarjetas de Trello en el período elegido.</div>'; return; }
   const ts = [...cr.tarjetas].reverse();
   document.getElementById('tTre').innerHTML = `<table>
     <thead><tr><th>Tarjeta</th><th class="num">Inicial</th><th class="num">Movimientos</th><th class="num">Calculado</th><th class="num">Total escrito</th><th>¿Cierra?</th><th>¿Sigue a la anterior?</th><th class="num">En Sheet</th></tr></thead>
