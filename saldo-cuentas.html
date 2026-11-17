@@ -6,6 +6,7 @@
 <title>Rent2888 · Saldo de Cuentas</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
   --red:#CC1414; --red-dark:#8f0e0e; --gold:#d4af37;
@@ -14,6 +15,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:var(--bg);color:var(--txt);font-family:'Inter',system-ui,sans-serif;font-size:14px}
+a{color:var(--gold)}
 /* ---------- LOGIN ---------- */
 #login{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center}
 #login .box{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:40px;width:340px;text-align:center}
@@ -32,63 +34,94 @@ header{position:sticky;top:0;z-index:50;background:rgba(12,14,19,.92);backdrop-f
 .sub{color:var(--muted);font-size:12.5px;flex:1}
 .hbtn{background:var(--panel2);border:1px solid var(--border);color:var(--txt);border-radius:8px;padding:8px 12px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap}
 .hbtn:hover{border-color:var(--red)}
-main{padding:22px;max-width:1200px;margin:0 auto}
-#status{color:var(--muted);padding:40px 0;text-align:center}
+main{padding:22px;max-width:1240px;margin:0 auto}
+#status{color:var(--muted);padding:40px 0;text-align:center;line-height:1.7}
+.fuentes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.fte{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:4px 11px;font-size:12px;color:var(--muted)}
+.fte i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
+.fte.ok i{background:var(--green)} .fte.err i{background:var(--neg)} .fte.off i{background:#555}
+.fte.err{color:var(--neg)}
+/* ---------- TABS ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border);overflow-x:auto}
+.tabBtn{background:none;border:none;color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;padding:10px 4px;margin-right:18px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tabBtn:hover{color:var(--txt)}
+.tabBtn.on{color:var(--txt);border-bottom-color:var(--red)}
+.tabBtn .cnt{display:inline-block;background:var(--gold);color:#000;border-radius:10px;font-size:10px;padding:1px 6px;margin-left:5px;vertical-align:2px}
 /* ---------- FILTERS ---------- */
 .filters{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:18px}
 .f label{display:block;font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
 .f select{min-width:240px;background:var(--panel);border:1px solid var(--border);color:var(--txt);border-radius:9px;padding:10px 12px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
-.f select:focus{outline:none;border-color:var(--red)}
 /* ---------- KPI ---------- */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin-bottom:18px}
 .kpi{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid var(--border);border-radius:14px;padding:16px 18px}
 .kpi .t{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
-.kpi .v{font-size:26px;font-weight:800;margin-top:6px}
+.kpi .v{font-size:24px;font-weight:800;margin-top:6px}
 .kpi .v.pos{color:var(--green)} .kpi .v.negv{color:var(--neg)} .kpi .v.gold{color:var(--gold)}
 .kpi .s{font-size:11px;color:var(--muted);margin-top:4px}
+/* ---------- AVISOS (mismo bloque que el dashboard principal) ---------- */
+.avi{background:linear-gradient(145deg,var(--panel),var(--panel2));border:1px solid rgba(212,175,55,.35);border-radius:14px;padding:14px 18px;margin-bottom:18px}
+.avi.rojo{border-color:rgba(255,92,92,.45)}
+.avi.ok{border-color:rgba(46,204,113,.3)}
+.debTop{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;cursor:pointer}
+.debTit{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+.debVal{font-size:24px;font-weight:800;color:var(--gold);margin-top:4px}
+.avi.rojo .debVal{color:var(--neg)}
+.avi.ok .debVal{color:var(--green);font-size:20px}
+.debVal small{font-size:12px;font-weight:600;color:var(--muted);margin-left:8px;letter-spacing:0}
+.debVer{background:var(--panel);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:7px 13px;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap}
+.debVer:hover{color:var(--txt)}
+.debDet{display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px;max-height:520px;overflow-y:auto}
+.avi.on .debDet{display:block}
+.aviTit{font-size:13px;font-weight:700;color:var(--gold);margin:14px 0 5px}
+.aviTit.r{color:var(--neg)}
+.aviTit:first-child{margin-top:0}
+.aviTit.info{color:var(--muted);border-top:1px solid var(--border);padding-top:12px}
+.aviLin{font-size:13px;padding:4px 0 4px 14px;color:var(--txt);line-height:1.5}
+.aviLin span{color:var(--muted)}
+.aviLin.info{color:var(--muted)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.chip{font-size:11px;font-weight:700;border-radius:20px;padding:3px 10px;border:1px solid var(--border);color:var(--muted)}
+.chip.r{color:var(--neg);border-color:rgba(255,92,92,.4)} .chip.g{color:var(--gold);border-color:rgba(212,175,55,.4)}
 /* ---------- TABLE ---------- */
 .tblCard{background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:18px}
-.tblHead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border)}
+.tblHead{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap}
 .tblHead h3{font-size:14px;font-weight:700}
 .tblWrap{overflow-x:auto;max-height:560px;overflow-y:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
-th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:10px 14px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;cursor:pointer;white-space:nowrap;z-index:2}
-th:hover{color:var(--txt)}
-td{padding:10px 14px;border-top:1px solid var(--border);white-space:nowrap}
-td.num{text-align:right;font-variant-numeric:tabular-nums}
-th.num{text-align:right}
+th{position:sticky;top:0;background:var(--panel2);text-align:left;padding:10px 14px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;white-space:nowrap;z-index:2}
+td{padding:9px 14px;border-top:1px solid var(--border);white-space:nowrap}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.wrap{white-space:normal;min-width:220px}
 tbody tr:hover{background:rgba(255,255,255,.03)}
 tbody tr.clickable{cursor:pointer}
 tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--panel2)}
-.pos{color:var(--green)} .negv{color:var(--neg)}
+.pos{color:var(--green)} .negv{color:var(--neg)} .gold{color:var(--gold)} .muted{color:var(--muted)}
 .note{color:var(--muted);font-size:12px;line-height:1.6;padding:14px 18px;border-top:1px solid var(--border)}
 .pill{display:inline-block;background:var(--panel2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;color:var(--muted)}
-.ms{position:relative;min-width:220px}
-.ms .msBtn{width:100%;background:var(--panel);border:1px solid var(--border);color:var(--txt);border-radius:9px;padding:10px 12px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;text-align:left;display:flex;justify-content:space-between;gap:8px}
-.ms .msBtn:after{content:"▾";color:var(--muted)}
-.ms .msPanel{display:none;position:absolute;top:calc(100% + 5px);left:0;z-index:60;background:var(--panel2);border:1px solid var(--border);border-radius:10px;min-width:260px;max-height:340px;overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.5)}
-.ms.open .msPanel{display:block}
-.msPanel input{width:calc(100% - 16px);margin:8px;padding:7px 10px;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-family:inherit;font-size:13px}
-.msActions{display:flex;gap:6px;padding:0 8px 6px}
-.msActions button{flex:1;background:var(--panel);border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:5px;cursor:pointer;font-size:11px;font-family:inherit}
-.msActions button:hover{color:var(--txt);border-color:var(--muted)}
-.msList{max-height:220px;overflow-y:auto;padding:0 4px 6px}
-.msList label{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--txt)}
-.msList label:hover{background:var(--panel)}
-.msList input{accent-color:var(--red);margin:0;width:auto}
-.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--border)}
-.tabBtn{background:none;border:none;color:var(--muted);font-family:inherit;font-size:14px;font-weight:700;padding:10px 4px;margin-right:18px;cursor:pointer;border-bottom:2px solid transparent}
-.tabBtn:hover{color:var(--txt)}
-.tabBtn.on{color:var(--txt);border-bottom-color:var(--red)}
+.st{display:inline-block;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700}
+.st.ok{background:rgba(46,204,113,.12);color:var(--green)}
+.st.r{background:rgba(255,92,92,.12);color:var(--neg)}
+.st.g{background:rgba(212,175,55,.12);color:var(--gold)}
+.st.m{background:var(--panel2);color:var(--muted)}
+.chartCard{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px 18px;margin-bottom:18px}
+.chartCard h3{font-size:14px;font-weight:700;margin-bottom:10px}
+.chartBox{position:relative;height:280px}
+.lineasTr{background:var(--bg)}
+.lineasTr td{padding:6px 14px 6px 34px;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--border)}
+/* ---------- CONFIG ---------- */
 #cfgBox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;align-items:center;justify-content:center}
-#cfgBox .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:380px}
-#cfgBox h3{margin-bottom:14px}
+#cfgBox .box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:24px;width:520px;max-width:94vw;max-height:90vh;overflow-y:auto}
+#cfgBox h3{margin-bottom:6px}
+#cfgBox h4{margin:18px 0 2px;font-size:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.5px}
+#cfgBox .hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin-top:3px}
 #cfgBox label{display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;font-weight:700}
-#cfgBox input{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-family:inherit}
-#cfgBox .row{display:flex;gap:8px;margin-top:16px}
+#cfgBox input,#cfgBox textarea{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--txt);font-family:inherit;font-size:13px}
+#cfgBox textarea{font-family:ui-monospace,monospace;font-size:12px;min-height:84px}
+#cfgBox .row{display:flex;gap:8px;margin-top:18px}
 #cfgBox button{flex:1;padding:10px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:inherit}
 #cfgBox .save{background:var(--red);color:#fff}
 #cfgBox .cancel{background:var(--panel2);color:var(--txt)}
+@media(max-width:640px){ main{padding:14px} header{padding:0 12px} .sub{display:none} .f select{min-width:180px} }
 </style>
 </head>
 <body>
@@ -106,57 +139,64 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
 <div id="app">
 <header>
   <div class="logo">RENT<span>2888</span></div>
-  <div class="sub">Saldo de cuentas</div>
+  <div class="sub">Saldo de cuentas · Sheet × Trello × Limpiezas</div>
   <span id="upd" class="pill"></span>
   <button class="hbtn" onclick="loadData()">↻ Actualizar</button>
   <button class="hbtn" onclick="openCfg()">⚙</button>
 </header>
 
 <main>
-  <div id="status">Cargando datos del Sheet…</div>
-
+  <div id="status">Cargando datos…</div>
   <div id="content" style="display:none">
+    <div class="fuentes" id="fuentes"></div>
     <div class="tabs">
-      <button class="tabBtn on" data-t="con" onclick="setTab('con')">📊 Consolidado</button>
-      <button class="tabBtn" data-t="mov" onclick="setTab('mov')">📋 Movimientos por cuenta</button>
+      <button class="tabBtn on" data-t="res" onclick="setTab('res')">📊 Resumen</button>
+      <button class="tabBtn" data-t="cta" onclick="setTab('cta')">🔎 Por cuenta</button>
+      <button class="tabBtn" data-t="tre" onclick="setTab('tre')">🗂 Tarjetas Trello</button>
+      <button class="tabBtn" data-t="lim" onclick="setTab('lim')">🧹 Limpiezas</button>
     </div>
 
-    <div id="pane-con" class="tabPane">
-      <div class="filters">
-        <div class="f">
-          <label>Cuentas visibles</label>
-          <div class="ms" id="msCuentas">
-            <button class="msBtn" onclick="toggleMsPanel()"></button>
-            <div class="msPanel">
-              <input type="text" placeholder="Buscar cuenta…" oninput="filterMsList(this.value)">
-              <div class="msActions">
-                <button onclick="setAllCuentas(true)">Todas</button>
-                <button onclick="setAllCuentas(false)">Ninguna</button>
-              </div>
-              <div class="msList" id="msList"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="kpis" id="kTop"></div>
+    <div id="pane-res" class="tabPane">
+      <div class="kpis" id="kRes"></div>
+      <div id="aviRes"></div>
       <div class="tblCard">
-        <div class="tblHead"><h3>Saldo por cuenta</h3><button class="hbtn" onclick="expCSV('resumen')">⬇ CSV</button></div>
-        <div class="tblWrap" id="tResumen"></div>
-        <div class="note">Saldo = Ingresos + Egresos de esa cuenta, cada uno en su propia moneda (sin convertir). Si una cuenta solo movió pesos, no se muestra fila en dólares, y viceversa. Hacé click en una cuenta para ver sus movimientos.</div>
+        <div class="tblHead"><h3>Saldo por cuenta: Sheet contra Trello</h3><button class="hbtn" onclick="expCSV('resumen')">⬇ CSV</button></div>
+        <div class="tblWrap" id="tRes"></div>
+        <div class="note">El saldo del Sheet es Ingresos + Egresos de la cuenta (col "Donde $?"), cada moneda por separado.
+          El de Trello es el Total escrito en la última tarjeta de esa cuenta. Hacé click en una fila para ver el detalle.</div>
       </div>
     </div>
 
-    <div id="pane-mov" class="tabPane" style="display:none">
-      <div class="filters">
-        <div class="f">
-          <label>Cuenta</label>
-          <select id="selMov" onchange="renderMov()"></select>
-        </div>
-      </div>
-      <div class="kpis" id="kMov"></div>
+    <div id="pane-cta" class="tabPane" style="display:none">
+      <div class="filters"><div class="f"><label>Cuenta</label><select id="selCta" onchange="renderCta()"></select></div></div>
+      <div class="kpis" id="kCta"></div>
+      <div id="aviCta"></div>
+      <div class="chartCard"><h3>Evolución del saldo — línea: Sheet acumulado · puntos: Total de cada tarjeta de Trello</h3><div class="chartBox"><canvas id="chSaldo"></canvas></div></div>
       <div class="tblCard">
-        <div class="tblHead"><h3 id="tMovTit">Movimientos</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
-        <div class="tblWrap" id="tMov"></div>
+        <div class="tblHead"><h3 id="tCtaTit">Movimientos del Sheet</h3><button class="hbtn" onclick="expCSV('detalle')">⬇ CSV</button></div>
+        <div class="tblWrap" id="tCta"></div>
+      </div>
+    </div>
+
+    <div id="pane-tre" class="tabPane" style="display:none">
+      <div class="filters"><div class="f"><label>Cuenta</label><select id="selTre" onchange="renderTre()"></select></div></div>
+      <div class="tblCard">
+        <div class="tblHead"><h3>Tarjetas, en orden</h3><span class="muted" style="font-size:12px">Click en una tarjeta para ver sus líneas</span></div>
+        <div class="tblWrap" id="tTre"></div>
+        <div class="note">Cada tarjeta tiene que cumplir dos cosas: Inicial + movimientos = Total, y su Inicial tiene que ser el Total de la tarjeta anterior.
+          La columna "En Sheet" dice cuántas líneas de la tarjeta encontré cargadas en el Sheet (misma cuenta, mismo monto, fecha cercana).</div>
+      </div>
+    </div>
+
+    <div id="pane-lim" class="tabPane" style="display:none">
+      <div class="kpis" id="kLim"></div>
+      <div id="aviLim"></div>
+      <div class="tblCard">
+        <div class="tblHead"><h3>Pagos a cada chica: app de limpiezas contra transferencias en Trello</h3><button class="hbtn" onclick="expCSV('limpiezas')">⬇ CSV</button></div>
+        <div class="tblWrap" id="tLim"></div>
+        <div class="note">"Pagado según la app" es la suma de pago_semana de las semanas que terminan en ese mes.
+          "Transferido según Trello" son las líneas "Transferencia &lt;nombre&gt;" de las tarjetas, por la fecha de la tarjeta.
+          Una semana que se paga al mes siguiente puede dar diferencia en un mes y compensarse en el otro: el control de arriba mira el total del período.</div>
       </div>
     </div>
   </div>
@@ -166,8 +206,23 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
 <div id="cfgBox">
   <div class="box">
     <h3>Configuración</h3>
-    <label>ID del Google Sheet</label><input id="cfgId">
+    <div class="hint">Todo se guarda solo en este navegador.</div>
+    <h4>Google Sheet</h4>
+    <label>ID del Sheet</label><input id="cfgId">
     <label>Pestaña de datos</label><input id="cfgTab">
+    <h4>Trello</h4>
+    <div class="hint">Se genera en trello.com/power-ups/admin → New → API key, y desde ahí "Token". Con permiso de solo lectura alcanza.</div>
+    <label>API key</label><input id="cfgTk" autocomplete="off">
+    <label>Token</label><input id="cfgTt" type="password" autocomplete="off">
+    <label>ID de la lista "Cuentas"</label><input id="cfgTl">
+    <h4>App de limpiezas</h4>
+    <div class="hint">URL de la app y el token que pusiste en la variable EXPORT_TOKEN de Vercel. Vacío = no se hace este control.</div>
+    <label>URL</label><input id="cfgLu" placeholder="https://v0-cleaning-management-app.vercel.app">
+    <label>Token</label><input id="cfgLt" type="password" autocomplete="off">
+    <h4>Cuentas</h4>
+    <label>Nombre en Trello → nombre en el Sheet</label><textarea id="cfgMap"></textarea>
+    <label>Lista oficial de cuentas (una por línea)</label><textarea id="cfgOfi"></textarea>
+    <label>Margen de días para cruzar movimientos</label><input id="cfgMg" type="number" min="0" max="30">
     <div class="row">
       <button class="cancel" onclick="closeCfg()">Cancelar</button>
       <button class="save" onclick="saveCfg()">Guardar y recargar</button>
@@ -176,49 +231,274 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
 </div>
 
 <script>
+/* ================= NÚCLEO: lectura de tarjetas de Trello y cruces =================
+   Funciones puras (sin DOM) para poder probarlas aparte. */
+
+// número en formato argentino: 1.234.567,89  →  1234567.89
+function numAR(s){
+  s = String(s||'').trim();
+  if(!s) return null;
+  if(s.includes(',')) s = s.replace(/\./g,'').replace(',','.');
+  else if(/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g,'');
+  else if(/\./.test(s)){
+    // "21.3000" o "2.0000.000": puntos mal puestos. Si lo que sigue al último punto
+    // tiene 1-2 cifras, lo tomamos como decimal; si no, sacamos todos los puntos.
+    const p = s.split('.');
+    s = (p.length===2 && p[1].length<=2) ? s : s.replace(/\./g,'');
+  }
+  const n = parseFloat(s);
+  return isFinite(n) ? n : null;
+}
+// ¿el número está bien escrito? (miles con punto de a 3, decimales con coma)
+function numBienEscrito(s){
+  return /^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s) || /^\d+(,\d+)?$/.test(s);
+}
+function limpiarMd(t){
+  return String(t||'')
+    .replace(/‌|​| /g,' ')
+    .replace(/\\([+\-*_.#])/g,'$1')
+    .replace(/\*\*|__/g,'')
+    .replace(/(^|\s)[*_]+|[*_]+(\s|$)/g,'$1$2');
+}
+function fechaTitulo(nombre, actividadISO){
+  const ms = [...String(nombre).matchAll(/(\d{1,2})\s*[.\/-]\s*(\d{1,2})(?:\s*[.\/-]\s*(\d{2,4}))?/g)];
+  if(!ms.length) return null;
+  const m = ms[ms.length-1];
+  const d=+m[1], mo=+m[2];
+  if(mo<1||mo>12||d<1||d>31) return null;
+  let y = m[3] ? +m[3] : null;
+  if(y && y<100) y+=2000;
+  if(!y){
+    const a = actividadISO ? new Date(actividadISO) : new Date();
+    y = a.getFullYear();
+    if(mo > a.getMonth()+2) y--;          // tarjeta de diciembre tocada en enero
+  }
+  return {d, m:mo, y};
+}
+const ser = f => f ? f.y*10000+f.m*100+f.d : 0;
+function diasEntre(a,b){ // b - a en días
+  return Math.round((Date.UTC(b.y,b.m-1,b.d)-Date.UTC(a.y,a.m-1,a.d))/864e5);
+}
+function sumarDias(f,n){
+  const t = new Date(Date.UTC(f.y,f.m-1,f.d)+n*864e5);
+  return {y:t.getUTCFullYear(), m:t.getUTCMonth()+1, d:t.getUTCDate()};
+}
+const fstr = f => f ? String(f.d).padStart(2,'0')+'/'+String(f.m).padStart(2,'0')+'/'+f.y : '—';
+
+/* Una tarjeta "Cuenta Vero-14.11" →
+   {alias, fecha, ini, tot, iniU, totU, lineas:[{signo, monto, usd, texto, ok, avisos[]}]} */
+function parseTarjeta(card){
+  const nombre = card.name||'';
+  const mA = nombre.match(/cuenta\s+([a-záéíóúñ]+)/i);
+  if(!mA || /modelo/i.test(nombre)) return null;
+  const alias = mA[1].toLowerCase();
+  const fecha = fechaTitulo(nombre.slice(mA.index+mA[0].length), card.dateLastActivity);
+  const txt = limpiarMd(card.desc||'');
+  const iDet = txt.search(/detalle/i);
+  const totMs = [...txt.matchAll(/total\s*:?/gi)];
+  const iTot = totMs.length ? totMs[totMs.length-1].index : -1;
+  const cab = iDet>=0 ? txt.slice(0,iDet) : (iTot>=0 ? txt.slice(0,iTot) : txt);
+  const pie = iTot>=0 ? txt.slice(iTot) : '';
+  const cuerpo = txt.slice(iDet>=0 ? iDet+7 : 0, iTot>=0 && iTot>iDet ? iTot : undefined);
+
+  const leerMonto = (s)=>{
+    const m = s.match(/(-)?\s*\$?\s*(-)?\s*(\d[\d.,]*)/);
+    if(!m) return null;
+    const v = numAR(m[3]); if(v==null) return null;
+    return (m[1]||m[2]) ? -v : v;
+  };
+  const leerUSD = (s)=>{
+    const m = s.match(/(-)?\s*(?:USD|U\$S)\s*\$?\s*(\d[\d.,]*)/i);
+    if(!m) return null;
+    const v = numAR(m[2]); return v==null?null:(m[1]?-v:v);
+  };
+  const cabSinUSD = cab.replace(/(?:USD|U\$S)\s*\$?\s*\d[\d.,]*/gi,'');
+  const mIni = cabSinUSD.match(/inicial\s*:?([\s\S]*)/i);
+  const ini = mIni ? leerMonto(mIni[1]) : null;
+  const pieSinUSD = pie.replace(/(?:USD|U\$S)\s*\$?\s*\d[\d.,]*/gi,'');
+  const tot = pie ? leerMonto(pieSinUSD.replace(/total\s*:?/i,'')) : null;
+  const iniU = leerUSD(cab), totU = leerUSD(pie);
+
+  const lineas = [];
+  cuerpo.split('\n').forEach(raw=>{
+    let l = raw.trim();
+    if(!l || !/\d/.test(l)) return;
+    if(/^el\s+\d{1,2}[.\/]\d{1,2}\s*$/i.test(l)) return;           // "EL 05.11" = subtítulo de fecha
+    const m = l.match(/^([+-])?\s*(?:(USD|U\$S)\s*)?\$?\s*(?:(USD|U\$S)\s*\$?\s*)?(\d[\d.,]*(?:-\d{3})*)\s*(.*)$/i);
+    if(!m){ lineas.push({monto:0, texto:l, ok:/\bok\b/i.test(l), avisos:['no pude leer el monto'], ilegible:true}); return; }
+    const usd = !!(m[2]||m[3]);
+    const nTxt = m[4];
+    let v = numAR(nTxt.replace(/-/g,'.'));
+    const avisos = [];
+    if(!numBienEscrito(nTxt)) avisos.push(`número mal escrito: "${nTxt}"`);
+    let resto = m[5].replace(/\bok\b/ig,'').trim();
+    let signo = m[1];
+    if(!signo){
+      signo = /transfer|efectivo|comisi/i.test(resto) && !/^-/.test(resto) ? '+' : '-';
+      avisos.push(`sin signo (lo tomé como ${signo})`);
+    }
+    // "- $12.000 - F308 - Lavadero": el guión del medio es separador, no signo
+    resto = resto.replace(/^[-–]\s*/,'').replace(/^\((.*)\)$/,'$1').trim();
+    const fl = resto.match(/\((\d{1,2})[.\/](\d{1,2})\)\s*$/);   // "(27.08)" al final = fecha del movimiento
+    lineas.push({
+      monto: (signo==='-'?-1:1)*(v||0), usd, texto: resto || '(sin detalle)',
+      ok: /\bok\b/i.test(l), avisos,
+      fechaLinea: fl && fecha ? {d:+fl[1], m:+fl[2], y: (+fl[2]>fecha.m+1 ? fecha.y-1 : fecha.y)} : null,
+    });
+  });
+  const labels = (card.labels||[]).map(x=>x.name).filter(Boolean);
+  return {
+    id: card.id, url: card.shortUrl||card.url, nombre, alias, fecha, ini, tot, iniU, totU, lineas,
+    labels, actividad: card.dateLastActivity, pos: card.pos ?? card.position ?? 0,
+  };
+}
+
+/* Agrupa por cuenta, ordena, y calcula los controles propios de Trello */
+function analizarTarjetas(cards){
+  const tarjetas = cards.map(parseTarjeta).filter(Boolean);
+  const porCuenta = {};
+  tarjetas.forEach(t=>{ (porCuenta[t.alias] = porCuenta[t.alias]||[]).push(t); });
+  Object.values(porCuenta).forEach(arr=>{
+    arr.sort((a,b)=> (ser(a.fecha)-ser(b.fecha)) || (String(a.actividad).localeCompare(String(b.actividad))));
+    arr.forEach((t,i)=>{
+      const sumA = t.lineas.filter(l=>!l.usd).reduce((a,l)=>a+l.monto,0);
+      const sumU = t.lineas.filter(l=>l.usd).reduce((a,l)=>a+l.monto,0);
+      t.sumA = sumA; t.sumU = sumU;
+      t.calc = (t.ini!=null) ? t.ini + sumA : null;
+      t.cierra = (t.calc!=null && t.tot!=null) ? Math.abs(t.calc - t.tot) < 1 : null;
+      t.calcU = (t.iniU!=null) ? t.iniU + sumU : null;
+      t.cierraU = (t.calcU!=null && t.totU!=null) ? Math.abs(t.calcU - t.totU) < 1 : null;
+      t.prev = i ? arr[i-1] : null;
+      t.next = arr[i+1] || null;
+      t.cadena = null;
+      if(t.prev && t.prev.tot!=null && t.ini!=null){
+        const d = t.ini - t.prev.tot;
+        if(Math.abs(d) < 1) t.cadena = 'ok';
+        else if(Math.abs(t.ini + t.prev.tot) < 1) t.cadena = 'signo';
+        else t.cadena = 'rota';
+        t.difCadena = d;
+      }
+    });
+  });
+  return porCuenta;
+}
+
+/* Cruce Trello ↔ Sheet para una cuenta.
+   filas: [{fecha:{d,m,y}, monto, usd, idx, ...}] del Sheet para esa cuenta
+   Devuelve las líneas de Trello sin pareja y las filas del Sheet sin pareja. */
+function cruzar(tarjetas, filas, margen){
+  margen = margen ?? 5;
+  const usadas = new Set();
+  const hoy = (()=>{ const t=new Date(); return {y:t.getFullYear(), m:t.getMonth()+1, d:t.getDate()}; })();
+  const faltanEnSheet = [];
+  tarjetas.forEach(t=>{
+    if(!t.fecha) return;
+    const desde = sumarDias(t.fecha, -margen);
+    const hasta = sumarDias(t.next && t.next.fecha ? t.next.fecha : hoy, margen);
+    t.lineas.forEach(l=>{
+      l.match = null;
+      if(!l.monto || l.ilegible) return;
+      const ref = l.fechaLinea || t.fecha;
+      let mejor=null, mejorD=1e9;
+      filas.forEach(f=>{
+        if(usadas.has(f.idx) || !!f.usd !== !!l.usd) return;
+        if(Math.abs(f.monto - l.monto) >= 1) return;
+        if(!f.fecha || ser(f.fecha) < ser(desde) || ser(f.fecha) > ser(hasta)) return;
+        const dd = Math.abs(diasEntre(ref, f.fecha));
+        if(dd < mejorD){ mejor=f; mejorD=dd; }
+      });
+      if(mejor){ usadas.add(mejor.idx); l.match = mejor; }
+      else faltanEnSheet.push({tarjeta:t, linea:l});
+    });
+  });
+  const primera = tarjetas.find(t=>t.fecha);
+  const desdeSheet = primera ? sumarDias(primera.fecha, margen) : null;
+  const faltanEnTrello = desdeSheet
+    ? filas.filter(f=>!usadas.has(f.idx) && f.fecha && ser(f.fecha) >= ser(desdeSheet) && f.monto)
+    : [];
+  return {faltanEnSheet, faltanEnTrello, emparejadas: usadas.size};
+}
+
+/* Pagos a las chicas de limpieza: líneas "Transferencia <Nombre>" que no son cuentas internas */
+function pagosLimpieza(porCuenta, internas){
+  const out = [];
+  const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').trim();
+  const intN = internas.map(norm);
+  Object.values(porCuenta).flat().forEach(t=>{
+    t.lineas.forEach(l=>{
+      if(l.monto >= 0 || l.usd) return;
+      const m = l.texto.match(/^trans?ferencia\s*[-–]?\s*([a-záéíóúñ]+(?:\s+[a-z]\b\.?)?)/i);
+      if(!m) return;
+      const nom = norm(m[1]).replace(/\.$/,'');
+      const pri = nom.split(/\s+/)[0];
+      if(intN.some(x=> x===nom || x.split(/\s+/).includes(pri) || x.replace(/^mp\s+/,'')===pri)) return;
+      if(/^(mp|usd|efectivo|cadete|vero|kari|karina|tamy|tamara|nico|dana|brico)$/.test(pri)) return;
+      const f = l.fechaLinea || t.fecha;
+      out.push({nombre: nom, primer: pri, monto: -l.monto, fecha: f, tarjeta: t, linea: l});
+    });
+  });
+  return out;
+}
+
+
+</script>
+<script>
 /* ================= CONFIG ================= */
-const DEF = { id:'1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw', tab:'$$$', pass:'rent2888' };
+const DEF = {
+  id:'1dBQzIqkRXzRVreJxecQT0XD1jslrBRI0PcCXZT7huRw', tab:'$$$', pass:'rent2888',
+  tlist:'64d92b32e944128a8f27e659',
+  map:{ vero:'Vero Rent', kari:'Karina', karina:'Karina', nico:'Mp Nico', tamara:'Tamara', tamy:'Tamara', cadete:'Cadete' },
+  oficiales:['Mp Nico','Mp Dana','Mp Brico','Tamara','Efectivo','USD','Karina','Vero Rent','Cadete'],
+  margen:5,
+};
+const LS = (k,d)=>{ try{ const v=localStorage.getItem(k); return v==null?d:v; }catch(e){ return d; } };
+const LSset = (k,v)=>{ try{ localStorage.setItem(k,v); }catch(e){} };
 const cfg = {
-  get id(){ return localStorage.getItem('r28s_id') || DEF.id },
-  get tab(){ return localStorage.getItem('r28s_tab') || DEF.tab },
-  get pass(){ return localStorage.getItem('r28s_pw') || DEF.pass },
+  get id(){ return LS('r28s_id',DEF.id) }, get tab(){ return LS('r28s_tab',DEF.tab) }, get pass(){ return LS('r28s_pw',DEF.pass) },
+  get tkey(){ return LS('r28s_tkey','') }, get ttok(){ return LS('r28s_ttok','') }, get tlist(){ return LS('r28s_tlist',DEF.tlist) },
+  get lurl(){ return LS('r28s_lurl','').replace(/\/+$/,'') }, get ltok(){ return LS('r28s_ltok','') },
+  get map(){ try{ return JSON.parse(LS('r28s_map','')) }catch(e){ return DEF.map } },
+  get oficiales(){ const v=LS('r28s_ofi',''); return v ? v.split('\n').map(s=>s.trim()).filter(Boolean) : DEF.oficiales },
+  get margen(){ const v=+LS('r28s_mg',DEF.margen); return isFinite(v)?v:DEF.margen },
 };
 function openCfg(){
-  document.getElementById('cfgId').value = cfg.id;
-  document.getElementById('cfgTab').value = cfg.tab;
+  const s=(i,v)=>document.getElementById(i).value=v;
+  s('cfgId',cfg.id); s('cfgTab',cfg.tab); s('cfgTk',cfg.tkey); s('cfgTt',cfg.ttok); s('cfgTl',cfg.tlist);
+  s('cfgLu',cfg.lurl); s('cfgLt',cfg.ltok); s('cfgMap',JSON.stringify(cfg.map,null,1)); s('cfgOfi',cfg.oficiales.join('\n')); s('cfgMg',cfg.margen);
   document.getElementById('cfgBox').style.display='flex';
 }
 function closeCfg(){ document.getElementById('cfgBox').style.display='none'; }
 function saveCfg(){
-  localStorage.setItem('r28s_id', document.getElementById('cfgId').value.trim());
-  localStorage.setItem('r28s_tab', document.getElementById('cfgTab').value.trim());
+  const g=i=>document.getElementById(i).value.trim();
+  try{ JSON.parse(g('cfgMap')||'{}'); }catch(e){ alertaCfg('El mapeo de cuentas no es un JSON válido'); return; }
+  LSset('r28s_id',g('cfgId')); LSset('r28s_tab',g('cfgTab')); LSset('r28s_tkey',g('cfgTk')); LSset('r28s_ttok',g('cfgTt'));
+  LSset('r28s_tlist',g('cfgTl')); LSset('r28s_lurl',g('cfgLu')); LSset('r28s_ltok',g('cfgLt'));
+  LSset('r28s_map',g('cfgMap')); LSset('r28s_ofi',g('cfgOfi')); LSset('r28s_mg',g('cfgMg'));
   closeCfg(); loadData();
 }
+function alertaCfg(t){ const h=document.querySelector('#cfgBox .hint'); h.textContent='⚠ '+t; h.style.color='var(--neg)'; }
+
 /* ================= LOGIN ================= */
 function doLogin(){
-  if(document.getElementById('pw').value === cfg.pass){
-    sessionStorage.setItem('r28s_auth','1'); showApp();
-  } else { document.getElementById('loginErr').style.display='block'; }
+  if(document.getElementById('pw').value === cfg.pass){ try{sessionStorage.setItem('r28s_auth','1')}catch(e){} showApp(); }
+  else document.getElementById('loginErr').style.display='block';
 }
 function showApp(){
   document.getElementById('login').style.display='none';
   document.getElementById('app').style.display='block';
-  loadData();
-  startAutoRefresh();
+  loadData(); startAutoRefresh();
 }
 const AUTO_MS = 5*60*1000;
 let autoTimer=null, lastLoad=0;
 function startAutoRefresh(){
   if(autoTimer) clearInterval(autoTimer);
   autoTimer = setInterval(()=>{ if(!document.hidden) loadData(); }, AUTO_MS);
-  document.addEventListener('visibilitychange', ()=>{
-    if(!document.hidden && Date.now()-lastLoad > 60000) loadData();
-  });
+  document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && Date.now()-lastLoad > 60000) loadData(); });
 }
-if(sessionStorage.getItem('r28s_auth')==='1'){ window.addEventListener('DOMContentLoaded',showApp); }
-else { window.addEventListener('DOMContentLoaded',()=>document.getElementById('pw').focus()); }
+let _auth=false; try{ _auth = sessionStorage.getItem('r28s_auth')==='1'; }catch(e){}
+window.addEventListener('DOMContentLoaded', _auth ? showApp : ()=>document.getElementById('pw').focus());
 
-/* ================= HELPERS (idénticos al dashboard principal, para no desviar números) ================= */
+/* ================= HELPERS (los mismos del dashboard principal) ================= */
 function pn(v){
   if(v==null) return 0;
   let s = String(v).trim();
@@ -233,6 +513,7 @@ function pn(v){
   return isFinite(n) ? n : 0;
 }
 function fmt(n){
+  if(n==null || !isFinite(n)) return '—';
   const neg = n<0; n = Math.abs(n);
   const s = n.toLocaleString('es-AR',{minimumFractionDigits:0, maximumFractionDigits:0});
   return (neg && s!=='0' ? '-' : '') + s;
@@ -241,15 +522,8 @@ function parseCSV(text){
   const rows=[]; let row=[], cell='', q=false;
   for(let i=0;i<text.length;i++){
     const c=text[i];
-    if(q){
-      if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; }
-      else cell+=c;
-    } else {
-      if(c==='"') q=true;
-      else if(c===','){ row.push(cell); cell=''; }
-      else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; }
-      else if(c!=='\r') cell+=c;
-    }
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else q=false; } else cell+=c; }
+    else { if(c==='"') q=true; else if(c===','){ row.push(cell); cell=''; } else if(c==='\n'){ row.push(cell); rows.push(row); row=[]; cell=''; } else if(c!=='\r') cell+=c; }
   }
   if(cell!=='' || row.length){ row.push(cell); rows.push(row); }
   return rows;
@@ -260,285 +534,496 @@ function parseFecha(s){
   let y = +m[3]; if(y<100) y += 2000;
   return { d:+m[1], m:+m[2], y };
 }
-function serial(f){ return f ? f.y*10000+f.m*100+f.d : 0; }
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,' ').trim();
+const MESES = ['','ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const sim = usd => usd ? 'u$s' : '$';
+const lnk = t => t && t.url ? `<a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.nombre)}</a>` : esc(t ? t.nombre : '');
 
-/* ================= DATA ================= */
-let ROWS = [];       // todas las filas con "Donde $?" cargado
-let CUENTAS = {};     // nombre de cuenta -> {ingA,ingU,egrA,egrU,comA,comU,rows:[]}
-let loading = false;
+/* ================= DATOS ================= */
+let ROWS=[], CUENTAS={}, TRELLO=null, TRELLO_ERR=null, LIMP=null, LIMP_ERR=null, SHEET_ERR=null;
+let CRUCE={}, AVISOS=null, VARIANTES={}, loading=false;
 
-async function loadData(){
-  if(loading) return;
-  loading = true;
-  const st = document.getElementById('status');
-  if(!ROWS.length){
-    st.style.display='block'; st.textContent='Cargando datos del Sheet…';
-    document.getElementById('content').style.display='none';
-  } else {
-    document.getElementById('upd').textContent = '⏳ Actualizando…';
+async function cargarSheet(){
+  const url = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:csv&t=${Date.now()}&sheet=${encodeURIComponent(cfg.tab)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('HTTP '+res.status+' — no se pudo leer la pestaña "'+cfg.tab+'"');
+  const raw = parseCSV(await res.text());
+  if(raw.length<2) throw new Error('La pestaña "'+cfg.tab+'" está vacía');
+  let hi = 0;
+  for(let i=0;i<Math.min(5,raw.length);i++){
+    const c = raw[i].map(x=>String(x).trim());
+    if(c.includes('mes/ano') && c.includes('Departamento')){ hi=i; break; }
   }
-  try{
-    const base = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:csv&t=${Date.now()}&sheet=`;
-    const res = await fetch(base+encodeURIComponent(cfg.tab));
-    if(!res.ok) throw new Error('HTTP '+res.status+' — no se pudo leer la pestaña "'+cfg.tab+'"');
-    const raw = parseCSV(await res.text());
-    if(raw.length<2) throw new Error('La pestaña "'+cfg.tab+'" está vacía');
-
-    let hi = 0;
-    for(let i=0;i<Math.min(5,raw.length);i++){
-      const c = raw[i].map(x=>String(x).trim());
-      if(c.includes('mes/ano') && c.includes('Departamento')){ hi=i; break; }
-    }
-    const H = raw[hi].map(h=>String(h).trim());
-    const ix = {}; H.forEach((h,i)=>{ if(!(h in ix)) ix[h]=i; });
-    const g = (r,name)=> (ix[name]!=null && r[ix[name]]!=null) ? String(r[ix[name]]).trim() : '';
-
-    ROWS = [];
-    for(let i=hi+1;i<raw.length;i++){
-      const r = raw[i];
-      if(!r || r.every(c=>!String(c).trim())) continue;
-
-      const donde = g(r,'Donde $?');
-      const ing  = pn(g(r,'Ingresos carga'));
-      const egrRaw = pn(g(r,'Egresos'));
-      const com = pn(g(r,'Comision BK'));
-      if(!donde && ing===0 && egrRaw===0 && com===0) continue; // fila sin nada relevante para cuentas
-
-      const monedaRaw = g(r,'Moneda').toUpperCase();
-      const isUSD = monedaRaw.includes('U');
-
-      // SIN conversión de moneda: cada movimiento suma solo a la columna de su
-      // propia moneda (col L). Nada de dolarizar/pesificar vía MEP acá — eso
-      // generaba un saldo "fantasma" en la moneda que la cuenta nunca usó.
-      const ingA = isUSD ? 0 : ing;
-      const ingU = isUSD ? ing : 0;
-      const egrA = isUSD ? 0 : egrRaw;
-      const egrU = isUSD ? egrRaw : 0;
-      const comA = isUSD ? 0 : com;
-      const comU = isUSD ? com : 0;
-
-      const concepto = g(r,'Concepto Egresos') || (egrRaw!==0 ? (g(r,'Concepto Ingresos')||'') : (g(r,'Concepto Ingresos')||''));
-      const detalleTxt = g(r,'Detalle');
-
-      ROWS.push({
-        fecha: g(r,'Fecha'), dep: g(r,'Departamento'), hue: g(r,'Huésped'),
-        concepto, detalleTxt,
-        donde: donde || '(sin cuenta)',
-        moneda: isUSD?'USD':'ARS',
-        ing, ingA, ingU, egrOrig: egrRaw, egrA, egrU, com, comA, comU,
-      });
-    }
-
-    CUENTAS = {};
-    for(const r of ROWS){
-      const c = CUENTAS[r.donde] = CUENTAS[r.donde] || {ingA:0,ingU:0,egrA:0,egrU:0,comA:0,comU:0,rows:[]};
-      c.ingA += r.ingA; c.ingU += r.ingU; c.egrA += r.egrA; c.egrU += r.egrU;
-      c.comA += r.comA; c.comU += r.comU; c.rows.push(r);
-    }
-
-    document.getElementById('upd').textContent = ROWS.length+' movimientos · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
-    st.style.display='none';
-    document.getElementById('content').style.display='block';
-    buildSelector();
-    render();
-  }catch(e){
-    st.style.display='block';
-    st.textContent = '⚠ '+e.message;
-  }
-  lastLoad = Date.now();
-  loading = false;
-}
-
-/* ================= FILTRO DE CUENTAS (persistente) ================= */
-// se guardan las OCULTAS, no las visibles: así una cuenta nueva en el Sheet
-// aparece sola, sin que Maria tenga que ir a tildarla a mano cada vez.
-let hidden = new Set(JSON.parse(localStorage.getItem('r28s_hidden')||'[]'));
-function saveHidden(){ localStorage.setItem('r28s_hidden', JSON.stringify([...hidden])); }
-function cuentasVisibles(){ return Object.keys(CUENTAS).filter(c=>!hidden.has(c)); }
-
-function buildSelector(){
-  document.getElementById('msBtnLabel') || null; // noop guard
-  renderMsList('');
-  updateMsBtn();
-}
-function updateMsBtn(){
-  const total = Object.keys(CUENTAS).length, vis = cuentasVisibles().length;
-  document.querySelector('#msCuentas .msBtn').textContent = `${vis}/${total} cuentas`;
-}
-function renderMsList(filterTxt){
-  const cuentas = Object.keys(CUENTAS).sort((a,b)=>a.localeCompare(b,'es'));
-  const f = filterTxt.trim().toLowerCase();
-  document.getElementById('msList').innerHTML = cuentas
-    .filter(c=>!f || c.toLowerCase().includes(f))
-    .map(c=>`<label><input type="checkbox" ${hidden.has(c)?'':'checked'} onchange="toggleCuenta('${c.replace(/'/g,"\\'")}',this.checked)">${c} <span style="color:var(--muted);margin-left:auto">(${CUENTAS[c].rows.length})</span></label>`)
-    .join('');
-}
-function filterMsList(v){ renderMsList(v); }
-function toggleCuenta(donde, visible){
-  if(visible) hidden.delete(donde); else hidden.add(donde);
-  saveHidden(); updateMsBtn(); render();
-}
-function setAllCuentas(visible){
-  if(visible) hidden = new Set(); else hidden = new Set(Object.keys(CUENTAS));
-  saveHidden(); renderMsList(''); updateMsBtn(); render();
-}
-function toggleMsPanel(){ document.getElementById('msCuentas').classList.toggle('open'); }
-document.addEventListener('click',e=>{ if(!e.target.closest('.ms')) document.querySelectorAll('.ms.open').forEach(m=>m.classList.remove('open')); });
-
-const sortState = { resumen:{key:'saldo',asc:false}, detalle:{key:'fecha',asc:false} };
-function cmp(a,b,key,asc){
-  let x=a[key], y=b[key];
-  if(key==='fecha'){ const fa=parseFecha(x),fb=parseFecha(y); x=fa?fa.y*10000+fa.m*100+fa.d:0; y=fb?fb.y*10000+fb.m*100+fb.d:0; }
-  if(typeof x==='string'){ x=x.toLowerCase(); y=String(y).toLowerCase(); }
-  return (x<y?-1:x>y?1:0)*(asc?1:-1);
-}
-function sortTable(view,key){
-  const s = sortState[view];
-  if(s.key===key) s.asc=!s.asc; else { s.key=key; s.asc=false; }
-  render();
-}
-
-let lastFiltered = {resumen:[], detalle:[]};
-let currentTab = 'con';
-
-function setTab(t){
-  currentTab = t;
-  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
-  document.getElementById('pane-con').style.display = t==='con' ? 'block':'none';
-  document.getElementById('pane-mov').style.display = t==='mov' ? 'block':'none';
-  render();
-}
-function irACuenta(donde){
-  setTab('mov');
-  document.getElementById('selMov').value = donde;
-  renderMov();
-}
-
-function render(){
-  if(!ROWS.length) return;
-  if(currentTab==='con'){ renderTopTodas(); renderResumen(); }
-  else { buildSelMov(); renderMov(); }
-}
-
-function renderTopTodas(){
-  let totA=0,totU=0;
-  cuentasVisibles().forEach(donde=>{ const c=CUENTAS[donde]; totA+=c.ingA+c.egrA; totU+=c.ingU+c.egrU; });
-  document.getElementById('kTop').innerHTML = `
-    <div class="kpi"><div class="t">Saldo total $</div><div class="v ${totA<0?'negv':'pos'}">$ ${fmt(totA)}</div></div>
-    <div class="kpi"><div class="t">Saldo total u$s</div><div class="v gold">u$s ${fmt(totU)}</div></div>
-    <div class="kpi"><div class="t">Cuentas visibles</div><div class="v">${cuentasVisibles().length} <span style="font-size:13px;color:var(--muted)">/ ${Object.keys(CUENTAS).length}</span></div></div>`;
-}
-
-// Una fila por cuenta y por moneda REALMENTE usada (nada de filas en 0 en la moneda
-// que esa cuenta nunca tocó). La gran mayoría de las cuentas van a tener 1 sola fila.
-function filasResumen(){
+  const H = raw[hi].map(h=>String(h).trim());
+  const ix = {}; H.forEach((h,i)=>{ if(!(h in ix)) ix[h]=i; });
+  const g = (r,name)=> (ix[name]!=null && r[ix[name]]!=null) ? String(r[ix[name]]).trim() : '';
   const out = [];
-  cuentasVisibles().forEach(donde=>{
-    const c = CUENTAS[donde];
-    const hayARS = c.rows.some(r=>r.moneda==='ARS');
-    const hayUSD = c.rows.some(r=>r.moneda==='USD');
-    if(hayARS) out.push({donde, moneda:'$', simbolo:'$', ing:c.ingA, egr:c.egrA, saldo:c.ingA+c.egrA, n:c.rows.filter(r=>r.moneda==='ARS').length});
-    if(hayUSD) out.push({donde, moneda:'u$s', simbolo:'u$s', ing:c.ingU, egr:c.egrU, saldo:c.ingU+c.egrU, n:c.rows.filter(r=>r.moneda==='USD').length});
-  });
+  for(let i=hi+1;i<raw.length;i++){
+    const r = raw[i];
+    if(!r || r.every(c=>!String(c).trim())) continue;
+    const donde = g(r,'Donde $?');
+    const ing = pn(g(r,'Ingresos carga')), egr = pn(g(r,'Egresos')), com = pn(g(r,'Comision BK'));
+    if(!donde && ing===0 && egr===0 && com===0) continue;
+    const monedaRaw = g(r,'Moneda');
+    const usd = monedaRaw.toUpperCase().includes('U');
+    out.push({
+      idx: out.length, filaSheet: i+1,
+      fechaTxt: g(r,'Fecha'), fecha: parseFecha(g(r,'Fecha')),
+      dep: g(r,'Departamento'), hue: g(r,'Huésped'), detalle: g(r,'Detalle'),
+      concepto: g(r,'Concepto Egresos') || g(r,'Concepto Ingresos') || '',
+      cptEgr: g(r,'Concepto Egresos'),
+      donde: donde || '(sin cuenta)', monedaRaw, usd,
+      ing, egr, com, monto: ing+egr,
+    });
+  }
   return out;
 }
 
-function renderResumen(){
-  const s = sortState.resumen;
-  let rows = filasResumen();
-  rows = [...rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
-  lastFiltered.resumen = rows;
-  document.getElementById('tResumen').innerHTML = `<table>
-    <thead><tr>
-      <th onclick="sortTable('resumen','donde')">Cuenta</th>
-      <th onclick="sortTable('resumen','moneda')">Moneda</th>
-      <th class="num" onclick="sortTable('resumen','ing')">Ingresos</th>
-      <th class="num" onclick="sortTable('resumen','egr')">Egresos</th>
-      <th class="num" onclick="sortTable('resumen','saldo')">Saldo</th>
-      <th class="num" onclick="sortTable('resumen','n')">Mov.</th>
-    </tr></thead>
-    <tbody>${rows.map(r=>`<tr class="clickable" onclick="irACuenta('${r.donde.replace(/'/g,"\\'")}')">
-      <td><b>${r.donde}</b></td>
-      <td><span class="pill">${r.moneda}</span></td>
-      <td class="num">${r.simbolo} ${fmt(r.ing)}</td>
-      <td class="num">${r.simbolo} ${fmt(r.egr)}</td>
-      <td class="num ${r.saldo<0?'negv':'pos'}"><b>${r.simbolo} ${fmt(r.saldo)}</b></td>
-      <td class="num">${r.n}</td>
-    </tr>`).join('')}</tbody>
+async function cargarTrello(){
+  if(!cfg.tkey || !cfg.ttok) return null;
+  const url = `https://api.trello.com/1/lists/${encodeURIComponent(cfg.tlist)}/cards?fields=name,desc,labels,dateLastActivity,shortUrl,pos&key=${encodeURIComponent(cfg.tkey)}&token=${encodeURIComponent(cfg.ttok)}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error('Trello respondió '+res.status+(res.status===401?' (key o token inválidos)':''));
+  return analizarTarjetas(await res.json());
+}
+
+async function cargarLimpiezas(){
+  if(!cfg.lurl || !cfg.ltok) return null;
+  const res = await fetch(`${cfg.lurl}/api/export/pagos?token=${encodeURIComponent(cfg.ltok)}&t=${Date.now()}`);
+  if(!res.ok) throw new Error('La app de limpiezas respondió '+res.status+(res.status===401?' (token inválido)':res.status===404?' (falta el endpoint /api/export/pagos)':''));
+  const j = await res.json();
+  return j.map(x=>({
+    empleada: x.empleada, inicio: parseISO(x.inicio), fin: parseISO(x.fin),
+    pago: +x.pago_semana||0, jornales: +x.jornales||0, gastos: (+x.gastos_enc||0),
+    gastosAdm: (+x.gastos_admin||0), saldoIni: +x.saldo_inicial||0, cerrada: !!x.admin_cerrada,
+  }));
+}
+function parseISO(s){ const m=String(s||'').match(/(\d{4})-(\d{2})-(\d{2})/); return m?{y:+m[1],m:+m[2],d:+m[3]}:null; }
+
+async function loadData(){
+  if(loading) return; loading = true;
+  const st = document.getElementById('status');
+  if(!ROWS.length){ st.style.display='block'; st.textContent='Cargando Sheet, Trello y app de limpiezas…'; document.getElementById('content').style.display='none'; }
+  else document.getElementById('upd').textContent='⏳ Actualizando…';
+  const [rS, rT, rL] = await Promise.allSettled([cargarSheet(), cargarTrello(), cargarLimpiezas()]);
+  if(rS.status==='fulfilled'){ ROWS = rS.value; SHEET_ERR=null; } else SHEET_ERR = rS.reason.message;
+  if(rT.status==='fulfilled'){ TRELLO = rT.value; TRELLO_ERR=null; } else TRELLO_ERR = rT.reason.message;
+  if(rL.status==='fulfilled'){ LIMP = rL.value; LIMP_ERR=null; } else LIMP_ERR = rL.reason.message;
+  lastLoad = Date.now(); loading = false;
+  if(!ROWS.length){
+    st.style.display='block';
+    st.innerHTML = '⚠ No se pudo leer el Sheet.<br><span style="font-size:12px">'+esc(SHEET_ERR||'')+' — Verificá en ⚙ el nombre de la pestaña y que el Sheet esté compartido como "cualquiera con el enlace".</span>';
+    return;
+  }
+  calcular();
+  st.style.display='none';
+  document.getElementById('content').style.display='block';
+  document.getElementById('upd').textContent = ROWS.length+' movimientos · '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})
+    + (SHEET_ERR?' · ⚠ Sheet sin actualizar':'');
+  renderFuentes(); buildSelects(); render();
+}
+
+/* ================= CÁLCULOS ================= */
+function cuentaSheet(alias){
+  const m = cfg.map; const n = m[alias] || m[norm(alias)];
+  if(!n) return null;
+  const k = Object.keys(CUENTAS).find(c=>norm(c)===norm(n));
+  return k || n;
+}
+function calcular(){
+  CUENTAS = {}; VARIANTES = {};
+  // mismo nombre escrito distinto ("Vero rent ", "vero Rent") → una sola cuenta, con aviso
+  const canon = {};
+  cfg.oficiales.forEach(o=>canon[norm(o)] = o);
+  ROWS.forEach(r=>{
+    if(r.donde==='(sin cuenta)') return;
+    const k = norm(r.donde);
+    if(!canon[k]) canon[k] = r.donde.trim();
+    if(r.donde !== canon[k]){ const v = VARIANTES[r.donde] = VARIANTES[r.donde]||{a:canon[k], n:0}; v.n++; }
+    r.donde = canon[k];
+  });
+  ROWS.forEach(r=>{
+    const c = CUENTAS[r.donde] = CUENTAS[r.donde] || {rows:[], saldoA:0, saldoU:0, hayA:false, hayU:false};
+    c.rows.push(r);
+    if(r.usd){ c.saldoU += r.monto; c.hayU=true; } else { c.saldoA += r.monto; c.hayA=true; }
+  });
+  CRUCE = {};
+  if(TRELLO){
+    Object.entries(TRELLO).forEach(([alias, tarjetas])=>{
+      const cta = cuentaSheet(alias);
+      const filas = cta && CUENTAS[cta] ? CUENTAS[cta].rows : [];
+      CRUCE[alias] = { cuenta: cta, existe: !!(cta && CUENTAS[cta]), tarjetas, ...cruzar(tarjetas, filas, cfg.margen) };
+    });
+  }
+  AVISOS = armarAvisos();
+}
+
+const hoyF = (()=>{ const t=new Date(); return {y:t.getFullYear(), m:t.getMonth()+1, d:t.getDate()}; })();
+
+function armarAvisos(){
+  const A = { rojo:[], oro:[], info:[] };
+  const add = (nivel, clave, titulo, items, nota) => { if(items.length) A[nivel].push({clave, titulo, items, nota}); };
+
+  /* --- Trello vs Sheet --- */
+  if(TRELLO){
+    const difSaldo=[], noCierra=[], cadena=[], signo=[], faltaS=[], faltaT=[], sinMapa=[], numMal=[], sinSigno=[], noVerif=[];
+    Object.entries(CRUCE).forEach(([alias, x])=>{
+      const ult = [...x.tarjetas].reverse().find(t=>t.tot!=null);
+      if(!x.existe){ sinMapa.push(`<b>${esc(alias)}</b> <span>· ${x.tarjetas.length} tarjetas; ${x.cuenta?'en el Sheet no hay ninguna fila con la cuenta "'+esc(x.cuenta)+'"':'no sé a qué cuenta del Sheet corresponde (agregalo en ⚙ → Cuentas)'}</span>`); }
+      else if(ult){
+        const sS = CUENTAS[x.cuenta].saldoA, d = sS - ult.tot;
+        if(Math.abs(d) >= 1) difSaldo.push(`<b>${esc(x.cuenta)}</b> — Sheet $ ${fmt(sS)} · Trello $ ${fmt(ult.tot)} <span>(${lnk(ult)})</span> → <b class="negv">diferencia $ ${fmt(d)}</b>`);
+      }
+      x.tarjetas.forEach(t=>{
+        if(t.cierra===false){
+          const malas = t.lineas.filter(l=>l.avisos.some(a=>a.startsWith('número')));
+          const alt = (t.cadena==='signo' && t.prev && t.prev.tot!=null && Math.abs(t.prev.tot + t.sumA - t.tot)<1);
+          if(!alt) noCierra.push(`${lnk(t)} — Inicial $ ${fmt(t.ini)} + movimientos $ ${fmt(t.sumA)} = <b>$ ${fmt(t.calc)}</b>, pero dice Total <b>$ ${fmt(t.tot)}</b>
+            <span>· diferencia $ ${fmt(t.tot - t.calc)}${malas.length?' — seguramente por el número mal escrito ('+malas.map(l=>esc(l.texto)).join(', ')+')':''}</span>`);
+        }
+        if(t.cierraU===false) noCierra.push(`${lnk(t)} (u$s) — Inicial u$s ${fmt(t.iniU)} + movimientos u$s ${fmt(t.sumU)} = u$s ${fmt(t.calcU)}, dice u$s ${fmt(t.totU)}`);
+        if(t.cadena==='rota') cadena.push(`${lnk(t)} arranca en <b>$ ${fmt(t.ini)}</b>, pero ${lnk(t.prev)} cerró en <b>$ ${fmt(t.prev.tot)}</b> <span>· se ${t.difCadena>0?'agregaron':'perdieron'} $ ${fmt(Math.abs(t.difCadena))} entre una tarjeta y la otra</span>`);
+        if(t.cadena==='signo') signo.push(`${lnk(t)} — Inicial $ ${fmt(t.ini)}, la anterior cerró en $ ${fmt(t.prev.tot)} <span>· el Inicial tiene el signo cambiado${(Math.abs(t.prev.tot + t.sumA - t.tot)<1)?'; con el signo correcto la tarjeta cierra':''}</span>`);
+        t.lineas.forEach(l=>{
+          l.avisos.forEach(a=>{
+            if(a.startsWith('número')) numMal.push(`${lnk(t)} — "${esc(l.texto)}" <span>· ${esc(a)}</span>`);
+            else if(a.startsWith('sin signo')) sinSigno.push(`${lnk(t)} — $ ${fmt(Math.abs(l.monto))} "${esc(l.texto)}" <span>· ${esc(a)}</span>`);
+          });
+        });
+        if(t.labels.some(n=>/no verificad/i.test(n)) && t.fecha && diasEntre(t.fecha, hoyF) > 7)
+          noVerif.push(`${lnk(t)} <span>· hace ${diasEntre(t.fecha, hoyF)} días</span>`);
+      });
+      if(x.existe){
+        x.faltanEnSheet.forEach(({tarjeta:t, linea:l})=>faltaS.push(`<b>${esc(x.cuenta)}</b> · ${lnk(t)} — ${sim(l.usd)} ${fmt(l.monto)} "${esc(l.texto)}"`));
+        x.faltanEnTrello.forEach(f=>faltaT.push(`<b>${esc(x.cuenta)}</b> · ${esc(f.fechaTxt)} — ${sim(f.usd)} ${fmt(f.monto)} <span>· ${esc([f.concepto,f.dep,f.detalle||f.hue].filter(Boolean).join(' · '))} (fila ${f.filaSheet})</span>`));
+      }
+    });
+    add('rojo','saldo','El saldo del Sheet no coincide con el Total de la última tarjeta', difSaldo);
+    add('rojo','cierra','Tarjetas que no cierran (Inicial + movimientos ≠ Total)', noCierra);
+    add('rojo','cadena','Cadena rota: el Inicial no es el Total de la tarjeta anterior', cadena);
+    add('rojo','faltaS','Está en Trello pero no lo encuentro en el Sheet', faltaS, 'Busqué en la misma cuenta, mismo monto, entre la fecha de la tarjeta y la siguiente (± '+cfg.margen+' días).');
+    add('rojo','faltaT','Está en el Sheet pero no en ninguna tarjeta de Trello', faltaT, 'Solo miro desde la primera tarjeta abierta de cada cuenta. Los movimientos de los últimos días pueden no estar todavía en Trello.');
+    add('oro','signo','Inicial con el signo cambiado', signo);
+    add('oro','num','Números mal escritos en Trello', numMal);
+    add('oro','sinsig','Líneas de Trello sin + ni −', sinSigno);
+    add('oro','noverif','Tarjetas con la etiqueta "CARGA - NO VERIFICADA" hace más de una semana', noVerif);
+    add('oro','mapa','Cuentas de Trello que no encuentro en el Sheet', sinMapa);
+  }
+
+  /* --- controles del Sheet solo --- */
+  const ofi = cfg.oficiales.map(norm);
+  const fuera = Object.entries(CUENTAS).filter(([c])=>c!=='(sin cuenta)' && !ofi.includes(norm(c)))
+    .sort((a,b)=>b[1].rows.length-a[1].rows.length)
+    .map(([c,x])=>`<b>${esc(c)}</b> <span>· ${x.rows.length} movimientos${parecida(c)?' — ¿no será "'+esc(parecida(c))+'"?':''}</span>`);
+  add('oro','variante','Mismo nombre de cuenta escrito distinto en "Donde $?" (las sumé juntas)',
+    Object.entries(VARIANTES).map(([v,x])=>`"${esc(v)}" → <b>${esc(x.a)}</b> <span>· ${x.n} ${x.n===1?'fila':'filas'}</span>`));
+  add('oro','fuera','Nombres de cuenta en "Donde $?" que no están en la lista oficial', fuera, 'Si alguno es una cuenta real, agregala a la lista en ⚙.');
+  const sinCta = (CUENTAS['(sin cuenta)']||{rows:[]}).rows.filter(r=>r.monto);
+  add('oro','sincta','Movimientos sin cuenta (col "Donde $?" vacía)', sinCta.map(r=>`${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.dep,r.detalle||r.hue].filter(Boolean).join(' · '))} (fila ${r.filaSheet})</span>`));
+  const sinMon = ROWS.filter(r=>r.monto && !r.monedaRaw && r.donde!=='(sin cuenta)');
+  add('oro','sinmon','Movimientos sin moneda (se tomaron como pesos)', sinMon.map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${fmt(r.monto)} <span>· ${esc(r.concepto||r.dep||'')} (fila ${r.filaSheet})</span>`));
+
+  // transferencias entre cuentas: cada salida tiene que tener su entrada en otra cuenta
+  const esTr = r => /transfer|trasfer/i.test(r.cptEgr||r.concepto||'');
+  const trs = ROWS.filter(r=>esTr(r) && r.monto && r.fecha && r.donde!=='(sin cuenta)');
+  const usadas = new Set(); const huerf = [];
+  trs.forEach(r=>{
+    if(usadas.has(r.idx)) return;
+    const par = trs.find(o=>o.idx!==r.idx && !usadas.has(o.idx) && o.donde!==r.donde && o.usd===r.usd
+      && Math.abs(o.monto + r.monto) < 1 && Math.abs(diasEntre(r.fecha,o.fecha)) <= cfg.margen);
+    if(par){ usadas.add(r.idx); usadas.add(par.idx); } else huerf.push(r);
+  });
+  // si casi ninguna transferencia tiene pareja, el Sheet carga un solo lado: no tiene sentido avisar
+  if(trs.length && usadas.size/trs.length >= 0.3){
+    const nombresInt = cfg.oficiales.map(norm);
+    const internas = huerf.filter(r=>nombresInt.some(n=>norm(r.detalle+' '+r.hue+' '+r.concepto).includes(n.replace(/^mp /,''))));
+    add('info','trs','Transferencias entre cuentas sin la contrapartida', internas.slice(-40).map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.detalle||r.hue].filter(Boolean).join(' · '))} — no hay un ${fmt(-r.monto)} en otra cuenta esos días</span>`));
+  }
+
+  /* --- limpiezas --- */
+  if(LIMP && TRELLO){
+    const L = analizarLimpiezas();
+    add('rojo','limp','Pagos a las chicas que no coinciden (app de limpiezas contra Trello)', L.difs, 'Total del período en que hay datos de las dos fuentes.');
+    add('oro','limpN','Transferencias a personas que no aparecen en la app de limpiezas', L.sinApp);
+  }
+  return A;
+}
+function parecida(c){
+  const n = norm(c);
+  return cfg.oficiales.find(o=>{ const m=norm(o); return m!==n && (m.includes(n)||n.includes(m)||m.replace(/^mp /,'')===n.replace(/^mp /,'')); });
+}
+
+/* ================= LIMPIEZAS ================= */
+function analizarLimpiezas(){
+  const pagos = pagosLimpieza(TRELLO, [...cfg.oficiales, ...Object.keys(cfg.map)]);
+  const desde = pagos.reduce((m,p)=> p.fecha && (!m || ser(p.fecha)<ser(m)) ? p.fecha : m, null);
+  const filas = {};   // nombre|mes
+  const key = (n,f)=> n+'|'+f.y+'-'+String(f.m).padStart(2,'0');
+  const pri = s => norm(s).split(' ')[0];
+  const nombresApp = new Set(LIMP.map(x=>pri(x.empleada)));
+  const nombreLindo = {};
+  LIMP.forEach(x=>{
+    // una semana se paga unos días después de terminar: arranco 10 días antes de la primera transferencia
+    if(!x.fin || (desde && ser(x.fin) < ser(sumarDias(desde,-10)))) return;
+    const n = pri(x.empleada); nombreLindo[n]=x.empleada;
+    const k = key(n,x.fin); const o = filas[k] = filas[k]||{n, f:{y:x.fin.y,m:x.fin.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
+    o.app += x.pago; o.jor += x.jornales; o.gas += x.gastos; o.sem++;
+  });
+  const sinApp = [];
+  pagos.forEach(p=>{
+    if(!p.fecha) return;
+    if(!nombresApp.has(p.primer)){ sinApp.push(`<b>${esc(p.nombre)}</b> — $ ${fmt(p.monto)} <span>· ${lnk(p.tarjeta)}</span>`); return; }
+    const k = key(p.primer,p.fecha); const o = filas[k] = filas[k]||{n:p.primer, f:{y:p.fecha.y,m:p.fecha.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
+    o.tr += p.monto; o.trDet.push(p);
+  });
+  const lista = Object.values(filas).sort((a,b)=> a.n.localeCompare(b.n) || (a.f.y*100+a.f.m)-(b.f.y*100+b.f.m));
+  const tot = {};
+  lista.forEach(o=>{ const t=tot[o.n]=tot[o.n]||{app:0,tr:0}; t.app+=o.app; t.tr+=o.tr; });
+  const difs = Object.entries(tot).filter(([n,t])=>Math.abs(t.app-t.tr)>=1)
+    .map(([n,t])=>`<b>${esc(nombreLindo[n]||n)}</b> — app $ ${fmt(t.app)} · Trello $ ${fmt(t.tr)} → <b class="negv">diferencia $ ${fmt(t.tr-t.app)}</b>`);
+  return {lista, tot, difs, sinApp, nombreLindo, desde};
+}
+
+/* ================= RENDER ================= */
+let currentTab='res';
+function setTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tabBtn').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
+  ['res','cta','tre','lim'].forEach(p=>document.getElementById('pane-'+p).style.display = p===t?'block':'none');
+  render();
+}
+function render(){
+  if(!ROWS.length) return;
+  if(currentTab==='res') renderRes();
+  else if(currentTab==='cta') renderCta();
+  else if(currentTab==='tre') renderTre();
+  else renderLim();
+}
+function renderFuentes(){
+  const f = (nom, estado, txt) => `<span class="fte ${estado}" title="${esc(txt)}"><i></i>${nom}${estado==='err'?' — '+esc(txt):estado==='off'?' — sin configurar':''}</span>`;
+  const nT = TRELLO ? Object.values(TRELLO).reduce((a,x)=>a+x.length,0) : 0;
+  document.getElementById('fuentes').innerHTML =
+    f('Sheet · '+ROWS.length+' mov.', SHEET_ERR?'err':'ok', SHEET_ERR||'') +
+    (TRELLO_ERR ? f('Trello','err',TRELLO_ERR) : TRELLO ? f('Trello · '+nT+' tarjetas','ok','') : f('Trello','off','')) +
+    (LIMP_ERR ? f('Limpiezas','err',LIMP_ERR) : LIMP ? f('Limpiezas · '+LIMP.length+' semanas','ok','') : f('Limpiezas','off',''));
+}
+function bloqueAvisos(A, id, filtro){
+  const grupos = [...A.rojo.map(g=>({...g,n:'r'})), ...A.oro.map(g=>({...g,n:'g'})), ...A.info.map(g=>({...g,n:'i'}))].filter(filtro||(()=>true));
+  const nR = grupos.filter(g=>g.n==='r').reduce((a,g)=>a+g.items.length,0);
+  const nG = grupos.filter(g=>g.n==='g').reduce((a,g)=>a+g.items.length,0);
+  if(!nR && !nG && !grupos.length) return `<div class="avi ok"><div class="debTop"><div><div class="debTit">Cosas para revisar</div><div class="debVal">Ninguna <small>todo cruza</small></div></div></div></div>`;
+  const CORTE = 15;
+  const det = grupos.map(g=>`
+    <div class="aviTit ${g.n==='r'?'r':g.n==='i'?'info':''}">${esc(g.titulo)} (${g.items.length})</div>
+    ${g.items.slice(0,CORTE).map(x=>`<div class="aviLin ${g.n==='i'?'info':''}">• ${x}</div>`).join('')}
+    ${g.items.length>CORTE?`<div class="aviLin"><span>…y ${g.items.length-CORTE} más</span></div>`:''}
+    ${g.nota?`<div class="aviLin"><span>${esc(g.nota)}</span></div>`:''}`).join('');
+  const chips = grupos.filter(g=>g.n!=='i').map(g=>`<span class="chip ${g.n}">${g.items.length} · ${esc(g.titulo.split(/[:(]/)[0].trim())}</span>`).join('');
+  return `<div class="avi ${nR?'rojo':''}" id="${id}">
+    <div class="debTop" onclick="document.getElementById('${id}').classList.toggle('on')">
+      <div><div class="debTit">Cosas para revisar</div>
+      <div class="debVal">${nR?nR+' <small>'+(nR===1?'diferencia de plata':'diferencias de plata')+'</small>':''}${nG?(nR?' · ':'')+'<span class="gold">'+nG+'</span> <small>de carga</small>':''}${!nR&&!nG?'Ninguna <small>todo cruza</small>':''}</div></div>
+      <button class="debVer">Ver el detalle ▾</button>
+    </div>
+    <div class="chips">${chips}</div>
+    <div class="debDet">${det}</div>
+  </div>`;
+}
+
+function filasResumen(){
+  const out=[];
+  const aliasDe = {};
+  Object.entries(CRUCE).forEach(([a,x])=>{ if(x.existe) aliasDe[x.cuenta]=a; });
+  Object.entries(CUENTAS).sort((a,b)=>a[0].localeCompare(b[0],'es')).forEach(([c,x])=>{
+    const a = aliasDe[c]; const cr = a ? CRUCE[a] : null;
+    const ult = cr ? [...cr.tarjetas].reverse().find(t=>t.tot!=null) : null;
+    const ultU = cr ? [...cr.tarjetas].reverse().find(t=>t.totU!=null) : null;
+    const sinCruzar = cr ? cr.faltanEnSheet.length + cr.faltanEnTrello.length : null;
+    if(x.hayA || !x.hayU) out.push({cuenta:c, usd:false, sheet:x.saldoA, trello: ult?ult.tot:null, tarjeta:ult, n:x.rows.filter(r=>!r.usd).length, sinCruzar});
+    if(x.hayU) out.push({cuenta:c, usd:true, sheet:x.saldoU, trello: ultU?ultU.totU:null, tarjeta:ultU, n:x.rows.filter(r=>r.usd).length, sinCruzar:null});
+  });
+  out.forEach(r=>{ r.dif = r.trello==null ? null : r.sheet - r.trello; });
+  return out;
+}
+let lastRes=[], lastDet=[], lastLim=[];
+function renderRes(){
+  const filas = filasResumen(); lastRes = filas;
+  const totA = filas.filter(r=>!r.usd).reduce((a,r)=>a+r.sheet,0);
+  const totU = filas.filter(r=>r.usd).reduce((a,r)=>a+r.sheet,0);
+  const conT = filas.filter(r=>r.trello!=null);
+  const okT = conT.filter(r=>Math.abs(r.dif)<1).length;
+  document.getElementById('kRes').innerHTML = `
+    <div class="kpi"><div class="t">Saldo total $ (Sheet)</div><div class="v ${totA<0?'negv':'pos'}">$ ${fmt(totA)}</div><div class="s">${Object.keys(CUENTAS).length} cuentas</div></div>
+    <div class="kpi"><div class="t">Saldo total u$s (Sheet)</div><div class="v gold">u$s ${fmt(totU)}</div></div>
+    <div class="kpi"><div class="t">Cuentas que cruzan con Trello</div><div class="v ${conT.length&&okT===conT.length?'pos':'negv'}">${TRELLO?okT+' <span style="font-size:14px;color:var(--muted)">/ '+conT.length+'</span>':'—'}</div><div class="s">${TRELLO?'el saldo del Sheet es igual al Total de la última tarjeta':'conectá Trello en ⚙'}</div></div>`;
+  document.getElementById('aviRes').innerHTML = bloqueAvisos(AVISOS,'aviBoxRes');
+  document.getElementById('tRes').innerHTML = `<table>
+    <thead><tr><th>Cuenta</th><th>Moneda</th><th class="num">Saldo Sheet</th><th>Última tarjeta</th><th class="num">Saldo Trello</th><th class="num">Diferencia</th><th class="num">Mov. sin cruzar</th><th class="num">Mov.</th></tr></thead>
+    <tbody>${filas.map(r=>`<tr class="clickable" onclick="irACuenta('${esc(r.cuenta).replace(/'/g,"\\'")}')">
+      <td><b>${esc(r.cuenta)}</b></td><td><span class="pill">${sim(r.usd)}</span></td>
+      <td class="num ${r.sheet<0?'negv':''}"><b>${sim(r.usd)} ${fmt(r.sheet)}</b></td>
+      <td>${r.tarjeta?`<span class="muted">${fstr(r.tarjeta.fecha)}</span>`:'<span class="muted">—</span>'}</td>
+      <td class="num">${r.trello==null?'<span class="muted">—</span>':sim(r.usd)+' '+fmt(r.trello)}</td>
+      <td class="num">${r.dif==null?'':Math.abs(r.dif)<1?'<span class="st ok">✓ cruza</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.dif)}</span>`}</td>
+      <td class="num">${r.sinCruzar==null?'':r.sinCruzar?`<span class="st g">${r.sinCruzar}</span>`:'<span class="st ok">0</span>'}</td>
+      <td class="num">${r.n}</td></tr>`).join('')}</tbody>
   </table>`;
 }
 
-function buildSelMov(){
-  const sel = document.getElementById('selMov');
-  const prev = sel.value;
-  const cuentas = cuentasVisibles().sort((a,b)=>a.localeCompare(b,'es'));
-  sel.innerHTML = cuentas.map(c=>`<option value="${c.replace(/"/g,'&quot;')}">${c}</option>`).join('');
-  sel.value = cuentas.includes(prev) ? prev : (cuentas[0]||'');
+function buildSelects(){
+  const s1 = document.getElementById('selCta'), p1 = s1.value;
+  const cs = Object.keys(CUENTAS).sort((a,b)=>a.localeCompare(b,'es'));
+  s1.innerHTML = cs.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  s1.value = cs.includes(p1) ? p1 : (cs.find(c=>Object.values(CRUCE).some(x=>x.cuenta===c)) || cs[0] || '');
+  const s2 = document.getElementById('selTre'), p2 = s2.value;
+  const as = TRELLO ? Object.keys(TRELLO).sort() : [];
+  s2.innerHTML = as.map(a=>`<option value="${esc(a)}">${esc(a[0].toUpperCase()+a.slice(1))}${CRUCE[a]&&CRUCE[a].existe?' → '+esc(CRUCE[a].cuenta):''}</option>`).join('');
+  s2.value = as.includes(p2) ? p2 : (as[0]||'');
+}
+function irACuenta(c){ setTab('cta'); document.getElementById('selCta').value = c; renderCta(); }
+function irATrello(a){ setTab('tre'); document.getElementById('selTre').value = a; renderTre(); }
+
+let chart=null;
+function renderCta(){
+  const c = document.getElementById('selCta').value; const x = CUENTAS[c];
+  if(!x){ document.getElementById('tCta').innerHTML=''; return; }
+  const alias = Object.keys(CRUCE).find(a=>CRUCE[a].cuenta===c && CRUCE[a].existe);
+  const cr = alias ? CRUCE[alias] : null;
+  const ult = cr ? [...cr.tarjetas].reverse().find(t=>t.tot!=null) : null;
+  const k = [];
+  if(x.hayA) k.push(`<div class="kpi"><div class="t">Saldo $ en el Sheet</div><div class="v ${x.saldoA<0?'negv':'pos'}">$ ${fmt(x.saldoA)}</div></div>`);
+  if(x.hayU) k.push(`<div class="kpi"><div class="t">Saldo u$s en el Sheet</div><div class="v gold">u$s ${fmt(x.saldoU)}</div></div>`);
+  if(ult){ const d=x.saldoA-ult.tot; k.push(`<div class="kpi"><div class="t">Trello · ${fstr(ult.fecha)}</div><div class="v">$ ${fmt(ult.tot)}</div><div class="s">${Math.abs(d)<1?'<span class="pos">✓ coincide con el Sheet</span>':'<span class="negv">diferencia $ '+fmt(d)+'</span>'} · <a href="#" onclick="irATrello('${esc(alias)}');return false">ver tarjetas</a></div></div>`); }
+  if(cr) k.push(`<div class="kpi"><div class="t">Movimientos cruzados</div><div class="v">${cr.emparejadas}</div><div class="s">${cr.faltanEnSheet.length} solo en Trello · ${cr.faltanEnTrello.length} solo en Sheet</div></div>`);
+  document.getElementById('kCta').innerHTML = k.join('');
+  document.getElementById('aviCta').innerHTML = cr ? bloqueAvisos(AVISOS,'aviBoxCta', g=>g.items.some(i=>i.includes(esc(c))||cr.tarjetas.some(t=>i.includes(esc(t.nombre))))) : '';
+  // filtro de avisos de esta cuenta: re-armamos los grupos solo con sus líneas
+  if(cr){
+    const A2 = {rojo:[],oro:[],info:[]};
+    ['rojo','oro','info'].forEach(n=>AVISOS[n].forEach(g=>{
+      const it = g.items.filter(i=>i.includes('<b>'+esc(c)+'</b>') || cr.tarjetas.some(t=>i.includes('>'+esc(t.nombre)+'<')));
+      if(it.length) A2[n].push({...g, items:it});
+    }));
+    document.getElementById('aviCta').innerHTML = bloqueAvisos(A2,'aviBoxCta');
+  }
+  // gráfico
+  const rows = x.rows.filter(r=>!r.usd && r.fecha).sort((a,b)=>ser(a.fecha)-ser(b.fecha));
+  const pts=[]; let acc=0;
+  rows.forEach(r=>{ acc+=r.monto; const t=Date.UTC(r.fecha.y,r.fecha.m-1,r.fecha.d); if(pts.length && pts[pts.length-1].x===t) pts[pts.length-1].y=acc; else pts.push({x:t,y:acc}); });
+  const ptsT = cr ? cr.tarjetas.filter(t=>t.tot!=null && t.next && t.next.fecha).map(t=>({x:Date.UTC(t.next.fecha.y,t.next.fecha.m-1,t.next.fecha.d)-864e5, y:t.tot, n:t.nombre})) : [];
+  if(ult) ptsT.push({x:Date.UTC(hoyF.y,hoyF.m-1,hoyF.d), y:ult.tot, n:ult.nombre+' (actual)'});
+  const desde = ptsT.length ? Math.min(...ptsT.map(p=>p.x)) - 20*864e5 : (pts.length? pts[Math.max(0,pts.length-60)].x : 0);
+  const ptsV = pts.filter(p=>p.x>=desde);
+  if(chart) chart.destroy();
+  if(window.Chart){
+    chart = new Chart(document.getElementById('chSaldo'), {
+      type:'line',
+      data:{ datasets:[
+        {label:'Sheet (acumulado)', data:ptsV, borderColor:'#CC1414', backgroundColor:'rgba(204,20,20,.08)', fill:true, stepped:true, pointRadius:0, borderWidth:2},
+        {label:'Trello (Total de cada tarjeta)', data:ptsT.filter(p=>p.x>=desde), type:'scatter', backgroundColor:'#d4af37', pointRadius:6, pointHoverRadius:8},
+      ]},
+      options:{ responsive:true, maintainAspectRatio:false, parsing:false,
+        scales:{ x:{type:'linear', ticks:{color:'#8a93a8', callback:v=>{const d=new Date(v); return d.getUTCDate()+'/'+(d.getUTCMonth()+1);}}, grid:{color:'#262d3f'}},
+                 y:{ticks:{color:'#8a93a8', callback:v=>'$ '+fmt(v)}, grid:{color:'#262d3f'}} },
+        plugins:{ legend:{labels:{color:'#e8eaf0'}}, tooltip:{callbacks:{
+          title:it=>{const d=new Date(it[0].raw.x); return d.getUTCDate()+'/'+(d.getUTCMonth()+1)+'/'+d.getUTCFullYear();},
+          label:it=>(it.raw.n?it.raw.n+': ':it.dataset.label+': ')+'$ '+fmt(it.raw.y)}}} }
+    });
+  }
+  // tabla de movimientos con marca de cruce
+  const enTrello = new Map();
+  if(cr) cr.tarjetas.forEach(t=>t.lineas.forEach(l=>{ if(l.match) enTrello.set(l.match.idx, t); }));
+  const desdeT = cr && cr.tarjetas.find(t=>t.fecha) ? cr.tarjetas.find(t=>t.fecha).fecha : null;
+  const lista = [...x.rows].sort((a,b)=>ser(b.fecha)-ser(a.fecha) || b.idx-a.idx); lastDet = lista;
+  document.getElementById('tCtaTit').textContent = `Movimientos del Sheet — ${c} (${lista.length})`;
+  document.getElementById('tCta').innerHTML = `<table>
+    <thead><tr><th>Fecha</th><th>Concepto</th><th>Departamento</th><th>Huésped / Detalle</th><th class="num">Monto</th>${cr?'<th>En Trello</th>':''}</tr></thead>
+    <tbody>${lista.slice(0,600).map(r=>{
+      const t = enTrello.get(r.idx);
+      const marca = !cr ? '' : t ? `<td><span class="st ok">✓</span> <span class="muted">${esc(t.nombre.replace(/^cuenta\s+/i,''))}</span></td>`
+        : (desdeT && r.fecha && ser(r.fecha) >= ser(sumarDias(desdeT,cfg.margen))) ? '<td><span class="st r">no está</span></td>' : '<td><span class="st m">antes de Trello</span></td>';
+      return `<tr><td>${esc(r.fechaTxt||'—')}</td><td>${r.concepto?`<span class="pill">${esc(r.concepto)}</span>`:''}</td><td>${esc(r.dep)}</td><td>${esc(r.hue||r.detalle)}</td>
+        <td class="num ${r.monto<0?'negv':'pos'}">${sim(r.usd)} ${fmt(r.monto)}</td>${marca}</tr>`; }).join('')}</tbody>
+    <tfoot><tr><td colspan="4">SALDO</td><td class="num">${x.hayA?'$ '+fmt(x.saldoA):''}${x.hayU?' · u$s '+fmt(x.saldoU):''}</td>${cr?'<td></td>':''}</tr></tfoot>
+  </table>${lista.length>600?'<div class="note">Se muestran los 600 más recientes. El CSV los trae todos.</div>':''}`;
 }
 
-function renderMov(){
-  const donde = document.getElementById('selMov').value;
-  if(!donde){ document.getElementById('kMov').innerHTML=''; document.getElementById('tMov').innerHTML=''; return; }
-  const c = CUENTAS[donde];
-  const hayARS = c.rows.some(r=>r.moneda==='ARS');
-  const hayUSD = c.rows.some(r=>r.moneda==='USD');
-
-  const kpis = [];
-  if(hayARS){ const saldo=c.ingA+c.egrA; kpis.push(`<div class="kpi"><div class="t">Saldo $</div><div class="v ${saldo<0?'negv':'pos'}">$ ${fmt(saldo)}</div><div class="s">Ingresos $ ${fmt(c.ingA)} + Egresos $ ${fmt(c.egrA)}</div></div>`); }
-  if(hayUSD){ const saldo=c.ingU+c.egrU; kpis.push(`<div class="kpi"><div class="t">Saldo u$s</div><div class="v gold">u$s ${fmt(saldo)}</div><div class="s">Ingresos u$s ${fmt(c.ingU)} + Egresos u$s ${fmt(c.egrU)}</div></div>`); }
-  kpis.push(`<div class="kpi"><div class="t">Movimientos</div><div class="v">${c.rows.length}</div></div>`);
-  document.getElementById('kMov').innerHTML = kpis.join('');
-
-  const s = sortState.detalle;
-  const rows = [...c.rows].sort((a,b)=>cmp(a,b,s.key,s.asc));
-  lastFiltered.detalle = rows;
-  document.getElementById('tMovTit').textContent = `Movimientos — ${donde} (${rows.length})`;
-
-  // columnas dinámicas: si la cuenta solo movió pesos, no aparece ninguna columna en
-  // dólares (y viceversa); si movió las dos monedas, aparecen ambos bloques.
-  let headCols = '<th onclick="sortTable(\'detalle\',\'fecha\')">Fecha</th><th onclick="sortTable(\'detalle\',\'concepto\')">Concepto</th><th onclick="sortTable(\'detalle\',\'dep\')">Departamento</th><th onclick="sortTable(\'detalle\',\'hue\')">Huésped / Detalle</th>';
-  if(hayARS) headCols += '<th class="num" onclick="sortTable(\'detalle\',\'ingA\')">Ingresos $</th><th class="num" onclick="sortTable(\'detalle\',\'comA\')">Comisión BK $</th><th class="num" onclick="sortTable(\'detalle\',\'egrA\')">Egresos $</th>';
-  if(hayUSD) headCols += '<th class="num" onclick="sortTable(\'detalle\',\'ingU\')">Ingresos u$s</th><th class="num" onclick="sortTable(\'detalle\',\'comU\')">Comisión BK u$s</th><th class="num" onclick="sortTable(\'detalle\',\'egrU\')">Egresos u$s</th>';
-
-  const bodyRows = rows.map(r=>{
-    let tds = `<td>${r.fecha||'—'}</td><td>${r.concepto?`<span class="pill">${r.concepto}</span>`:''}</td><td>${r.dep||''}</td><td>${r.hue||r.detalleTxt||''}</td>`;
-    if(hayARS) tds += `<td class="num">${r.ingA?fmt(r.ingA):''}</td><td class="num">${r.comA?fmt(r.comA):''}</td><td class="num ${r.egrA<0?'negv':r.egrA>0?'pos':''}">${r.egrA?fmt(r.egrA):''}</td>`;
-    if(hayUSD) tds += `<td class="num">${r.ingU?fmt(r.ingU):''}</td><td class="num">${r.comU?fmt(r.comU):''}</td><td class="num ${r.egrU<0?'negv':r.egrU>0?'pos':''}">${r.egrU?fmt(r.egrU):''}</td>`;
-    return `<tr>${tds}</tr>`;
-  }).join('');
-
-  let footCols = `<td colspan="4">TOTAL (${rows.length})</td>`;
-  if(hayARS) footCols += `<td class="num">${fmt(rows.reduce((a,r)=>a+r.ingA,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.comA,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.egrA,0))}</td>`;
-  if(hayUSD) footCols += `<td class="num">${fmt(rows.reduce((a,r)=>a+r.ingU,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.comU,0))}</td><td class="num">${fmt(rows.reduce((a,r)=>a+r.egrU,0))}</td>`;
-
-  document.getElementById('tMov').innerHTML = `<table>
-    <thead><tr>${headCols}</tr></thead>
-    <tbody>${bodyRows}</tbody>
-    <tfoot><tr>${footCols}</tr></tfoot>
+const abiertas = new Set();
+function toggleTar(id){ abiertas.has(id)?abiertas.delete(id):abiertas.add(id); renderTre(); }
+function renderTre(){
+  const a = document.getElementById('selTre').value;
+  if(!TRELLO){ document.getElementById('tTre').innerHTML = `<div class="note">${TRELLO_ERR?'⚠ '+esc(TRELLO_ERR):'Trello no está conectado. Cargá la API key y el token en ⚙.'}</div>`; return; }
+  const cr = CRUCE[a]; if(!cr) return;
+  const ts = [...cr.tarjetas].reverse();
+  document.getElementById('tTre').innerHTML = `<table>
+    <thead><tr><th>Tarjeta</th><th class="num">Inicial</th><th class="num">Movimientos</th><th class="num">Calculado</th><th class="num">Total escrito</th><th>¿Cierra?</th><th>¿Sigue a la anterior?</th><th class="num">En Sheet</th></tr></thead>
+    <tbody>${ts.map(t=>{
+      const nLin = t.lineas.filter(l=>l.monto).length, nOk = t.lineas.filter(l=>l.match).length;
+      const est = t.cierra===null?'<span class="st m">—</span>':t.cierra?'<span class="st ok">✓</span>':`<span class="st r">no · $ ${fmt(t.tot-t.calc)}</span>`;
+      const cad = !t.cadena?'<span class="st m">primera</span>':t.cadena==='ok'?'<span class="st ok">✓</span>':t.cadena==='signo'?'<span class="st g">signo cambiado</span>':`<span class="st r">$ ${fmt(t.difCadena)}</span>`;
+      const avL = t.lineas.filter(l=>l.avisos.length).length;
+      let h = `<tr class="clickable" onclick="toggleTar('${esc(t.id)}')">
+        <td>${abiertas.has(t.id)?'▾':'▸'} <b>${esc(t.nombre)}</b> ${t.labels.map(n=>`<span class="pill">${esc(n)}</span>`).join(' ')} ${avL?`<span class="st g">${avL} línea${avL>1?'s':''} rara${avL>1?'s':''}</span>`:''}</td>
+        <td class="num">${fmt(t.ini)}</td><td class="num">${fmt(t.sumA)}</td><td class="num">${fmt(t.calc)}</td><td class="num"><b>${fmt(t.tot)}</b>${t.totU!=null?'<br><span class="gold">u$s '+fmt(t.totU)+'</span>':''}</td>
+        <td>${est}</td><td>${cad}</td>
+        <td class="num">${cr.existe?(nOk===nLin?`<span class="st ok">${nOk}/${nLin}</span>`:`<span class="st r">${nOk}/${nLin}</span>`):'<span class="muted">—</span>'}</td></tr>`;
+      if(abiertas.has(t.id)) h += t.lineas.map(l=>`<tr class="lineasTr"><td colspan="3">${esc(l.texto)} ${l.ok?'<span class="pill">OK</span>':''} ${l.avisos.map(x=>`<span class="st g">${esc(x)}</span>`).join(' ')}</td>
+          <td class="num ${l.monto<0?'negv':'pos'}">${sim(l.usd)} ${fmt(l.monto)}</td>
+          <td colspan="4">${!cr.existe?'':l.match?`<span class="st ok">✓ Sheet ${esc(l.match.fechaTxt)}</span> <span class="muted">fila ${l.match.filaSheet}</span>`:l.monto?'<span class="st r">no está en el Sheet</span>':''}</td></tr>`).join('')
+          + `<tr class="lineasTr"><td colspan="8"><a href="${esc(t.url)}" target="_blank" rel="noopener">Abrir en Trello ↗</a></td></tr>`;
+      return h; }).join('')}</tbody>
   </table>`;
 }
 
-/* ================= CSV EXPORT ================= */
+function renderLim(){
+  const k = document.getElementById('kLim'), av = document.getElementById('aviLim'), tb = document.getElementById('tLim');
+  if(!LIMP || !TRELLO){
+    k.innerHTML=''; av.innerHTML='';
+    tb.innerHTML = `<div class="note">${LIMP_ERR?'⚠ '+esc(LIMP_ERR)+'<br><br>':''}${!TRELLO?'Hace falta Trello conectado. ':''}${!LIMP?'Para este control hay que agregar el endpoint <b>/api/export/pagos</b> a la app de limpiezas y cargar su URL y token en ⚙.':''}</div>`;
+    return;
+  }
+  const L = analizarLimpiezas(); lastLim = L.lista;
+  const tApp = Object.values(L.tot).reduce((a,t)=>a+t.app,0), tTr = Object.values(L.tot).reduce((a,t)=>a+t.tr,0);
+  k.innerHTML = `
+    <div class="kpi"><div class="t">Pagado según la app</div><div class="v">$ ${fmt(tApp)}</div><div class="s">desde ${fstr(L.desde)}</div></div>
+    <div class="kpi"><div class="t">Transferido según Trello</div><div class="v">$ ${fmt(tTr)}</div></div>
+    <div class="kpi"><div class="t">Diferencia</div><div class="v ${Math.abs(tTr-tApp)<1?'pos':'negv'}">$ ${fmt(tTr-tApp)}</div><div class="s">${L.difs.length} ${L.difs.length===1?'chica':'chicas'} con diferencia</div></div>`;
+  const A2 = {rojo:AVISOS.rojo.filter(g=>g.clave==='limp'), oro:AVISOS.oro.filter(g=>g.clave==='limpN'), info:[]};
+  av.innerHTML = bloqueAvisos(A2,'aviBoxLim');
+  let prev=null;
+  tb.innerHTML = `<table>
+    <thead><tr><th>Chica</th><th>Mes</th><th class="num">Semanas</th><th class="num">Jornales</th><th class="num">Gastos</th><th class="num">Pagado según la app</th><th class="num">Transferido según Trello</th><th class="num">Diferencia</th></tr></thead>
+    <tbody>${L.lista.map(o=>{
+      const d=o.tr-o.app; const nuevo = o.n!==prev; prev=o.n;
+      const tt=L.tot[o.n];
+      return `${nuevo?`<tr style="background:var(--panel2)"><td colspan="5"><b>${esc(L.nombreLindo[o.n]||o.n)}</b></td><td class="num"><b>$ ${fmt(tt.app)}</b></td><td class="num"><b>$ ${fmt(tt.tr)}</b></td><td class="num">${Math.abs(tt.tr-tt.app)<1?'<span class="st ok">✓</span>':`<span class="st r">$ ${fmt(tt.tr-tt.app)}</span>`}</td></tr>`:''}
+      <tr><td></td><td>${MESES[o.f.m]} ${o.f.y}</td><td class="num">${o.sem||''}</td><td class="num">${o.jor?fmt(o.jor):''}</td><td class="num">${o.gas?fmt(o.gas):''}</td>
+      <td class="num">${fmt(o.app)}</td><td class="num" title="${esc(o.trDet.map(p=>p.tarjeta.nombre+': '+fmt(p.monto)).join('\n'))}">${fmt(o.tr)}</td>
+      <td class="num ${Math.abs(d)<1?'muted':'gold'}">${Math.abs(d)<1?'—':fmt(d)}</td></tr>`; }).join('')}</tbody>
+  </table>`;
+}
+
+/* ================= CSV ================= */
 function expCSV(view){
   let head, lines, name;
   if(view==='resumen'){
-    head = ['Cuenta','Moneda','Ingresos','Egresos','Saldo','Movimientos'];
-    lines = lastFiltered.resumen.map(r=>[r.donde,r.moneda,r.ing.toFixed(2),r.egr.toFixed(2),r.saldo.toFixed(2),r.n]);
-    name = 'saldo-cuentas-resumen.csv';
+    head=['Cuenta','Moneda','Saldo Sheet','Última tarjeta','Saldo Trello','Diferencia','Mov. sin cruzar','Movimientos'];
+    lines=lastRes.map(r=>[r.cuenta,sim(r.usd),r.sheet.toFixed(2),r.tarjeta?r.tarjeta.nombre:'',r.trello==null?'':r.trello.toFixed(2),r.dif==null?'':r.dif.toFixed(2),r.sinCruzar??'',r.n]);
+    name='saldo-cuentas-resumen.csv';
+  } else if(view==='detalle'){
+    const c=document.getElementById('selCta').value;
+    head=['Fecha','Concepto','Departamento','Huésped/Detalle','Moneda','Monto','Fila Sheet'];
+    lines=lastDet.map(r=>[r.fechaTxt,r.concepto,r.dep,r.hue||r.detalle,sim(r.usd),r.monto.toFixed(2),r.filaSheet]);
+    name='saldo-cuenta-'+(c||'').replace(/[^a-z0-9]+/gi,'-')+'.csv';
   } else {
-    const donde = document.getElementById('selMov').value;
-    head = ['Fecha','Concepto','Departamento','Huésped/Detalle','Ingresos $','Comisión BK $','Egresos $','Ingresos u$s','Comisión BK u$s','Egresos u$s'];
-    lines = lastFiltered.detalle.map(r=>[r.fecha,r.concepto,r.dep,r.hue||r.detalleTxt,r.ingA.toFixed(2),r.comA.toFixed(2),r.egrA.toFixed(2),r.ingU.toFixed(2),r.comU.toFixed(2),r.egrU.toFixed(2)]);
-    name = 'saldo-cuenta-'+(donde||'todas').replace(/[^a-z0-9]+/gi,'-')+'.csv';
+    head=['Chica','Mes','Semanas','Jornales','Gastos','Pagado app','Transferido Trello','Diferencia'];
+    lines=lastLim.map(o=>[o.n,o.f.y+'-'+String(o.f.m).padStart(2,'0'),o.sem,o.jor,o.gas,o.app,o.tr,o.tr-o.app]);
+    name='limpiezas-pagos.csv';
   }
-  const csv = [head, ...lines].map(row=>row.map(v=>{
-    v = String(v==null?'':v);
-    return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v;
-  }).join(',')).join('\n');
-  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download=name; a.click();
-  URL.revokeObjectURL(url);
+  const csv=[head,...lines].map(row=>row.map(v=>{ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }).join(',')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
 }
 </script>
 </body>
