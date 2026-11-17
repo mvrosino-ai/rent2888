@@ -192,10 +192,9 @@ tfoot td{border-top:2px solid var(--border);font-weight:800;background:var(--pan
       <div class="kpis" id="kLim"></div>
       <div id="aviLim"></div>
       <div class="tblCard">
-        <div class="tblHead"><h3>Pagos a cada chica: app de limpiezas contra transferencias en Trello</h3><button class="hbtn" onclick="expCSV('limpiezas')">⬇ CSV</button></div>
+        <div class="tblHead"><h3>Pagos a cada chica: lo que dice la app contra lo que recibió</h3><button class="hbtn" onclick="expCSV('limpiezas')">⬇ CSV</button></div>
         <div class="tblWrap" id="tLim"></div>
-        <div class="note">"Pagado según la app" es la suma de pago_semana de las semanas que terminan en ese mes.
-          "Transferido según Trello" son las líneas "Transferencia &lt;nombre&gt;" de las tarjetas, por la fecha de la tarjeta.
+        <div class="note">"Se entrega" es lo que la app dice que se le pagó a cada chica. Lo comparo contra las transferencias que entraron a SU cuenta en el Sheet (vengan de Vero, Efectivo o Mp Dana). Si la chica no tiene cuenta en el Sheet, comparo contra las transferencias de las tarjetas de Vero en Trello.
           Una semana que se paga al mes siguiente puede dar diferencia en un mes y compensarse en el otro: el control de arriba mira el total del período.</div>
       </div>
     </div>
@@ -390,13 +389,15 @@ function cruzar(tarjetas, filas, margen){
   margen = margen ?? 5;
   const usadas = new Set();
   const hoy = (()=>{ const t=new Date(); return {y:t.getFullYear(), m:t.getMonth()+1, d:t.getDate()}; })();
-  const faltanEnSheet = [];
+  const faltanEnSheet = [], pend = [];
   tarjetas.forEach(t=>{
     if(!t.fecha) return;
-    const desde = sumarDias(t.fecha, -margen);
+    // ventana: desde la tarjeta anterior hasta la siguiente. Hay quien nombra la tarjeta por la
+    // fecha en que la abre (Vero) y quien por la fecha en que la cierra (Kari): así sirve para las dos.
+    const desde = sumarDias(t.prev && t.prev.fecha ? t.prev.fecha : sumarDias(t.fecha, -10), -margen);
     const hasta = sumarDias(t.next && t.next.fecha ? t.next.fecha : hoy, margen);
     t.lineas.forEach(l=>{
-      l.match = null;
+      l.match = null; l.matchN = null;
       if(!l.monto || l.ilegible) return;
       const ref = l.fechaLinea || t.fecha;
       let mejor=null, mejorD=1e9;
@@ -408,11 +409,27 @@ function cruzar(tarjetas, filas, margen){
         if(dd < mejorD){ mejor=f; mejorD=dd; }
       });
       if(mejor){ usadas.add(mejor.idx); l.match = mejor; }
-      else faltanEnSheet.push({tarjeta:t, linea:l});
+      else pend.push({t, l, desde, hasta, ref});
     });
   });
+  // segunda vuelta: una línea de Trello que en el Sheet se cargó partida en 2 o 3 filas
+  // (ej. "Limpieza Paulas y Caru -28.000" = dos filas de -14.000)
+  pend.forEach(({t, l, desde, hasta, ref})=>{
+    const cand = filas.filter(f=>!usadas.has(f.idx) && !!f.usd===!!l.usd && f.fecha && f.monto
+        && Math.sign(f.monto)===Math.sign(l.monto) && Math.abs(f.monto) < Math.abs(l.monto)
+        && ser(f.fecha) >= ser(desde) && ser(f.fecha) <= ser(hasta))
+      .sort((a,b)=>Math.abs(diasEntre(ref,a.fecha))-Math.abs(diasEntre(ref,b.fecha))).slice(0,40);
+    let combo = null;
+    for(let i=0;i<cand.length && !combo;i++) for(let j=i+1;j<cand.length && !combo;j++){
+      const s2 = cand[i].monto+cand[j].monto;
+      if(Math.abs(s2-l.monto)<1){ combo=[cand[i],cand[j]]; break; }
+      for(let k=j+1;k<cand.length;k++) if(Math.abs(s2+cand[k].monto-l.monto)<1){ combo=[cand[i],cand[j],cand[k]]; break; }
+    }
+    if(combo){ combo.forEach(f=>usadas.add(f.idx)); l.match = combo[0]; l.matchN = combo; }
+    else faltanEnSheet.push({tarjeta:t, linea:l});
+  });
   const primera = tarjetas.find(t=>t.fecha);
-  const desdeSheet = primera ? sumarDias(primera.fecha, margen) : null;
+  const desdeSheet = primera ? sumarDias(primera.prev && primera.prev.fecha ? primera.prev.fecha : primera.fecha, margen) : null;
   const faltanEnTrello = desdeSheet
     ? filas.filter(f=>!usadas.has(f.idx) && f.fecha && ser(f.fecha) >= ser(desdeSheet) && f.monto)
     : [];
@@ -696,7 +713,8 @@ function armarAvisos(){
     Object.entries(CRUCE).forEach(([alias, x])=>{
       if(!x.existe) sinMapa.push(`<b>${esc(alias)}</b> <span>· ${x.tarjetas.length} tarjetas en el período; ${x.cuenta?'en el Sheet no hay filas con la cuenta "'+esc(x.cuenta)+'"':'no sé a qué cuenta del Sheet corresponde'}</span>`);
       if(x.cambio!=null){
-        if(Math.abs(x.cambio) >= 1) difSaldo.push(`<b>${esc(x.cuenta)}</b> — al ${fstr(x.pri.fecha)} la diferencia Sheet−Trello era $ ${fmt(x.dif0)}, hoy es $ ${fmt(x.difHoy)} → <b class="negv">se descuadraron $ ${fmt(x.cambio)} en el período</b>`);
+        if(Math.abs(x.difHoy) < 1){ if(Math.abs(x.dif0) >= 1) arrastre.push(`<b>${esc(x.cuenta)}</b> — ✓ hoy Sheet y Trello coinciden (al ${fstr(x.pri.fecha)} había una diferencia de $ ${fmt(x.dif0)} que ya se corrigió)`); }
+        else if(Math.abs(x.cambio) >= 1) difSaldo.push(`<b>${esc(x.cuenta)}</b> — al ${fstr(x.pri.fecha)} la diferencia Sheet−Trello era $ ${fmt(x.dif0)}, hoy es $ ${fmt(x.difHoy)} → <b class="negv">se descuadraron $ ${fmt(x.cambio)} en el período</b>`);
         else if(Math.abs(x.difHoy) >= 1) arrastre.push(`<b>${esc(x.cuenta)}</b> — Sheet y Trello difieren en $ ${fmt(x.difHoy)}, pero esa diferencia ya estaba al ${fstr(x.pri.fecha)} y no cambió`);
       }
       x.tarjetas.forEach(t=>{
@@ -731,7 +749,7 @@ function armarAvisos(){
     add('oro','sinsig','Líneas de Trello sin + ni −', sinSigno);
     add('oro','noverif','Tarjetas con la etiqueta "CARGA - NO VERIFICADA" hace más de una semana', noVerif);
     add('oro','mapa','Cuentas de Trello que no encuentro en el Sheet', sinMapa);
-    add('info','arrastre','Diferencias que vienen de antes del período (no cambiaron)', arrastre);
+    add('info','arrastre','Diferencias viejas y cuentas ya corregidas', arrastre);
   }
 
   /* --- Sheet, solo movimientos del período --- */
@@ -740,8 +758,13 @@ function armarAvisos(){
   const parec = Object.entries(CUENTAS).filter(([c,x])=>c!=='(sin cuenta)' && !esCaja(c) && x.nPer && parecida(c))
     .map(([c,x])=>`<b>${esc(c)}</b> <span>· ${x.nPer} movimientos — ¿no será "${esc(parecida(c))}"?</span>`);
   add('oro','parecida','Cuentas con un nombre parecido a una cuenta de caja', parec);
-  const sinCta = ROWS.filter(r=>r.donde==='(sin cuenta)' && enPer(r) && r.egr);
-  add('oro','sincta','Egresos sin cuenta (col "Donde $?" vacía)', sinCta.map(r=>`${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.dep,r.detalle||r.hue].filter(Boolean).join(' · '))} (fila ${r.filaSheet})</span>`));
+  const sc = ROWS.filter(r=>r.donde==='(sin cuenta)' && enPer(r) && r.egr);
+  const parUsado = new Set();
+  sc.forEach(r=>{ if(parUsado.has(r.idx)) return;
+    const p = sc.find(o=>o.idx!==r.idx && !parUsado.has(o.idx) && Math.abs(o.monto+r.monto)<1 && o.fecha && r.fecha && Math.abs(diasEntre(o.fecha,r.fecha))<=3);
+    if(p){ parUsado.add(r.idx); parUsado.add(p.idx); } });
+  const sinCta = sc.filter(r=>!parUsado.has(r.idx));
+  add('oro','sincta','Egresos sin cuenta (col "Donde $?" vacía) que no son la pareja depto/Reclamos de un arreglo', sinCta.map(r=>`${esc(r.fechaTxt)} — ${sim(r.usd)} ${fmt(r.monto)} <span>· ${esc([r.concepto,r.dep,r.detalle||r.hue].filter(Boolean).join(' · '))} (fila ${r.filaSheet})</span>`));
   const sinMon = ROWS.filter(r=>r.monto && !r.monedaRaw && esCaja(r.donde) && enPer(r));
   add('oro','sinmon','Movimientos de caja sin moneda (se tomaron como pesos)', sinMon.map(r=>`<b>${esc(r.donde)}</b> ${esc(r.fechaTxt)} — ${fmt(r.monto)} <span>· ${esc(r.concepto||r.dep||'')} (fila ${r.filaSheet})</span>`));
 
@@ -775,7 +798,13 @@ function parecida(c){
 
 /* ================= LIMPIEZAS ================= */
 function analizarLimpiezas(){
-  const desde = DESDE();
+  // arranco en el primer mes completo del período: la app corta las semanas a fin de mes,
+  // así no comparo una semana sin su pago (o un pago sin su semana) en el borde
+  const D0 = DESDE();
+  const iniMes = D0.d===1 ? D0 : (D0.m===12 ? {y:D0.y+1,m:1,d:1} : {y:D0.y,m:D0.m+1,d:1});
+  const semanas = LIMP.filter(x=>x.inicio && ser(x.inicio) >= ser(iniMes));
+  const primerFin = semanas.reduce((m,x)=> x.fin && (!m || ser(x.fin)<ser(m)) ? x.fin : m, null);
+  const desde = primerFin ? sumarDias(primerFin, 1) : iniMes;   // los pagos de la primera semana salen después de su cierre
   const todos = pagosLimpieza(TRELLO, [...cfg.oficiales, ...Object.keys(cfg.map)]).filter(p=>p.fecha && ser(p.fecha) >= ser(desde));
   // hasta dónde está cargada la app: última semana con algún jornal o pago
   const cargadas = LIMP.filter(x=>x.fin && (x.pago || x.jornales));
@@ -789,7 +818,7 @@ function analizarLimpiezas(){
   const nombresApp = new Set(LIMP.map(x=>pri(x.empleada)));
   const nombreLindo = {};
   LIMP.forEach(x=>{
-    if(!x.fin || ser(x.fin) < ser(sumarDias(desde,-10)) || (hasta && ser(x.fin) > ser(hasta))) return;
+    if(!x.fin || !x.inicio || ser(x.inicio) < ser(iniMes) || (hasta && ser(x.fin) > ser(hasta))) return;
     const n = pri(x.empleada); nombreLindo[n] = nombreLindo[n] || x.empleada;
     const k = key(n,x.fin); const o = filas[k] = filas[k]||{n, f:{y:x.fin.y,m:x.fin.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
     o.app += x.pago; o.jor += x.jornales; o.gas += x.gastos; if(x.pago||x.jornales) o.sem++;
@@ -800,12 +829,25 @@ function analizarLimpiezas(){
     const k = key(p.primer,p.fecha); const o = filas[k] = filas[k]||{n:p.primer, f:{y:p.fecha.y,m:p.fecha.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
     o.tr += p.monto; o.trDet.push(p);
   });
-  const lista = Object.values(filas).filter(o=>o.app||o.tr||o.jor).sort((a,b)=> a.n.localeCompare(b.n) || (a.f.y*100+a.f.m)-(b.f.y*100+b.f.m));
+  // lo que recibió cada chica en SU cuenta del Sheet (transferencias desde cualquier cuenta: Vero, Efectivo, Mp Dana…)
+  const ctaChica = {};
+  Object.keys(CUENTAS).forEach(c=>{ if(c==='(sin cuenta)' || esCaja(c)) return; const p=pri(c); if(nombresApp.has(p) && !ctaChica[p]) ctaChica[p]=c; });
+  Object.entries(ctaChica).forEach(([n,c])=>{
+    CUENTAS[c].rows.forEach(r=>{
+      if(r.usd || r.monto<=0 || !r.fecha || !/transfer|trasfer/i.test(r.cptEgr||r.concepto||'')) return;
+      if(ser(r.fecha) < ser(desde) || ser(r.fecha) > ser(lim)) return;
+      const k = key(n,r.fecha); const o = filas[k] = filas[k]||{n, f:{y:r.fecha.y,m:r.fecha.m}, app:0, tr:0, jor:0, gas:0, sem:0, trDet:[]};
+      o.sh = (o.sh||0) + r.monto;
+    });
+  });
+  const lista = Object.values(filas).filter(o=>o.app||o.tr||o.jor||o.sh).sort((a,b)=> a.n.localeCompare(b.n) || (a.f.y*100+a.f.m)-(b.f.y*100+b.f.m));
   const tot = {};
-  lista.forEach(o=>{ const t=tot[o.n]=tot[o.n]||{app:0,tr:0}; t.app+=o.app; t.tr+=o.tr; });
-  const difs = Object.entries(tot).filter(([n,t])=>Math.abs(t.app-t.tr)>=1)
-    .map(([n,t])=>`<b>${esc(nombreLindo[n]||n)}</b> — app $ ${fmt(t.app)} · Trello $ ${fmt(t.tr)} → <b class="negv">diferencia $ ${fmt(t.tr-t.app)}</b>`);
-  return {lista, tot, difs, sinApp, despues, nombreLindo, desde, hasta};
+  lista.forEach(o=>{ const t=tot[o.n]=tot[o.n]||{app:0,tr:0,sh:0}; t.app+=o.app; t.tr+=o.tr; t.sh+=(o.sh||0); });
+  // se compara contra la cuenta de la chica en el Sheet (tiene todos los pagos); si no tiene cuenta, contra Trello
+  Object.entries(tot).forEach(([n,t])=>{ t.ref = ctaChica[n] ? t.sh : t.tr; t.fuente = ctaChica[n] ? 'Sheet ('+ctaChica[n]+')' : 'Trello'; });
+  const difs = Object.entries(tot).filter(([n,t])=>Math.abs(t.app-t.ref)>=1)
+    .map(([n,t])=>`<b>${esc(nombreLindo[n]||n)}</b> — "Se entrega" en la app $ ${fmt(t.app)} · recibido según ${esc(t.fuente)} $ ${fmt(t.ref)} → <b class="negv">diferencia $ ${fmt(t.ref-t.app)}</b>`);
+  return {lista, tot, difs, sinApp, despues, nombreLindo, desde: iniMes, hasta};
 }
 
 /* ================= RENDER ================= */
@@ -877,7 +919,7 @@ function renderRes(){
   const totA = filas.filter(r=>!r.usd).reduce((a,r)=>a+r.sheet,0);
   const totU = filas.filter(r=>r.usd).reduce((a,r)=>a+r.sheet,0);
   const conT = filas.filter(r=>r.cambio!=null);
-  const okT = conT.filter(r=>Math.abs(r.cambio)<1).length;
+  const okT = conT.filter(r=>Math.abs(r.cambio)<1||Math.abs(r.dif)<1).length;
   const per = LS('r28s_per','60'), todas = LS('r28s_todas','0')==='1';
   const op = (v,t)=>`<option value="${v}" ${per===v?'selected':''}>${t}</option>`;
   document.getElementById('kRes').innerHTML = `
@@ -901,7 +943,7 @@ function renderRes(){
       <td>${r.tarjeta?`<span class="muted">${fstr(r.tarjeta.fecha)}</span>`:'<span class="muted">—</span>'}</td>
       <td class="num">${r.trello==null?'<span class="muted">—</span>':sim(r.usd)+' '+fmt(r.trello)}</td>
       <td class="num">${r.dif==null?'':Math.abs(r.dif)<1?'<span class="st ok">✓ igual</span>':`<span class="muted">${sim(r.usd)} ${fmt(r.dif)}</span>`}</td>
-      <td class="num">${r.cambio==null?'':Math.abs(r.cambio)<1?'<span class="st ok">✓ sin cambios</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.cambio)}</span>`}</td>
+      <td class="num">${r.cambio==null?'':(Math.abs(r.cambio)<1||Math.abs(r.dif)<1)?'<span class="st ok">✓ ok</span>':`<span class="st r">${sim(r.usd)} ${fmt(r.cambio)}</span>`}</td>
       <td class="num">${r.sinCruzar==null?'':r.sinCruzar?`<span class="st g">${r.sinCruzar}</span>`:'<span class="st ok">0</span>'}</td>
       <td class="num">${r.n}</td></tr>`).join('')}</tbody>
   </table>`;
@@ -932,7 +974,7 @@ function renderCta(){
   if(x.hayA) k.push(`<div class="kpi"><div class="t">Saldo $ en el Sheet</div><div class="v ${x.saldoA<0?'negv':'pos'}">$ ${fmt(x.saldoA)}</div></div>`);
   if(x.hayU) k.push(`<div class="kpi"><div class="t">Saldo u$s en el Sheet</div><div class="v gold">u$s ${fmt(x.saldoU)}</div></div>`);
   if(ult){ const d=x.saldoA-ult.tot; k.push(`<div class="kpi"><div class="t">Trello · ${fstr(ult.fecha)}</div><div class="v">$ ${fmt(ult.tot)}</div><div class="s">${Math.abs(d)<1?'<span class="pos">✓ igual al Sheet</span>':'diferencia $ '+fmt(d)} · <a href="#" onclick="irATrello('${esc(alias)}');return false">ver tarjetas</a></div></div>`); }
-  if(cr && cr.cambio!=null) k.push(`<div class="kpi"><div class="t">Descuadre nuevo en el período</div><div class="v ${Math.abs(cr.cambio)<1?'pos':'negv'}">${Math.abs(cr.cambio)<1?'✓ ninguno':'$ '+fmt(cr.cambio)}</div><div class="s">diferencia al ${fstr(cr.pri.fecha)}: $ ${fmt(cr.dif0)} · hoy: $ ${fmt(cr.difHoy)}</div></div>`);
+  if(cr && cr.cambio!=null) k.push(`<div class="kpi"><div class="t">Descuadre nuevo en el período</div><div class="v ${(Math.abs(cr.cambio)<1||Math.abs(cr.difHoy)<1)?'pos':'negv'}">${(Math.abs(cr.cambio)<1||Math.abs(cr.difHoy)<1)?'✓ ninguno':'$ '+fmt(cr.cambio)}</div><div class="s">diferencia al ${fstr(cr.pri.fecha)}: $ ${fmt(cr.dif0)} · hoy: $ ${fmt(cr.difHoy)}</div></div>`);
   if(cr) k.push(`<div class="kpi"><div class="t">Movimientos cruzados</div><div class="v">${cr.emparejadas}</div><div class="s">${cr.faltanEnSheet.length} solo en Trello · ${cr.faltanEnTrello.length} solo en Sheet</div></div>`);
   document.getElementById('kCta').innerHTML = k.join('');
   document.getElementById('aviCta').innerHTML = cr ? bloqueAvisos(AVISOS,'aviBoxCta', g=>g.items.some(i=>i.includes(esc(c))||cr.tarjetas.some(t=>i.includes(esc(t.nombre))))) : '';
@@ -971,7 +1013,7 @@ function renderCta(){
   }
   // tabla de movimientos con marca de cruce
   const enTrello = new Map();
-  if(cr) cr.tarjetas.forEach(t=>t.lineas.forEach(l=>{ if(l.match) enTrello.set(l.match.idx, t); }));
+  if(cr) cr.tarjetas.forEach(t=>t.lineas.forEach(l=>{ (l.matchN||(l.match?[l.match]:[])).forEach(f=>enTrello.set(f.idx, t)); }));
   const desdeT = cr && cr.tarjetas.find(t=>t.fecha) ? cr.tarjetas.find(t=>t.fecha).fecha : null;
   const lista = x.rows.filter(enPer).sort((a,b)=>ser(b.fecha)-ser(a.fecha) || b.idx-a.idx); lastDet = lista;
   document.getElementById('tCtaTit').textContent = `Movimientos del Sheet desde el ${fstr(DESDE())} — ${c} (${lista.length})`;
@@ -1008,7 +1050,7 @@ function renderTre(){
         <td class="num">${cr.existe?(nOk===nLin?`<span class="st ok">${nOk}/${nLin}</span>`:`<span class="st r">${nOk}/${nLin}</span>`):'<span class="muted">—</span>'}</td></tr>`;
       if(abiertas.has(t.id)) h += t.lineas.map(l=>`<tr class="lineasTr"><td colspan="3">${esc(l.texto)} ${l.ok?'<span class="pill">OK</span>':''} ${l.avisos.map(x=>`<span class="st g">${esc(x)}</span>`).join(' ')}</td>
           <td class="num ${l.monto<0?'negv':'pos'}">${sim(l.usd)} ${fmt(l.monto)}</td>
-          <td colspan="4">${!cr.existe?'':l.match?`<span class="st ok">✓ Sheet ${esc(l.match.fechaTxt)}</span> <span class="muted">fila ${l.match.filaSheet}</span>`:l.monto?'<span class="st r">no está en el Sheet</span>':''}</td></tr>`).join('')
+          <td colspan="4">${!cr.existe?'':l.match?`<span class="st ok">✓ Sheet ${esc(l.match.fechaTxt)}</span> <span class="muted">${l.matchN?'partido en '+l.matchN.length+' filas: '+l.matchN.map(f=>f.filaSheet+' ($ '+fmt(f.monto)+')').join(', '):'fila '+l.match.filaSheet}</span>`:l.monto?'<span class="st r">no está en el Sheet</span>':''}</td></tr>`).join('')
           + `<tr class="lineasTr"><td colspan="8"><a href="${esc(t.url)}" target="_blank" rel="noopener">Abrir en Trello ↗</a></td></tr>`;
       return h; }).join('')}</tbody>
   </table>`;
@@ -1022,22 +1064,22 @@ function renderLim(){
     return;
   }
   const L = analizarLimpiezas(); lastLim = L.lista;
-  const tApp = Object.values(L.tot).reduce((a,t)=>a+t.app,0), tTr = Object.values(L.tot).reduce((a,t)=>a+t.tr,0);
+  const tApp = Object.values(L.tot).reduce((a,t)=>a+t.app,0), tTr = Object.values(L.tot).reduce((a,t)=>a+t.ref,0);
   k.innerHTML = `
     <div class="kpi"><div class="t">Pagado según la app</div><div class="v">$ ${fmt(tApp)}</div><div class="s">desde ${fstr(L.desde)}</div></div>
-    <div class="kpi"><div class="t">Transferido según Trello</div><div class="v">$ ${fmt(tTr)}</div></div>
+    <div class="kpi"><div class="t">Recibido por las chicas</div><div class="v">$ ${fmt(tTr)}</div></div>
     <div class="kpi"><div class="t">Diferencia</div><div class="v ${Math.abs(tTr-tApp)<1?'pos':'negv'}">$ ${fmt(tTr-tApp)}</div><div class="s">${L.difs.length} ${L.difs.length===1?'chica':'chicas'} con diferencia</div></div>`;
   const A2 = {rojo:AVISOS.rojo.filter(g=>g.clave==='limp'), oro:AVISOS.oro.filter(g=>g.clave==='limpN'), info:[]};
   av.innerHTML = bloqueAvisos(A2,'aviBoxLim');
   let prev=null;
   tb.innerHTML = `<table>
-    <thead><tr><th>Chica</th><th>Mes</th><th class="num">Semanas</th><th class="num">Jornales</th><th class="num">Gastos</th><th class="num">Pagado según la app</th><th class="num">Transferido según Trello</th><th class="num">Diferencia</th></tr></thead>
+    <thead><tr><th>Chica</th><th>Mes</th><th class="num">Semanas</th><th class="num">Jornales</th><th class="num">Gastos</th><th class="num">"Se entrega" (app)</th><th class="num">Recibido en su cuenta (Sheet)</th><th class="num">Transferido por Vero (Trello)</th><th class="num">Diferencia</th></tr></thead>
     <tbody>${L.lista.map(o=>{
-      const d=o.tr-o.app; const nuevo = o.n!==prev; prev=o.n;
-      const tt=L.tot[o.n];
-      return `${nuevo?`<tr style="background:var(--panel2)"><td colspan="5"><b>${esc(L.nombreLindo[o.n]||o.n)}</b></td><td class="num"><b>$ ${fmt(tt.app)}</b></td><td class="num"><b>$ ${fmt(tt.tr)}</b></td><td class="num">${Math.abs(tt.tr-tt.app)<1?'<span class="st ok">✓</span>':`<span class="st r">$ ${fmt(tt.tr-tt.app)}</span>`}</td></tr>`:''}
+      const tt=L.tot[o.n]; const usaSh = tt.fuente!=='Trello';
+      const ref = usaSh ? (o.sh||0) : o.tr; const d=ref-o.app; const nuevo = o.n!==prev; prev=o.n;
+      return `${nuevo?`<tr style="background:var(--panel2)"><td colspan="5"><b>${esc(L.nombreLindo[o.n]||o.n)}</b> <span class="muted" style="font-size:11px">· comparo contra ${esc(tt.fuente)}</span></td><td class="num"><b>$ ${fmt(tt.app)}</b></td><td class="num"><b>${usaSh?'$ '+fmt(tt.sh):'—'}</b></td><td class="num"><b>$ ${fmt(tt.tr)}</b></td><td class="num">${Math.abs(tt.ref-tt.app)<1?'<span class="st ok">✓</span>':`<span class="st r">$ ${fmt(tt.ref-tt.app)}</span>`}</td></tr>`:''}
       <tr><td></td><td>${MESES[o.f.m]} ${o.f.y}</td><td class="num">${o.sem||''}</td><td class="num">${o.jor?fmt(o.jor):''}</td><td class="num">${o.gas?fmt(o.gas):''}</td>
-      <td class="num">${fmt(o.app)}</td><td class="num" title="${esc(o.trDet.map(p=>p.tarjeta.nombre+': '+fmt(p.monto)).join('\n'))}">${fmt(o.tr)}</td>
+      <td class="num">${fmt(o.app)}</td><td class="num">${usaSh?fmt(o.sh||0):''}</td><td class="num" title="${esc(o.trDet.map(p=>p.tarjeta.nombre+': '+fmt(p.monto)).join('\n'))}">${fmt(o.tr)}</td>
       <td class="num ${Math.abs(d)<1?'muted':'gold'}">${Math.abs(d)<1?'—':fmt(d)}</td></tr>`; }).join('')}</tbody>
   </table>`;
 }
